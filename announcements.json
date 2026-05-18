@@ -1,14 +1,20 @@
 [
   {
+    "title": "📰 《明日方舟》制作组通讯#65期",
+    "content": "https://ak.hypergryph.com/news/2823",
+    "date": "2026-05-18",
+    "category": "明日方舟"
+  },
+  {
     "title": "站点上线公告",
     "date": "2026-05-15",
     "category": "重要",
     "content": "站点正式上线😎"
-  },  
+  },
   {
     "title": "站点更新公告",
     "date": "2026-05-17",
     "category": "更新",
-    "content": "1. Create a new Site Status Page. Users can now view current site availability , update schedules, and planned maintance activites.         2.Other Improvements" 
- }
+    "content": "1. Create a new Site Status Page. Users can now view current site availability , update schedules, and planned maintance activites.         2.Other Improvements"
+  }
 ]
