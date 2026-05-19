@@ -1,1 +1,2 @@
 echo json_backups/ >> .gitignore
+json_backups/

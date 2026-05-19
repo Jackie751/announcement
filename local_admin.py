@@ -10,10 +10,13 @@ import urllib.parse
 
 app = Flask(__name__)
 
-# 默认修改当前目录下的 announcements.json
-# 如果你的 announcements.json 在 data/announcements.json，就改成 Path("data/announcements.json")
-JSON_FILE = Path("announcements.json")
-BACKUP_DIR = Path("json_backups")
+# 永远以 local_admin.py 所在文件夹作为仓库目录，避免从错误目录启动导致 Git 失效
+BASE_DIR = Path(__file__).resolve().parent
+
+# 默认修改脚本同目录下的 announcements.json
+# 如果你的 announcements.json 在 data/announcements.json，就改成 BASE_DIR / "data" / "announcements.json"
+JSON_FILE = BASE_DIR / "announcements.json"
+BACKUP_DIR = BASE_DIR / "json_backups"
 
 
 def ensure_files():
@@ -87,34 +90,198 @@ def parse_pin_order(value):
         return 999999
 
 
+def run_cmd(args, cwd=None):
+    """
+    统一执行命令，返回：成功/失败 + 输出文本。
+    所有 Git 命令默认固定在 local_admin.py 所在仓库目录执行。
+    """
+    result = subprocess.run(
+        args,
+        cwd=str(cwd or BASE_DIR),
+        capture_output=True,
+        text=True,
+        shell=False
+    )
+    output = ((result.stdout or "") + "\n" + (result.stderr or "")).strip()
+    return result.returncode == 0, output
+
+
+def ensure_gitignore():
+    """
+    确保 json_backups/ 不会被提交到 GitHub。
+    """
+    gitignore = BASE_DIR / ".gitignore"
+    line = "json_backups/"
+
+    if gitignore.exists():
+        text = gitignore.read_text(encoding="utf-8", errors="ignore")
+        lines = [x.strip() for x in text.splitlines()]
+        if line not in lines:
+            with gitignore.open("a", encoding="utf-8") as f:
+                if text and not text.endswith("\n"):
+                    f.write("\n")
+                f.write(line + "\n")
+    else:
+        gitignore.write_text(line + "\n", encoding="utf-8")
+
+
+def get_current_branch():
+    ok, out = run_cmd(["git", "rev-parse", "--abbrev-ref", "HEAD"])
+    if ok and out:
+        return out.splitlines()[0].strip()
+    return "main"
+
+
+def commit_local_changes_if_any():
+    """
+    添加并提交本地修改。没有修改时不报错，继续后续 pull/push。
+    """
+    ensure_gitignore()
+
+    ok, out = run_cmd(["git", "add", "-A"])
+    if not ok:
+        return False, "git add 失败：\n" + out
+
+    msg = f"Update announcements {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+    ok_commit, commit_out = run_cmd(["git", "commit", "-m", msg])
+    text = (commit_out or "").lower()
+
+    if ok_commit:
+        return True, "已提交本地修改。"
+
+    nothing_cases = [
+        "nothing to commit",
+        "no changes added to commit",
+        "nothing added to commit"
+    ]
+    if any(x in text for x in nothing_cases):
+        return True, "没有新的本地修改需要提交。"
+
+    return False, "git commit 失败：\n" + commit_out
+
+
+def run_git_pull_only():
+    """
+    新按钮：先同步远程。
+    为了避免本地未提交修改阻止 pull，这里会先自动 add/commit，再 pull --rebase。
+    """
+    ok, out = run_cmd(["git", "rev-parse", "--is-inside-work-tree"])
+    if not ok or "true" not in out.lower():
+        return False, f"当前目录不是 Git 仓库：{BASE_DIR}"
+
+    branch = get_current_branch()
+
+    ok_commit, commit_msg = commit_local_changes_if_any()
+    if not ok_commit:
+        return False, commit_msg
+
+    ok_pull, pull_out = run_cmd(["git", "pull", "--rebase", "origin", branch])
+    if not ok_pull:
+        return False, (
+            "拉取远程失败，可能有冲突，需要手动处理。\n\n"
+            "建议在终端执行：\n"
+            "git status\n"
+            "git rebase --abort\n"
+            f"git pull origin {branch}\n\n"
+            "原始输出：\n" + pull_out
+        )
+
+    return True, f"已先提交本地改动，并成功拉取远程 origin/{branch}。"
+
+
+def run_git_pull_then_push():
+    """
+    新按钮：先拉取远程，再推送。
+    实际安全顺序：先保存/提交本地 → pull --rebase → push。
+    """
+    ok, out = run_cmd(["git", "rev-parse", "--is-inside-work-tree"])
+    if not ok or "true" not in out.lower():
+        return False, f"当前目录不是 Git 仓库：{BASE_DIR}"
+
+    branch = get_current_branch()
+
+    ok_commit, commit_msg = commit_local_changes_if_any()
+    if not ok_commit:
+        return False, commit_msg
+
+    ok_pull, pull_out = run_cmd(["git", "pull", "--rebase", "origin", branch])
+    if not ok_pull:
+        return False, (
+            "git pull --rebase 失败。通常是远程和本地改了同一个文件，需要手动处理冲突。\n\n"
+            "建议在终端执行：\n"
+            "git status\n"
+            "git rebase --abort\n"
+            f"git pull origin {branch}\n\n"
+            "原始输出：\n" + pull_out
+        )
+
+    ok_push, push_out = run_cmd(["git", "push", "origin", branch])
+    if not ok_push:
+        return False, "git push 失败：\n" + push_out
+
+    return True, f"已完成：本地提交 → 拉取远程 origin/{branch} → 推送到 GitHub。"
+
+
 def run_git_push():
+    """
+    稳定版推送逻辑：
+    1. 检查当前目录是不是 Git 仓库
+    2. 自动把 json_backups/ 写入 .gitignore
+    3. git add .
+    4. 有变化就 commit；没变化也继续 push
+    5. push 前自动 git pull --rebase origin 当前分支，解决 fetch first
+    6. 再 git push origin 当前分支
+    """
     try:
-        subprocess.run(["git", "add", str(JSON_FILE)], check=True)
+        ok, out = run_cmd(["git", "rev-parse", "--is-inside-work-tree"])
+        if not ok or "true" not in out.lower():
+            return False, "当前目录不是 Git 仓库。请把 local_admin.py 放在包含 .git 的仓库根目录运行。"
+
+        ensure_gitignore()
+        branch = get_current_branch()
+
+        ok, out = run_cmd(["git", "add", "."])
+        if not ok:
+            return False, "git add 失败：\n" + out
 
         commit_msg = f"Update announcements {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+        ok_commit, commit_out = run_cmd(["git", "commit", "-m", commit_msg])
 
-        commit_result = subprocess.run(
-            ["git", "commit", "-m", commit_msg],
-            capture_output=True,
-            text=True
-        )
+        commit_text = commit_out.lower()
+        if not ok_commit:
+            # 没有新变化不是错误；可能只是本地已有 commit 还没 push。
+            nothing_cases = [
+                "nothing to commit",
+                "no changes added to commit",
+                "nothing added to commit"
+            ]
+            if not any(x in commit_text for x in nothing_cases):
+                return False, "git commit 失败：\n" + commit_out
 
-        if commit_result.returncode != 0:
-            output = (commit_result.stdout or "") + "\n" + (commit_result.stderr or "")
-            if "nothing to commit" in output.lower():
-                return True, "没有新的修改需要提交。"
-            return False, output.strip()
+        # 先拉远程，解决 rejected / fetch first。
+        ok_pull, pull_out = run_cmd(["git", "pull", "--rebase", "origin", branch])
+        if not ok_pull:
+            return False, (
+                "git pull --rebase 失败。通常是远程和本地改了同一个文件，需要手动处理冲突。\n\n"
+                "你可以在终端执行：\n"
+                f"git status\n"
+                f"git rebase --abort\n"
+                f"git pull origin {branch}\n\n"
+                "原始输出：\n" + pull_out
+            )
 
-        push_result = subprocess.run(
-            ["git", "push", "origin", "main"],
-            capture_output=True,
-            text=True
-        )
+        ok_push, push_out = run_cmd(["git", "push", "origin", branch])
+        if not ok_push:
+            return False, "git push 失败：\n" + push_out
 
-        if push_result.returncode != 0:
-            return False, (push_result.stderr or push_result.stdout).strip()
-
-        return True, "已经成功推送到 GitHub。"
+        details = []
+        if ok_commit:
+            details.append("已提交本地修改")
+        else:
+            details.append("没有新的本地修改需要提交")
+        details.append(f"已同步远程分支 origin/{branch}")
+        details.append("已成功推送到 GitHub")
+        return True, "；".join(details) + "。"
 
     except FileNotFoundError:
         return False, "找不到 git。你需要先安装 Git for Windows，或者把 git 加入 PATH。"
@@ -359,11 +526,21 @@ pre {
 
 <div class="panel">
 <h2>同步操作</h2>
-<form method="post" action="/push">
-    <button class="push" type="submit">推送 GitHub</button>
+
+<form method="post" action="/pull" style="display:inline;">
+    <button class="edit" type="submit">① 先拉取远程 Pull</button>
 </form>
+
+<form method="post" action="/pull-push" style="display:inline;">
+    <button class="push" type="submit">② 拉取后推送 Pull → Push</button>
+</form>
+
+<form method="post" action="/push" style="display:inline;">
+    <button type="submit">普通推送 Push</button>
+</form>
+
 <div class="meta">
-这个按钮会执行：git add announcements.json → git commit → git push origin main
+推荐使用“② 拉取后推送”。它会执行：git add -A → git commit → git pull --rebase → git push，并自动忽略 json_backups/。
 </div>
 </div>
 
@@ -525,6 +702,24 @@ def delete(index):
 
     msg = urllib.parse.quote("删除失败：索引不存在。")
     return redirect(f"/?message={msg}&type=warning")
+
+
+@app.route("/pull", methods=["POST"])
+def pull_remote():
+    ok, msg = run_git_pull_only()
+    safe_msg = urllib.parse.quote(msg)
+    if ok:
+        return redirect(f"/?message={safe_msg}&type=success")
+    return redirect(f"/?message={urllib.parse.quote('Git 拉取失败：' + msg)}&type=warning")
+
+
+@app.route("/pull-push", methods=["POST"])
+def pull_then_push():
+    ok, msg = run_git_pull_then_push()
+    safe_msg = urllib.parse.quote(msg)
+    if ok:
+        return redirect(f"/?message={safe_msg}&type=success")
+    return redirect(f"/?message={urllib.parse.quote('Git 拉取后推送失败：' + msg)}&type=warning")
 
 
 @app.route("/push", methods=["POST"])
