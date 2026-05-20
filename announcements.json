@@ -1,5 +1,11 @@
 [
   {
+    "title": "📰 《明日方舟》制作组通讯#65期",
+    "content": "https://ak.hypergryph.com/news/2823",
+    "date": "2026-05-21",
+    "category": "明日方舟"
+  },
+  {
     "title": "公告部分更新修复",
     "date": "2026-05-20",
     "category": "更新",
@@ -7,12 +13,6 @@
     "image": "",
     "important": false,
     "pinOrder": 999999
-  },
-  {
-    "title": "📰 《明日方舟》制作组通讯#65期",
-    "content": "https://ak.hypergryph.com/news/2823",
-    "date": "2026-05-21",
-    "category": "明日方舟"
   },
   {
     "title": "资源报告页面显示体验优化",
