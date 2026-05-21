@@ -76,14 +76,14 @@
     "date": "2026-05-20",
     "time": "2026-05-20 21:37:48",
     "channel": "@TESTJACKIE3137",
-    "text": "26.5.18\n【生息演算：重启锚点】合成制作配方表一览\n作者：b站@梦境触感\n视频：BV1SgLE6VEmQ",
+    "text": "26.5.18\r\n【生息演算：重启锚点】合成制作配方表一览\r\n作者：b站@梦境触感\r\n视频：BV1SgLE6VEmQ",
     "image": "https://telegram.jackie3137.xyz/AgADvB296/Thunder%20File%20To%20Link_20260520213759.jpg",
     "images": [
-      "https://telegram.jackie3137.xyz/AgADvB296/Thunder%20File%20To%20Link_20260520213759.jpg",
-      "https://telegram.jackie3137.xyz/AgADvR298/Thunder%20File%20To%20Link_20260520213807.jpg",
-      "https://telegram.jackie3137.xyz/AgADvh300/Thunder%20File%20To%20Link_20260520213816.jpg",
-      "https://telegram.jackie3137.xyz/AgADvx302/Thunder%20File%20To%20Link_20260520213824.jpg"
-    ]
+      "https://telegram.jackie3137.xyz/AgADvB296/Thunder%20File%20To%20Link_20260520213759.jpg"
+    ],
+    "category": "资源更新",
+    "important": true,
+    "pinOrder": 2
   },
   {
     "id": 150,
@@ -224,11 +224,14 @@
     "date": "2026-05-19",
     "time": "2026-05-19 17:38:33",
     "channel": "@TESTJACKIE3137",
-    "text": "#明日方舟终末地##寻遗散记#\n亲爱的管理员，在此为大家带来关于未来内容的最新情报。\n我们将于5月22日19:30发布《明日方舟：终末地》「寻遗散记」版本前瞻预告节目，届时将为大家带来最新的开发进展与即将上线的新版本内容介绍。\n视频将介绍新增干员、未来版本更新内容以及优化内容。感谢大家一直以来的支持与陪伴，诚邀各位管理员一同观看。",
+    "text": "#明日方舟终末地##寻遗散记#\r\n亲爱的管理员，在此为大家带来关于未来内容的最新情报。\r\n我们将于5月22日19:30发布《明日方舟：终末地》「寻遗散记」版本前瞻预告节目，届时将为大家带来最新的开发进展与即将上线的新版本内容介绍。\r\n视频将介绍新增干员、未来版本更新内容以及优化内容。感谢大家一直以来的支持与陪伴，诚邀各位管理员一同观看。",
     "image": "https://raw.githubusercontent.com/Jackie751/announcement/main/arktips_images/2026-05-19_149.jpg",
     "images": [
       "https://raw.githubusercontent.com/Jackie751/announcement/main/arktips_images/2026-05-19_149.jpg"
-    ]
+    ],
+    "category": "活动",
+    "important": true,
+    "pinOrder": 1
   },
   {
     "id": 7100,
