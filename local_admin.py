@@ -16,10 +16,13 @@ JSON_FILES = {
     "announcements": BASE_DIR / "announcements.json",
     "arktips":       BASE_DIR / "arktips.json",
 }
+
 BACKUP_DIR = BASE_DIR / "json_backups"
+
 
 def get_json_file(file_key="announcements"):
     return JSON_FILES.get(file_key, JSON_FILES["announcements"])
+
 
 def ensure_files(json_file=None):
     BACKUP_DIR.mkdir(exist_ok=True)
@@ -28,6 +31,7 @@ def ensure_files(json_file=None):
     if not json_file.exists():
         json_file.parent.mkdir(parents=True, exist_ok=True)
         json_file.write_text("[]", encoding="utf-8")
+
 
 def backup_json(json_file=None):
     if json_file is None:
@@ -38,65 +42,87 @@ def backup_json(json_file=None):
     shutil.copy2(json_file, backup_path)
     return backup_path
 
+
 def load_data(json_file=None):
     if json_file is None:
         json_file = get_json_file()
+
     ensure_files(json_file)
     text = json_file.read_text(encoding="utf-8").strip()
+
     if not text:
         return [], "list"
+
     try:
         raw = json.loads(text)
     except json.JSONDecodeError as e:
         return [], f"broken: {e}"
+
     if isinstance(raw, list):
         return raw, "list"
+
     if isinstance(raw, dict) and isinstance(raw.get("announcements"), list):
         return raw["announcements"], "dict_announcements"
+
     return [], "unknown"
+
 
 def save_data(items, json_file=None):
     if json_file is None:
         json_file = get_json_file()
+
     ensure_files(json_file)
     backup_json(json_file)
+
     _, mode = load_data(json_file)
+
     if mode == "dict_announcements":
         output = {"announcements": items}
     else:
         output = items
+
     json_file.write_text(
         json.dumps(output, ensure_ascii=False, indent=2),
         encoding="utf-8"
     )
 
+
 def parse_bool(value):
     return value in ("on", "true", "True", "1", 1, True)
+
 
 def parse_pin_order(value):
     value = str(value or "").strip()
     if not value:
         return 999999
+
     try:
         num = int(value)
         return num if num > 0 else 999999
     except ValueError:
         return 999999
 
+
 def run_cmd(args, cwd=None):
     result = subprocess.run(
-        args, cwd=str(cwd or BASE_DIR),
-        capture_output=True, text=True, shell=False
+        args,
+        cwd=str(cwd or BASE_DIR),
+        capture_output=True,
+        text=True,
+        shell=False
     )
     output = ((result.stdout or "") + "\n" + (result.stderr or "")).strip()
     return result.returncode == 0, output
 
+
 def ensure_gitignore():
     gitignore = BASE_DIR / ".gitignore"
     line = "json_backups/"
+
     if gitignore.exists():
         text = gitignore.read_text(encoding="utf-8", errors="ignore")
         lines = [x.strip() for x in text.splitlines()]
+
         if line not in lines:
             with gitignore.open("a", encoding="utf-8") as f:
                 if text and not text.endswith("\n"):
@@ -105,80 +131,147 @@ def ensure_gitignore():
     else:
         gitignore.write_text(line + "\n", encoding="utf-8")
 
+
 def get_current_branch():
-    ok, out = run_cmd(["git", "rev-parse", "--abbrev-ref", "HEAD"])
-    if ok and out:
-        return out.splitlines()[0].strip()
+    """
+    获取当前分支名。
+
+    修复点：
+    之前使用 git rev-parse --abbrev-ref HEAD。
+    如果仓库处于 detached HEAD 状态，它会返回 HEAD，
+    然后程序会执行 git push origin HEAD，导致 Git 报：
+
+    The destination you provided is not a full refname
+
+    现在优先使用 git branch --show-current。
+    如果取不到分支，就默认推 main。
+    """
+    ok, out = run_cmd(["git", "branch", "--show-current"])
+    branch = out.strip() if ok and out else ""
+
+    if branch and branch != "HEAD":
+        return branch
+
     return "main"
+
+
+def git_push_current_head_to_branch(branch):
+    """
+    明确把当前 HEAD 推送到远程分支。
+
+    等价于：
+    git push origin HEAD:refs/heads/main
+
+    这样即使本地处于 detached HEAD，也不会再出现 full refname 错误。
+    """
+    return run_cmd(["git", "push", "origin", f"HEAD:refs/heads/{branch}"])
+
 
 def commit_local_changes_if_any():
     ensure_gitignore()
+
     ok, out = run_cmd(["git", "add", "-A"])
     if not ok:
         return False, "git add 失败：\n" + out
+
     msg = f"Update {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
     ok_commit, commit_out = run_cmd(["git", "commit", "-m", msg])
+
     text = (commit_out or "").lower()
+
     if ok_commit:
         return True, "已提交本地修改。"
-    nothing_cases = ["nothing to commit", "no changes added to commit", "nothing added to commit"]
+
+    nothing_cases = [
+        "nothing to commit",
+        "no changes added to commit",
+        "nothing added to commit"
+    ]
+
     if any(x in text for x in nothing_cases):
         return True, "没有新的本地修改需要提交。"
+
     return False, "git commit 失败：\n" + commit_out
+
 
 def run_git_pull_only():
     ok, out = run_cmd(["git", "rev-parse", "--is-inside-work-tree"])
     if not ok or "true" not in out.lower():
         return False, f"当前目录不是 Git 仓库：{BASE_DIR}"
+
     branch = get_current_branch()
+
     ok_commit, commit_msg = commit_local_changes_if_any()
     if not ok_commit:
         return False, commit_msg
+
     ok_pull, pull_out = run_cmd(["git", "pull", "--rebase", "origin", branch])
     if not ok_pull:
         return False, "拉取失败：\n" + pull_out
+
     return True, f"已拉取远程 origin/{branch}。"
+
 
 def run_git_pull_then_push():
     ok, out = run_cmd(["git", "rev-parse", "--is-inside-work-tree"])
     if not ok or "true" not in out.lower():
         return False, f"当前目录不是 Git 仓库：{BASE_DIR}"
+
     branch = get_current_branch()
+
     ok_commit, commit_msg = commit_local_changes_if_any()
     if not ok_commit:
         return False, commit_msg
+
     ok_pull, pull_out = run_cmd(["git", "pull", "--rebase", "origin", branch])
     if not ok_pull:
         return False, "git pull --rebase 失败：\n" + pull_out
-    ok_push, push_out = run_cmd(["git", "push", "origin", branch])
+
+    ok_push, push_out = git_push_current_head_to_branch(branch)
     if not ok_push:
         return False, "git push 失败：\n" + push_out
+
     return True, f"已完成：提交 → 拉取 origin/{branch} → 推送。"
+
 
 def run_git_push():
     try:
         ok, out = run_cmd(["git", "rev-parse", "--is-inside-work-tree"])
         if not ok or "true" not in out.lower():
             return False, "当前目录不是 Git 仓库。"
+
         ensure_gitignore()
+
         branch = get_current_branch()
+
         ok, out = run_cmd(["git", "add", "."])
         if not ok:
             return False, "git add 失败：\n" + out
+
         commit_msg = f"Update {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
         ok_commit, commit_out = run_cmd(["git", "commit", "-m", commit_msg])
-        commit_text = commit_out.lower()
+
+        commit_text = (commit_out or "").lower()
+
         if not ok_commit:
-            nothing_cases = ["nothing to commit", "no changes added to commit", "nothing added to commit"]
+            nothing_cases = [
+                "nothing to commit",
+                "no changes added to commit",
+                "nothing added to commit"
+            ]
             if not any(x in commit_text for x in nothing_cases):
                 return False, "git commit 失败：\n" + commit_out
+
         ok_pull, pull_out = run_cmd(["git", "pull", "--rebase", "origin", branch])
         if not ok_pull:
             return False, "git pull --rebase 失败：\n" + pull_out
-        ok_push, push_out = run_cmd(["git", "push", "origin", branch])
+
+        ok_push, push_out = git_push_current_head_to_branch(branch)
         if not ok_push:
             return False, "git push 失败：\n" + push_out
+
         return True, f"已推送到 origin/{branch}。"
+
     except FileNotFoundError:
         return False, "找不到 git，请安装 Git 并加入 PATH。"
     except Exception as e:
@@ -200,7 +293,7 @@ body{font-family:"Microsoft YaHei",Arial,sans-serif;background:#0f0f1e;color:#f0
 .file-path{font-family:Consolas,monospace;font-size:12px;color:#6688aa;margin-top:3px;}
 .switch-btn{display:inline-flex;align-items:center;gap:6px;padding:7px 16px;border-radius:999px;background:rgba(180,126,255,.15);border:1px solid rgba(180,126,255,.4);color:#d0a0ff;font-size:13px;font-weight:600;text-decoration:none;transition:all .2s;}
 .switch-btn:hover{background:rgba(180,126,255,.28);border-color:#b47eff;color:#fff;}
-.msg{padding:11px 16px;border-radius:10px;margin-bottom:16px;font-size:14px;}
+.msg{padding:11px 16px;border-radius:10px;margin-bottom:16px;font-size:14px;white-space:pre-wrap;}
 .success{background:#0d2b18;border:1px solid #1e6b36;color:#7fffaa;}
 .warning{background:#2b1e08;border:1px solid #7a4a00;color:#ffd166;}
 .panel{background:#181830;border:1px solid #2a2a4a;border-radius:16px;padding:22px;margin-bottom:20px;}
@@ -460,11 +553,25 @@ def render_page(message="", message_type="success", edit_index=None, file_key="a
     editing = edit_index is not None and 0 <= edit_index < len(items)
 
     if file_key == "arktips":
-        default_item = {"channel": "", "date": str(date.today()), "text": "",
-                        "image": "", "category": "活动", "important": False, "pinOrder": 999999}
+        default_item = {
+            "channel": "",
+            "date": str(date.today()),
+            "text": "",
+            "image": "",
+            "category": "活动",
+            "important": False,
+            "pinOrder": 999999
+        }
     else:
-        default_item = {"title": "", "date": str(date.today()), "category": "更新",
-                        "content": "", "image": "", "important": False, "pinOrder": 999999}
+        default_item = {
+            "title": "",
+            "date": str(date.today()),
+            "category": "更新",
+            "content": "",
+            "image": "",
+            "important": False,
+            "pinOrder": 999999
+        }
 
     edit_item = items[edit_index] if editing else default_item
 
@@ -512,7 +619,7 @@ def add():
             "time":      datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             "text":      request.form.get("text", "").strip(),
             "image":     request.form.get("image", "").strip(),
-            "images":    [request.form.get("image","").strip()] if request.form.get("image","").strip() else [],
+            "images":    [request.form.get("image", "").strip()] if request.form.get("image", "").strip() else [],
             "category":  request.form.get("category", "活动").strip(),
             "important": parse_bool(request.form.get("important")),
             "pinOrder":  parse_pin_order(request.form.get("pinOrder")),
@@ -530,6 +637,7 @@ def add():
 
     items.insert(0, item)
     save_data(items, json_file)
+
     msg = urllib.parse.quote(f"已保存到 {json_file.name}。")
     return redirect(f"/?message={msg}&type=success&file={file_key}")
 
@@ -589,6 +697,7 @@ def update(index):
         }
 
     save_data(items, json_file)
+
     msg = urllib.parse.quote("已修改并保存。")
     return redirect(f"/?message={msg}&type=success&file={file_key}")
 
@@ -606,6 +715,7 @@ def delete(index):
     if 0 <= index < len(items):
         items.pop(index)
         save_data(items, json_file)
+
         msg = urllib.parse.quote("已删除，并已自动备份。")
         return redirect(f"/?message={msg}&type=success&file={file_key}")
 
@@ -618,8 +728,10 @@ def pull_remote():
     file_key = request.args.get("file", "announcements")
     ok, msg = run_git_pull_only()
     safe_msg = urllib.parse.quote(msg)
+
     if ok:
         return redirect(f"/?message={safe_msg}&type=success&file={file_key}")
+
     return redirect(f"/?message={urllib.parse.quote('Git 拉取失败：' + msg)}&type=warning&file={file_key}")
 
 
@@ -628,8 +740,10 @@ def pull_then_push():
     file_key = request.args.get("file", "announcements")
     ok, msg = run_git_pull_then_push()
     safe_msg = urllib.parse.quote(msg)
+
     if ok:
         return redirect(f"/?message={safe_msg}&type=success&file={file_key}")
+
     return redirect(f"/?message={urllib.parse.quote('Git 操作失败：' + msg)}&type=warning&file={file_key}")
 
 
@@ -638,14 +752,18 @@ def push():
     file_key = request.args.get("file", "announcements")
     ok, msg = run_git_push()
     safe_msg = urllib.parse.quote(msg)
+
     if ok:
         return redirect(f"/?message={safe_msg}&type=success&file={file_key}")
+
     return redirect(f"/?message={urllib.parse.quote('Git 推送失败：' + msg)}&type=warning&file={file_key}")
 
 
 if __name__ == "__main__":
     url = "http://127.0.0.1:5000"
+
     def open_browser():
         webbrowser.open(url)
+
     threading.Timer(1.2, open_browser).start()
     app.run(host="127.0.0.1", port=5000, debug=False)
