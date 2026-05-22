@@ -11,7 +11,8 @@
     "images": [],
     "category": "活动",
     "important": false,
-    "pinOrder": 999999
+    "pinOrder": 999999,
+    "pinExpiry": ""
   },
   {
     "id": 128137,
@@ -27,7 +28,8 @@
     ],
     "category": "活动",
     "important": false,
-    "pinOrder": 999999
+    "pinOrder": 999999,
+    "pinExpiry": ""
   },
   {
     "id": 128136,
@@ -44,7 +46,8 @@
     ],
     "category": "活动",
     "important": false,
-    "pinOrder": 999999
+    "pinOrder": 999999,
+    "pinExpiry": ""
   },
   {
     "id": 7143,
@@ -66,7 +69,8 @@
     ],
     "category": "活动",
     "important": false,
-    "pinOrder": 999999
+    "pinOrder": 999999,
+    "pinExpiry": ""
   },
   {
     "id": 128134,
@@ -82,7 +86,8 @@
     ],
     "category": "活动",
     "important": false,
-    "pinOrder": 999999
+    "pinOrder": 999999,
+    "pinExpiry": ""
   },
   {
     "id": 222,
@@ -98,7 +103,8 @@
     ],
     "category": "活动",
     "important": false,
-    "pinOrder": 999999
+    "pinOrder": 999999,
+    "pinExpiry": ""
   },
   {
     "id": 221,
@@ -117,7 +123,8 @@
     ],
     "category": "活动",
     "important": true,
-    "pinOrder": 2
+    "pinOrder": 2,
+    "pinExpiry": ""
   },
   {
     "id": 217,
@@ -136,7 +143,8 @@
     ],
     "category": "资源更新",
     "important": true,
-    "pinOrder": 3
+    "pinOrder": 3,
+    "pinExpiry": ""
   },
   {
     "id": 7136,
@@ -147,7 +155,13 @@
     "image": "https://raw.githubusercontent.com/Jackie751/announcement/main/arktips_images/2026-05-21_7136.jpg",
     "images": [
       "https://raw.githubusercontent.com/Jackie751/announcement/main/arktips_images/2026-05-21_7136.jpg"
-    ]
+    ],
+    "pinExpiry": "",
+    "category": "活动",
+    "important": false,
+    "pinOrder": 999999,
+    "title": "「Concerto」鸣潮二周年线上特别画展 | 千咲\n\n“漂泊者，你在学院的这段时间，我很开心。不知",
+    "content": "「Concerto」鸣潮二周年线上特别画展 | 千咲\n\n“漂泊者，你在学院的这段时间，我很开心。不知道你什么时候会离开拉海洛......嗯，希望你一切顺利。我想无论未来面对何等困境，你都会有直面并打破的勇气。”\n\n感谢画师jura的精彩创作！\n\n※本次画展中涉及的内容均为同人创作，不代表游戏内实际剧情和设定。\n\nsource @MCKURO"
   },
   {
     "id": 7135,
@@ -158,7 +172,13 @@
     "image": "https://raw.githubusercontent.com/Jackie751/announcement/main/arktips_images/2026-05-21_7135.jpg",
     "images": [
       "https://raw.githubusercontent.com/Jackie751/announcement/main/arktips_images/2026-05-21_7135.jpg"
-    ]
+    ],
+    "pinExpiry": "",
+    "category": "活动",
+    "important": false,
+    "pinOrder": 999999,
+    "title": "《鸣潮》先约电台EP3.3——达妮娅《直到下次再见》 \n\n《鸣潮》先约电台EP3.3——达妮娅《直到",
+    "content": "《鸣潮》先约电台EP3.3——达妮娅《直到下次再见》 \n\n《鸣潮》先约电台EP3.3——达妮娅《直到下次再见（Dasvidaniya）》\n生日快乐，达妮娅。\n《鸣潮》先约电台EP3.3——达妮娅《直到下次再见（Dasvidaniya）》现已正式上架QQ音乐、酷狗音乐、酷我音乐、网易云音乐等平台,欢迎漂泊者前往收听！\n出品：鸣潮先约电台\n演唱：Cxssidy\n制作人：Crywolf\n作曲：Justin Phillips\n作词：Justin Phillips, Cxssidy\n编曲：Justin Phillips\n伴唱：Naïa Evergreen\n混音/母带：James Lancaster\n音乐监制：Steven Tang, SmileL, ShawWZ\n\nsource @MCKURO"
   },
   {
     "id": 7134,
@@ -169,7 +189,13 @@
     "image": "https://raw.githubusercontent.com/Jackie751/announcement/main/arktips_images/2026-05-21_7134.jpg",
     "images": [
       "https://raw.githubusercontent.com/Jackie751/announcement/main/arktips_images/2026-05-21_7134.jpg"
-    ]
+    ],
+    "pinExpiry": "",
+    "category": "活动",
+    "important": false,
+    "pinOrder": 999999,
+    "title": "「Concerto」鸣潮二周年线上特别画展 | 仇远\n\n“刀不问是非，只问该不该出鞘。我仍在江湖行走",
+    "content": "「Concerto」鸣潮二周年线上特别画展 | 仇远\n\n“刀不问是非，只问该不该出鞘。我仍在江湖行走，若有机会，再并肩一程。”\n\n感谢画师kei的精彩创作！\n\n※本次画展中涉及的内容均为同人创作，不代表游戏内实际剧情和设定。\n\nsource @MCKURO"
   },
   {
     "id": 7133,
@@ -186,7 +212,13 @@
       "https://telegram.jackie3137.xyz/AgADTx312/Thunder%20File%20To%20Link_20260521030317.jpg",
       "https://telegram.jackie3137.xyz/AgADMR314/99bf83da46d14d0e858c4d340cb052cc20260520.mp4",
       "https://telegram.jackie3137.xyz/AgADMh316/b217a74e14024323bda6797d5d9266b820250328.mp4"
-    ]
+    ],
+    "pinExpiry": "",
+    "category": "活动",
+    "important": false,
+    "pinOrder": 999999,
+    "title": "【有奖活动】达妮娅表情包征集活动启动！\n\n漂！泊！者！好！欢迎达妮娅登场啦！\n豚仔这次带来了达妮娅表",
+    "content": "【有奖活动】达妮娅表情包征集活动启动！\n\n漂！泊！者！好！欢迎达妮娅登场啦！\n豚仔这次带来了达妮娅表情包的征集活动呢嘿嘿，快来帮达妮娅绘制不同的表情包吧，豚仔准备了好多星声周边奖励等你来拿~\n\n达妮娅表情包征集活动正式开启啦！绘制达妮娅表情包并前往同人版区参与活动投稿就有机会获得本豚准备的精彩好礼噜噜噜！\n\n2026年5月21日~6月7日23:59\n\n活动期间，在鸣潮同人版区发布符合达妮娅角色的表情包原创帖，并带上达妮娅表情包话题，即可成功参与活动投稿！\n豚仔小贴士：参与活动投稿发布作品时请注意勾选【声明原创】选项噢！\n\n活动结束后，豚仔将从所有符合活动规则的投稿作品中，根据投稿作品主题、完成度、色彩、人气等多个维度综合评选出获奖作品，并送出以下奖品：\n【一等奖3名】\n星声*1500+达妮娅专属周边*1+鸣潮爱弥斯环宇穹音主题礼盒*1+鸣潮共鸣者主题毛绒趴趴玩偶（随机款）*1+鸣潮共鸣者主题金属纪念币（随机款）*1\n【二等奖5名】\n星声*800+达妮娅专属周边*1+鸣潮共鸣者主题毛绒趴趴玩偶（随机款）*1+鸣潮共鸣者主题金属纪念币（随机款）*1\n【三等奖10名】\n星声*500+达妮娅专属周边*1\n【参与奖】\n库街区 -《鸣潮》达妮娅角色头像挂件（42天）\n\n（1）参与活动即视为您同意我们拥有在线上、线下传播并使用您发布的投稿作品的权利。包括但不限于《鸣潮》官网、外部社区平台、库街区表情包功能等平台使用。如确认使用，我们会再次联系您获取表情包详细信息噢~表情包实装效果以最终上架效果为准。\n（2）漂泊者可以多次参与本活动，但禁止相同投稿刷屏的行为，每位漂泊者至多获得一个奖项，奖励不可叠加；若出现同一作品多平台投稿且均获奖，最终核实后按首发平台的奖励发放（仅发放一份奖励）。\n（3）发布内容务必遵守社区规范，请勿发布违反法律法规及社区版规的内容。\n（4）禁止使用非正当手段破坏活动公平性，例如通过雇佣水军刷赞、刷评论等方式增加热度等。\n（5）获奖名单将于活动结束后45个工作日内公布，奖品将于获奖名单公布后60个工作日内发放。部分奖项可能出现获奖名额空缺的情形。\n\nsource @MCKURO #表情包"
   },
   {
     "id": 7126,
@@ -197,7 +229,13 @@
     "image": "https://raw.githubusercontent.com/Jackie751/announcement/main/arktips_images/2026-05-21_7126.jpg",
     "images": [
       "https://raw.githubusercontent.com/Jackie751/announcement/main/arktips_images/2026-05-21_7126.jpg"
-    ]
+    ],
+    "pinExpiry": "",
+    "category": "活动",
+    "important": false,
+    "pinOrder": 999999,
+    "title": "“我不太擅长战斗啦......可以申请偷懒吗？”\n\n“我不太擅长战斗啦......可以申请偷懒吗？”",
+    "content": "“我不太擅长战斗啦......可以申请偷懒吗？”\n\n“我不太擅长战斗啦......可以申请偷懒吗？”\n\nsource @MCKURO"
   },
   {
     "id": 7125,
@@ -208,7 +246,13 @@
     "image": "https://raw.githubusercontent.com/Jackie751/announcement/main/arktips_images/2026-05-21_7125.jpg",
     "images": [
       "https://raw.githubusercontent.com/Jackie751/announcement/main/arktips_images/2026-05-21_7125.jpg"
-    ]
+    ],
+    "pinExpiry": "",
+    "category": "活动",
+    "important": false,
+    "pinOrder": 999999,
+    "title": "「Concerto」鸣潮二周年线上特别画展 | 嘉贝莉娜\n\n“狩猎之余，别忘记吃点好吃的放松一下，下",
+    "content": "「Concerto」鸣潮二周年线上特别画展 | 嘉贝莉娜\n\n“狩猎之余，别忘记吃点好吃的放松一下，下次再见，别忘了再帮我分摊这一大杯冰淇淋。”\n\n感谢画师Maenoo的精彩创作！\n\n※本次画展中涉及的内容均为同人创作，不代表游戏内实际剧情和设定。\n\nsource @MCKURO"
   },
   {
     "id": 150,
@@ -219,7 +263,13 @@
     "image": "https://telegram.jackie3137.xyz/AgADjg260/Thunder%20File%20To%20Link_20260520152055.jpg",
     "images": [
       "https://telegram.jackie3137.xyz/AgADjg260/Thunder%20File%20To%20Link_20260520152055.jpg"
-    ]
+    ],
+    "pinExpiry": "",
+    "category": "活动",
+    "important": false,
+    "pinOrder": 999999,
+    "title": "【常驻标准寻访】\n起止时间：5月21日04:00 ~ 6月4日03:59\n寻访说明：常驻标准寻访更新",
+    "content": "【常驻标准寻访】\n起止时间：5月21日04:00 ~ 6月4日03:59\n寻访说明：常驻标准寻访更新，该寻访中以下干员获得概率提升；\n★★★★★★：薇薇安娜 / 圣约送葬人（占6★出率的50%）\n★★★★★：录武官 / 海霓 / 洋灰（占5★出率的50%）\n*本次寻访期间，以下干员可于凭证交易所内使用高级凭证兑换：圣约送葬人、海霓\n\n更多后续活动内容及最新消息请关注《明日方舟》游戏内公告，感谢大家的支持"
   },
   {
     "id": 7124,
@@ -230,7 +280,13 @@
     "image": "https://raw.githubusercontent.com/Jackie751/announcement/main/arktips_images/2026-05-20_7124.jpg",
     "images": [
       "https://raw.githubusercontent.com/Jackie751/announcement/main/arktips_images/2026-05-20_7124.jpg"
-    ]
+    ],
+    "pinExpiry": "",
+    "category": "活动",
+    "important": false,
+    "pinOrder": 999999,
+    "title": "小团快跑·锦标赛总决赛最后三位团子选手确认！\n\n小团快跑·锦标赛总决赛最后三位团子选手确认！恭喜新晋",
+    "content": "小团快跑·锦标赛总决赛最后三位团子选手确认！\n\n小团快跑·锦标赛总决赛最后三位团子选手确认！恭喜新晋级的三位团子选手！\n小团快跑·锦标赛总决赛将于5月23日正式举行，明日也将为漂泊者们奉上精彩的谢幕赛，还请漂泊者继续为支持的团子选手应援哦！\n\nsource @MCKURO"
   },
   {
     "id": 7123,
@@ -241,7 +297,13 @@
     "image": "https://raw.githubusercontent.com/Jackie751/announcement/main/arktips_images/2026-05-20_7123.jpg",
     "images": [
       "https://raw.githubusercontent.com/Jackie751/announcement/main/arktips_images/2026-05-20_7123.jpg"
-    ]
+    ],
+    "pinExpiry": "",
+    "category": "活动",
+    "important": false,
+    "pinOrder": 999999,
+    "title": "「Concerto」鸣潮二周年线上特别画展 | 尤诺\n\n“空白之人，你现在……在做什么呢？今夜，我这",
+    "content": "「Concerto」鸣潮二周年线上特别画展 | 尤诺\n\n“空白之人，你现在……在做什么呢？今夜，我这里很热闹，远处的月亮也亮得刚刚好，这种时候，要是你也能在……果然，是你的话，约定好的重逢还是意料外的惊喜，怎样我都不介意。给你的手镯要好好爱惜哦，弄丢了就没有第二个了。”\n\n感谢画师Criin的精彩创作！\n\n※本次画展中涉及的内容均为同人创作，不代表游戏内实际剧情和设定。\n\nsource @MCKURO"
   },
   {
     "id": 7122,
@@ -255,7 +317,10 @@
     ],
     "category": "活动",
     "important": true,
-    "pinOrder": 3
+    "pinOrder": 3,
+    "pinExpiry": "",
+    "title": "《鸣潮》3.3版本近期活动汇总\r\n\r\n为漂泊者带来3.3版本即将开启的活动资讯，欢迎漂泊者查看！\r\n",
+    "content": "《鸣潮》3.3版本近期活动汇总\r\n\r\n为漂泊者带来3.3版本即将开启的活动资讯，欢迎漂泊者查看！\r\n\r\nsource @MCKURO #活动汇总"
   },
   {
     "id": 7112,
@@ -270,7 +335,13 @@
       "https://raw.githubusercontent.com/Jackie751/announcement/main/arktips_images/2026-05-20_7109.jpg",
       "https://raw.githubusercontent.com/Jackie751/announcement/main/arktips_images/2026-05-20_7110.jpg",
       "https://raw.githubusercontent.com/Jackie751/announcement/main/arktips_images/2026-05-20_7112.jpg"
-    ]
+    ],
+    "pinExpiry": "",
+    "category": "活动",
+    "important": false,
+    "pinOrder": 999999,
+    "title": "活动预告 | <深坠异想奇境・异构绮梦> 限时战斗活动\n\n✦活动时间✦\n2026年5月21日10:0",
+    "content": "活动预告 | <深坠异想奇境・异构绮梦> 限时战斗活动\n\n✦活动时间✦\n2026年5月21日10:00 ~ 2026年6月7日03:59（服务器时间）\n\n✦奖励内容✦\n星声*800、「绮梦织者」*1（活动称号）、特级调谐器、特级共鸣促剂、特级密音筒、特级能源核心、贝币，以及其他养成材料等。\n\nsource @MCKURO"
   },
   {
     "id": 7106,
@@ -281,7 +352,13 @@
     "image": "https://raw.githubusercontent.com/Jackie751/announcement/main/arktips_images/2026-05-20_7106.jpg",
     "images": [
       "https://raw.githubusercontent.com/Jackie751/announcement/main/arktips_images/2026-05-20_7106.jpg"
-    ]
+    ],
+    "pinExpiry": "",
+    "category": "活动",
+    "important": false,
+    "pinOrder": 999999,
+    "title": "「Concerto」鸣潮二周年线上特别画展 | 奥古斯塔\n\n“远方的挚友，见字如面。自与你并肩渡过那",
+    "content": "「Concerto」鸣潮二周年线上特别画展 | 奥古斯塔\n\n“远方的挚友，见字如面。自与你并肩渡过那场风波后，七丘一切安好。不知你那边近况如何？愿你旅途顺遂，前路坦荡。要是路上遇到什么难处，尽管开口。挚友相召，我定会跨山越海前来相助。”\n\n感谢画师Z1NhAN的精彩创作！\n\n※本次画展中涉及的内容均为同人创作，不代表游戏内实际剧情和设定。\n\nsource @MCKURO"
   },
   {
     "id": 7105,
@@ -292,7 +369,13 @@
     "image": "https://raw.githubusercontent.com/Jackie751/announcement/main/arktips_images/2026-05-20_7105.jpg",
     "images": [
       "https://raw.githubusercontent.com/Jackie751/announcement/main/arktips_images/2026-05-20_7105.jpg"
-    ]
+    ],
+    "pinExpiry": "",
+    "category": "活动",
+    "important": false,
+    "pinOrder": 999999,
+    "title": "《鸣潮》先约电台EP3.3——达妮娅《坠入虚无》\n\n《鸣潮》先约电台EP3.3——达妮娅《坠入虚无（",
+    "content": "《鸣潮》先约电台EP3.3——达妮娅《坠入虚无》\n\n《鸣潮》先约电台EP3.3——达妮娅《坠入虚无（Decensus Ad Nihilum）》\n别低头看，别回头望，就让时间停止摆荡。\n《鸣潮》先约电台EP3.3——达妮娅《坠入虚无（Decensus Ad Nihilum）》现已正式上架QQ音乐、酷狗音乐、酷我音乐、网易云音乐等平台,欢迎漂泊者前往收听！\n出品： 鸣潮先约电台\n演唱： Kahoca from Empty Old City\n制作人：Crywolf\n作曲：Justin Phillips\n作词：Justin Phillips, Cxssidy\n编曲：Justin Phillips\n伴唱：Justin Phillips, Cxssidy\n混音/母带：James Lancaster\n音乐监制：Steven Tang, SmileL, ShawWZ\n\nsource @MCKURO"
   },
   {
     "id": 7104,
@@ -303,7 +386,13 @@
     "image": "https://raw.githubusercontent.com/Jackie751/announcement/main/arktips_images/2026-05-20_7104.jpg",
     "images": [
       "https://raw.githubusercontent.com/Jackie751/announcement/main/arktips_images/2026-05-20_7104.jpg"
-    ]
+    ],
+    "pinExpiry": "",
+    "category": "活动",
+    "important": false,
+    "pinOrder": 999999,
+    "title": "【3.3版本】[角色/武器活动唤取・第二期]\n\n「予明日以谎言」、「曙暮一线之间」、「挽歌永不落幕」",
+    "content": "【3.3版本】[角色/武器活动唤取・第二期]\n\n「予明日以谎言」、「曙暮一线之间」、「挽歌永不落幕」角色活动唤取，「赝作的矮星」、「昙切」、「幽冥的忘忧章」武器活动唤取限时开启！\n✦活动时间：2026年5月21日10:00 ~ 2026年6月7日11:59（服务器时间）\n✦更多活动详细说明，请前往游戏内【唤取】界面查看。\n\nsource @MCKURO"
   },
   {
     "id": 7103,
@@ -319,7 +408,8 @@
     "content": "「赝作的矮星」武器活动唤取\r\n\r\n活动期间，5星武器「赝作的矮星」、4星武器「核熔星盘」「凋亡频移」「飞逝」唤取概率限时提升！\r\n\r\n✦活动时间✦\r\n2026年5月21日10:00 ~ 2026年6月7日11:59（服务器时间）\r\n\r\n✦开放条件✦\r\n- 联觉等级达到5级。\r\n- 或在潮汐任务「嘤鸣初相召」中完成实战检测。\r\n- 或通过【潮汐任务快速体验】功能，跟随指引到达对应潮汐任务节点。\r\n\r\n✦唤取说明✦\r\n- [浮声沉兵]归属于【武器活动唤取】。\r\n- 漂泊者可使用【铸潮波纹】进行唤取，至多10次唤取必获得至少1个4星或以上内容（内容包括角色和武器）。\r\n- 所有归属于【武器活动唤取】的活动共享5星保底机制，漂泊者未获得5星武器的保底计数将在任意【武器活动唤取】活动中合并计算，并在获得5星武器后重新计数。\r\n- 当唤取获得5星武器时，必定为UP武器「赝作的矮星」。\r\n- 活动期间UP武器「赝作的矮星」仅可在【武器活动唤取】中获得，活动结束后暂无获取途径。\r\n\r\n※更多活动详细说明，请前往游戏内【唤取】界面查看。\r\n\r\nsource @MCKURO",
     "category": "活动",
     "important": true,
-    "pinOrder": 4
+    "pinOrder": 4,
+    "pinExpiry": ""
   },
   {
     "id": 7102,
@@ -330,7 +420,13 @@
     "image": "https://raw.githubusercontent.com/Jackie751/announcement/main/arktips_images/2026-05-20_7102.jpg",
     "images": [
       "https://raw.githubusercontent.com/Jackie751/announcement/main/arktips_images/2026-05-20_7102.jpg"
-    ]
+    ],
+    "pinExpiry": "",
+    "category": "活动",
+    "important": false,
+    "pinOrder": 999999,
+    "title": "[予明日以谎言]角色活动唤取\n\n活动期间，5星角色「达妮娅」、4星角色「炽霞」「卜灵」「秧秧」唤取概",
+    "content": "[予明日以谎言]角色活动唤取\n\n活动期间，5星角色「达妮娅」、4星角色「炽霞」「卜灵」「秧秧」唤取概率限时提升！\n\n✦活动时间✦\n2026年5月21日10:00 ~ 2026年6月7日11:59（服务器时间）\n\n✦开放条件✦\n- 联觉等级达到5级。\n- 或在潮汐任务「嘤鸣初相召」中完成实战检测。\n- 或通过【潮汐任务快速体验】功能，跟随指引到达对应潮汐任务节点。\n\n✦唤取说明✦\n- [予明日以谎言]归属于【角色活动唤取】。漂泊者可使用【浮金波纹】进行唤取，至多10次唤取必获得至少1个4星或以上内容（内容包括角色和武器）。\n- 所有归属于【角色活动唤取】的活动共享5星保底机制，漂泊者未获得5星角色的保底计数将在任意【角色活动唤取】活动中合并计算，并在获得5星角色后重新计数。\n- 活动期间UP角色「达妮娅」仅可在[予明日以谎言]角色活动唤取中获得，活动结束后暂无获取途径。\n- 活动期间UP角色「达妮娅」的【回音频段】将会同步上架【余波珊瑚】商店，永久限购2次，唤取活动结束后将会下架。\n- 活动期间，【角色活动唤取】所UP角色将开放对应[初露峥嵘]角色试用活动，使用所选【试用角色】组成的队伍完成挑战即可领取奖励。\n\n※更多活动详细说明，请前往游戏内【唤取】界面查看。\n\nsource @MCKURO"
   },
   {
     "id": 7101,
@@ -341,7 +437,13 @@
     "image": "https://raw.githubusercontent.com/Jackie751/announcement/main/arktips_images/2026-05-20_7101.jpg",
     "images": [
       "https://raw.githubusercontent.com/Jackie751/announcement/main/arktips_images/2026-05-20_7101.jpg"
-    ]
+    ],
+    "pinExpiry": "",
+    "category": "活动",
+    "important": false,
+    "pinOrder": 999999,
+    "title": "星炬学院早间播报 | 高质量人类睡眠大赛\n\n哎？达妮娅评委怎么也跟着睡着了！\n\nsource @MC",
+    "content": "星炬学院早间播报 | 高质量人类睡眠大赛\n\n哎？达妮娅评委怎么也跟着睡着了！\n\nsource @MCKURO"
   },
   {
     "id": 7100,
@@ -352,6 +454,12 @@
     "image": "https://raw.githubusercontent.com/Jackie751/announcement/main/arktips_images/2026-05-19_7100.jpg",
     "images": [
       "https://raw.githubusercontent.com/Jackie751/announcement/main/arktips_images/2026-05-19_7100.jpg"
-    ]
+    ],
+    "pinExpiry": "",
+    "category": "活动",
+    "important": false,
+    "pinOrder": 999999,
+    "title": "「Concerto」鸣潮二周年线上特别画展 | 弗洛洛\n\n“收到这封信，很让人惊讶吗？没关系，像之前",
+    "content": "「Concerto」鸣潮二周年线上特别画展 | 弗洛洛\n\n“收到这封信，很让人惊讶吗？没关系，像之前那样做你最擅长的事吧。它不必被回复，我也不期待你的回复……”\n\n感谢画师水視zumi的精彩创作！\n\n※本次画展中涉及的内容均为同人创作，不代表游戏内实际剧情和设定。\n\nsource @MCKURO"
   }
 ]
