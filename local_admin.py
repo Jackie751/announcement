@@ -714,7 +714,8 @@ def update(index):
     old_item = items[index]
 
     if file_key == "arktips":
-        img = request.form.get("image", "").strip()
+        imgs_raw  = request.form.get("images", "").strip()
+        imgs      = [x.strip() for x in imgs_raw.splitlines() if x.strip()]
         raw_title = request.form.get("title", "").strip()
         raw_text  = request.form.get("text", "").strip()
         items[index] = {
