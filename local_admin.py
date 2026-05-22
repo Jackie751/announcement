@@ -371,6 +371,8 @@ textarea{min-height:160px;line-height:1.65;resize:vertical;}
       <input name="date" value="{{ edit_item.get('date', today) }}">
     </div>
   </div>
+  <label>标题 title（可留空，留空则取正文前50字）</label>
+  <input name="title" placeholder="自定义标题..." value="{{ edit_item.get('title', '') }}">
   <label>正文 text</label>
   <textarea name="text" placeholder="消息正文...">{{ edit_item.get('text', '') }}</textarea>
   <div class="row2">
@@ -673,11 +675,15 @@ def update(index):
 
     if file_key == "arktips":
         img = request.form.get("image", "").strip()
+        raw_title = request.form.get("title", "").strip()
+        raw_text  = request.form.get("text", "").strip()
         items[index] = {
             **old_item,
             "channel":   request.form.get("channel", "").strip(),
             "date":      request.form.get("date", "").strip(),
-            "text":      request.form.get("text", "").strip(),
+            "title":     raw_title if raw_title else raw_text[:50],
+            "text":      raw_text,
+            "content":   raw_text,
             "image":     img,
             "images":    [img] if img else old_item.get("images", []),
             "category":  request.form.get("category", "活动").strip(),
