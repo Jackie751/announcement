@@ -343,6 +343,46 @@ textarea{min-height:160px;line-height:1.65;resize:vertical;}
 .search-bar input:focus,.search-bar select:focus{outline:none;border-color:#6688ff;}
 .search-bar label{margin:0;color:#8899bb;font-size:12px;white-space:nowrap;}
 @media(max-width:700px){.row2{grid-template-columns:1fr;}.search-bar{flex-direction:column;}}
+
+/* 右下角导航 */
+#float-nav{
+  position:fixed;bottom:24px;right:24px;z-index:999;
+  display:flex;flex-direction:column;align-items:center;gap:8px;
+}
+.fnav-btn{
+  width:40px;height:40px;border-radius:50%;border:1px solid #334466;
+  background:rgba(10,10,30,.85);backdrop-filter:blur(10px);
+  color:#c0d8ff;font-size:16px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .2s;box-shadow:0 4px 14px rgba(0,0,0,.4);
+}
+.fnav-btn:hover{background:rgba(180,126,255,.25);border-color:#b47eff;color:#fff;}
+.fnav-jump{
+  display:flex;align-items:center;gap:4px;
+  background:rgba(10,10,30,.85);backdrop-filter:blur(10px);
+  border:1px solid #334466;border-radius:20px;
+  padding:4px 8px;
+}
+.fnav-jump input{
+  width:72px;
+  height:34px;
+  padding:6px 10px;
+  border-radius:10px;
+  border:1px solid #333355;
+  background:#0a0a1a;
+  color:#f0f0ff;
+  font-size:15px;
+  text-align:center;
+}
+.fnav-jump button{
+  width:28px;height:28px;border-radius:50%;border:none;
+  background:rgba(180,126,255,.2);color:#c0d8ff;
+  font-size:12px;cursor:pointer;transition:all .2s;
+}
+.fnav-jump button:hover{background:rgba(180,126,255,.4);color:#fff;}
+
+/* 快捷提取按钮 */
+.btn-extract{background:#a8edbe;color:#0a0a1a;font-size:12px;padding:6px 12px;}
 </style>
 </head>
 <body>
@@ -402,6 +442,13 @@ textarea{min-height:160px;line-height:1.65;resize:vertical;}
       <input type="number" name="pinOrder" min="1" placeholder="顺序（1最前）"
         value="{{ edit_item.get('pinOrder', '') if edit_item.get('pinOrder', 999999) != 999999 else '' }}">
     </div>
+    <div>
+      <label style="margin:0;color:#ff9966;font-size:12px;">⏰ 到期日</label>
+      <input type="date" name="pinExpiry"
+        value="{{ edit_item.get('pinExpiry', '') }}"
+        style="width:140px;padding:6px 10px;font-size:13px;">
+      <div class="hint">到期后自动取消置顶，留空永久有效</div>
+    </div>
   </div>
   <div class="btn-gap" style="margin-top:18px;">
     <button class="btn btn-save" type="submit">{% if editing %}💾 保存修改{% else %}✅ 保存{% endif %}</button>
@@ -450,6 +497,13 @@ textarea{min-height:160px;line-height:1.65;resize:vertical;}
       <input type="number" name="pinOrder" min="1" placeholder="顺序（1最前）"
         value="{{ edit_item.get('pinOrder', '') if edit_item.get('pinOrder', 999999) != 999999 else '' }}">
       <div class="hint">数字越小越靠前，不填则按时间排</div>
+    </div>
+    <div>
+      <label style="margin:0;color:#ff9966;font-size:12px;">⏰ 到期日</label>
+      <input type="date" name="pinExpiry"
+        value="{{ edit_item.get('pinExpiry', '') }}"
+        style="width:140px;padding:6px 10px;font-size:13px;">
+      <div class="hint">到期后自动取消置顶，留空永久有效</div>
     </div>
   </div>
   <div class="btn-gap" style="margin-top:18px;">
@@ -541,6 +595,10 @@ textarea{min-height:160px;line-height:1.65;resize:vertical;}
       <input type="hidden" name="file" value="{{ file_key }}">
       <button class="btn btn-del" type="submit">🗑 删除</button>
     </form>
+    <form method="post" action="/extract-title/{{ loop.index0 }}?file={{ file_key }}" style="margin:0;"
+          onsubmit="return confirm('确定将 content 第一段设为 title 并保存吗？')">
+      <button class="btn btn-extract" type="submit">⚡ 提取标题</button>
+    </form>
   </div>
 </div>
 {% else %}
@@ -549,7 +607,68 @@ textarea{min-height:160px;line-height:1.65;resize:vertical;}
 </div><!-- end card-list -->
 
 </div>
+
+<!-- 右下角导航 -->
+<div id="float-nav">
+  <button class="fnav-btn" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="回到顶部">↑</button>
+  <div class="fnav-jump">
+    <input type="number" id="jumpNum" min="1" placeholder="N" onkeydown="handleJumpEnter(event)">
+    <button onclick="jumpToCard()" title="跳到第N条">→</button>
+  </div>
+  <button class="fnav-btn" onclick="window.scrollTo({top:document.body.scrollHeight,behavior:'smooth'})" title="到底部">↓</button>
+</div>
+
 <script>
+function jumpToCard() {
+  const n = parseInt(document.getElementById('jumpNum').value);
+  if (!n || n < 1) return;
+  const cards = document.querySelectorAll('#cardList .card');
+  const visible = Array.from(cards).filter(c => c.style.display !== 'none');
+  const target = visible[n - 1];
+  if (target) target.scrollIntoView({behavior:'smooth', block:'center'});
+}
+
+function handleJumpEnter(event) {
+  if (event.key === 'Enter') {
+    event.preventDefault();
+    jumpToCard();
+  }
+}
+
+document.addEventListener('keydown', function(event) {
+  const key = event.key.toLowerCase();
+
+  const active = document.activeElement;
+  const tag = active && active.tagName ? active.tagName.toLowerCase() : '';
+  const isTyping =
+    tag === 'input' ||
+    tag === 'textarea' ||
+    tag === 'select' ||
+    (active && active.isContentEditable);
+
+  // 正在输入内容时，不拦截快捷键：
+  // Ctrl + A 仍然保留为“全选文字”，避免编辑公告时难用。
+  if (isTyping) return;
+
+  // Ctrl + A = 等于点击右下角向上按钮，回到顶部
+  if (event.ctrlKey && key === 'a') {
+    event.preventDefault();
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+  }
+
+  // Ctrl + D = 等于点击右下角向下按钮，到达底部
+  if (event.ctrlKey && key === 'd') {
+    event.preventDefault();
+    window.scrollTo({
+      top: document.body.scrollHeight,
+      behavior: 'smooth'
+    });
+  }
+});
+
 function filterCards() {
   const q    = document.getElementById('searchInput').value.toLowerCase();
   const d    = document.getElementById('dateInput').value.toLowerCase();
@@ -675,6 +794,7 @@ def add():
             "image":     request.form.get("image", "").strip(),
             "important": parse_bool(request.form.get("important")),
             "pinOrder":  parse_pin_order(request.form.get("pinOrder")),
+            "pinExpiry": request.form.get("pinExpiry", "").strip(),
         }
 
     items.insert(0, item)
@@ -730,6 +850,7 @@ def update(index):
             "category":  request.form.get("category", "活动").strip(),
             "important": parse_bool(request.form.get("important")),
             "pinOrder":  parse_pin_order(request.form.get("pinOrder")),
+            "pinExpiry": request.form.get("pinExpiry", "").strip(),
         }
     else:
         items[index] = {
@@ -741,6 +862,7 @@ def update(index):
             "image":     request.form.get("image", "").strip(),
             "important": parse_bool(request.form.get("important")),
             "pinOrder":  parse_pin_order(request.form.get("pinOrder")),
+            "pinExpiry": request.form.get("pinExpiry", "").strip(),
         }
 
     save_data(items, json_file)
@@ -768,6 +890,32 @@ def delete(index):
 
     msg = urllib.parse.quote("删除失败：索引不存在。")
     return redirect(f"/?message={msg}&type=warning&file={file_key}")
+
+
+@app.route("/extract-title/<int:index>", methods=["POST"])
+def extract_title(index):
+    file_key  = request.args.get("file", "announcements")
+    json_file = get_json_file(file_key)
+    items, mode = load_data(json_file)
+
+    if not (0 <= index < len(items)):
+        msg = urllib.parse.quote("索引不存在。")
+        return redirect(f"/?message={msg}&type=warning&file={file_key}")
+
+    item = items[index]
+    # 取 content 或 text 的第一段（第一个非空行）
+    raw = (item.get("content") or item.get("text") or "").strip()
+    first_para = next((line.strip() for line in raw.splitlines() if line.strip()), "")
+
+    if not first_para:
+        msg = urllib.parse.quote("内容为空，无法提取标题。")
+        return redirect(f"/?message={msg}&type=warning&file={file_key}")
+
+    items[index]["title"] = first_para[:80]
+    save_data(items, json_file)
+
+    msg = urllib.parse.quote(f"已提取标题：{first_para[:30]}…")
+    return redirect(f"/?message={msg}&type=success&file={file_key}")
 
 
 @app.route("/pull", methods=["POST"])
