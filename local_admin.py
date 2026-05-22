@@ -338,7 +338,11 @@ textarea{min-height:160px;line-height:1.65;resize:vertical;}
 .card-actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;}
 .section-title{font-size:1.1em;font-weight:700;color:#c0d8ff;margin:24px 0 12px;letter-spacing:.04em;}
 .count-badge{display:inline-block;margin-left:8px;padding:1px 10px;border-radius:999px;background:#1e2a3a;border:1px solid #334466;color:#7799aa;font-size:12px;font-weight:400;}
-@media(max-width:700px){.row2{grid-template-columns:1fr;}}
+.search-bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:16px;padding:14px;background:#12122a;border-radius:12px;border:1px solid #2a2a4a;}
+.search-bar input,.search-bar select{padding:8px 12px;border-radius:8px;border:1px solid #333355;background:#0a0a1a;color:#f0f0ff;font-size:13px;flex:1;min-width:120px;}
+.search-bar input:focus,.search-bar select:focus{outline:none;border-color:#6688ff;}
+.search-bar label{margin:0;color:#8899bb;font-size:12px;white-space:nowrap;}
+@media(max-width:700px){.row2{grid-template-columns:1fr;}.search-bar{flex-direction:column;}}
 </style>
 </head>
 <body>
@@ -377,8 +381,8 @@ textarea{min-height:160px;line-height:1.65;resize:vertical;}
   <textarea name="text" placeholder="消息正文...">{{ edit_item.get('text', '') }}</textarea>
   <div class="row2">
     <div>
-      <label>图片链接 image（可留空）</label>
-      <input name="image" placeholder="https://..." value="{{ edit_item.get('image', '') }}">
+      <label>图片链接 images（每行一个，可多张）</label>
+      <textarea name="images" placeholder="https://图片1&#10;https://图片2" style="min-height:80px;">{{ '\n'.join(edit_item.get('images', []) or ([edit_item.get('image')] if edit_item.get('image') else [])) }}</textarea>
     </div>
     <div>
       <label>分类 category</label>
@@ -476,18 +480,32 @@ textarea{min-height:160px;line-height:1.65;resize:vertical;}
 <div class="hint" style="margin-top:10px;">推荐用②，执行：git add -A → commit → pull --rebase → push</div>
 </div>
 
-<div class="section-title">
-  已有条目
-  <span class="count-badge">{{ items|length }} 条</span>
+<div class="search-bar">
+  <label>🔍</label>
+  <input type="text" id="searchInput" placeholder="搜索标题/正文/频道..." oninput="filterCards()">
+  <label>日期</label>
+  <input type="text" id="dateInput" placeholder="例如：2026-05" oninput="filterCards()">
+  <label>分类</label>
+  <select id="catSelect" onchange="filterCards()">
+    <option value="">全部</option>
+    {% for cat in categories %}
+    <option value="{{ cat }}">{{ cat }}</option>
+    {% endfor %}
+  </select>
 </div>
 
-<div class="card-list">
+<div class="section-title">
+  已有条目
+  <span class="count-badge" id="cardCount">{{ items|length }} 条</span>
+</div>
+
+<div class="card-list" id="cardList">
 {% for item in items %}
-<div class="card">
+<div class="card" data-title="{{ (item.get('title','') or item.get('text','') or '')|lower }}" data-date="{{ item.get('time', item.get('date','')) }}" data-cat="{{ item.get('category','') }}" data-channel="{{ item.get('channel','') }}">
   <div class="card-header">
     <div class="card-title">
       {% if file_key == "arktips" %}
-        {{ loop.index }}. {{ (item.get("text","") or "")[:60] }}{% if (item.get("text","") or "")|length > 60 %}…{% endif %}
+        {{ loop.index }}. {{ item.get("title","") or (item.get("text","") or "")[:60] }}{% if not item.get("title") and (item.get("text","") or "")|length > 60 %}…{% endif %}
       {% else %}
         {{ loop.index }}. {{ item.get("title", "无标题") }}
       {% endif %}
@@ -528,10 +546,32 @@ textarea{min-height:160px;line-height:1.65;resize:vertical;}
 {% else %}
 <div style="color:#556688;text-align:center;padding:30px;">暂无条目</div>
 {% endfor %}
-</div>
+</div><!-- end card-list -->
 
 </div>
 <script>
+function filterCards() {
+  const q    = document.getElementById('searchInput').value.toLowerCase();
+  const d    = document.getElementById('dateInput').value.toLowerCase();
+  const cat  = document.getElementById('catSelect').value.toLowerCase();
+  const cards = document.querySelectorAll('#cardList .card');
+  let shown = 0;
+  cards.forEach(card => {
+    const title   = (card.dataset.title   || '').toLowerCase();
+    const date    = (card.dataset.date    || '').toLowerCase();
+    const cardCat = (card.dataset.cat     || '').toLowerCase();
+    const ch      = (card.dataset.channel || '').toLowerCase();
+    const match =
+      (!q   || title.includes(q) || ch.includes(q)) &&
+      (!d   || date.includes(d)) &&
+      (!cat || cardCat === cat);
+    card.style.display = match ? '' : 'none';
+    if (match) shown++;
+  });
+  const el = document.getElementById('cardCount');
+  if (el) el.textContent = shown + ' 条';
+}
+
 function toggleText(idx, btn) {
   const el = document.getElementById('ct-' + idx);
   if (!el) return;
@@ -684,8 +724,8 @@ def update(index):
             "title":     raw_title if raw_title else raw_text[:50],
             "text":      raw_text,
             "content":   raw_text,
-            "image":     img,
-            "images":    [img] if img else old_item.get("images", []),
+            "image":     imgs[0] if imgs else "",
+            "images":    imgs,
             "category":  request.form.get("category", "活动").strip(),
             "important": parse_bool(request.form.get("important")),
             "pinOrder":  parse_pin_order(request.form.get("pinOrder")),
