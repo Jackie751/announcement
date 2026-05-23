@@ -1,5 +1,11 @@
 [
   {
+    "title": "📢 [明日方舟]05月22日16:00闪断更新公告",
+    "content": "https://ak.hypergryph.com/news/6255",
+    "date": "2026-05-23",
+    "category": "明日方舟"
+  },
+  {
     "title": "资源报告页面优化维护",
     "date": "2026-05-23",
     "category": "维护",
@@ -8,12 +14,6 @@
     "important": true,
     "pinOrder": 2,
     "pinExpiry": "2026-05-25"
-  },
-  {
-    "title": "📢 [明日方舟]05月22日16:00闪断更新公告",
-    "content": "https://ak.hypergryph.com/news/6255",
-    "date": "2026-05-23",
-    "category": "明日方舟"
   },
   {
     "title": "公告部分更新修复",
