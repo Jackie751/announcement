@@ -336,6 +336,7 @@ textarea{min-height:160px;line-height:1.65;resize:vertical;}
 .card-img{margin-top:8px;}
 .card-img img{max-width:120px;max-height:80px;border-radius:8px;object-fit:cover;border:1px solid #333355;}
 .card-actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;}
+.card-actions.right{justify-content:flex-end;}
 .section-title{font-size:1.1em;font-weight:700;color:#c0d8ff;margin:24px 0 12px;letter-spacing:.04em;}
 .count-badge{display:inline-block;margin-left:8px;padding:1px 10px;border-radius:999px;background:#1e2a3a;border:1px solid #334466;color:#7799aa;font-size:12px;font-weight:400;}
 .search-bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:16px;padding:14px;background:#12122a;border-radius:12px;border:1px solid #2a2a4a;}
@@ -383,6 +384,7 @@ textarea{min-height:160px;line-height:1.65;resize:vertical;}
 
 /* 快捷提取按钮 */
 .btn-extract{background:#a8edbe;color:#0a0a1a;font-size:12px;padding:6px 12px;}
+.btn-toggle-cat{background:#ffb347;color:#0a0a1a;font-size:12px;padding:6px 12px;}
 </style>
 </head>
 <body>
@@ -585,7 +587,12 @@ textarea{min-height:160px;line-height:1.65;resize:vertical;}
   {% if item.get("image") %}
   <div class="card-img"><img src="{{ item.get('image') }}" alt="img" onerror="this.style.display='none'"></div>
   {% endif %}
-  <div class="card-actions">
+  <div class="card-actions{% if file_key == 'arktips' %} right{% endif %}">
+    {% if file_key == "arktips" %}
+    <form method="post" action="/toggle-category/{{ loop.index0 }}?file=arktips" style="margin:0;">
+      <button class="btn btn-toggle-cat" type="submit" title="切换分类：活动 ↔ 其他 ↔ 资源更新">🔀 {{ item.get('category','活动') }}</button>
+    </form>
+    {% endif %}
     <form method="post" action="/edit/{{ loop.index0 }}" style="margin:0;">
       <input type="hidden" name="file" value="{{ file_key }}">
       <button class="btn btn-edit" type="submit">✏️ 编辑</button>
@@ -595,10 +602,12 @@ textarea{min-height:160px;line-height:1.65;resize:vertical;}
       <input type="hidden" name="file" value="{{ file_key }}">
       <button class="btn btn-del" type="submit">🗑 删除</button>
     </form>
+    {% if file_key != "arktips" %}
     <form method="post" action="/extract-title/{{ loop.index0 }}?file={{ file_key }}" style="margin:0;"
           onsubmit="return confirm('确定将 content 第一段设为 title 并保存吗？')">
       <button class="btn btn-extract" type="submit">⚡ 提取标题</button>
     </form>
+    {% endif %}
   </div>
 </div>
 {% else %}
@@ -645,6 +654,14 @@ document.addEventListener('keydown', function(event) {
     tag === 'textarea' ||
     tag === 'select' ||
     (active && active.isContentEditable);
+
+  // Ctrl + P = 保存（任何状态下都生效，包括正在输入时）
+  if (event.ctrlKey && key === 'p') {
+    event.preventDefault();
+    const saveBtn = document.querySelector('.panel form .btn-save');
+    if (saveBtn) saveBtn.closest('form').requestSubmit();
+    return;
+  }
 
   // 正在输入内容时，不拦截快捷键：
   // Ctrl + A 仍然保留为“全选文字”，避免编辑公告时难用。
@@ -915,6 +932,31 @@ def extract_title(index):
     save_data(items, json_file)
 
     msg = urllib.parse.quote(f"已提取标题：{first_para[:30]}…")
+    return redirect(f"/?message={msg}&type=success&file={file_key}")
+
+
+
+@app.route("/toggle-category/<int:index>", methods=["POST"])
+def toggle_category(index):
+    file_key  = request.args.get("file", "arktips")
+    json_file = get_json_file(file_key)
+    items, mode = load_data(json_file)
+
+    if not (0 <= index < len(items)):
+        msg = urllib.parse.quote("索引不存在。")
+        return redirect(f"/?message={msg}&type=warning&file={file_key}")
+
+    cycle = ["活动", "其他", "资源更新"]
+    current = items[index].get("category", "活动")
+    try:
+        next_cat = cycle[(cycle.index(current) + 1) % len(cycle)]
+    except ValueError:
+        next_cat = "活动"
+
+    items[index]["category"] = next_cat
+    save_data(items, json_file)
+
+    msg = urllib.parse.quote(f"分类已切换为：{next_cat}")
     return redirect(f"/?message={msg}&type=success&file={file_key}")
 
 
