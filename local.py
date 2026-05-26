@@ -602,12 +602,9 @@ textarea{min-height:160px;line-height:1.65;resize:vertical;}
       <input type="hidden" name="file" value="{{ file_key }}">
       <button class="btn btn-del" type="submit">🗑 删除</button>
     </form>
-    {% if file_key != "arktips" %}
-    <form method="post" action="/extract-title/{{ loop.index0 }}?file={{ file_key }}" style="margin:0;"
-          onsubmit="return confirm('确定将 content 第一段设为 title 并保存吗？')">
-      <button class="btn btn-extract" type="submit">⚡ 提取标题</button>
+    <form method="post" action="/extract-title/{{ loop.index0 }}?file={{ file_key }}" style="margin:0;">
+      <button class="btn btn-extract" type="submit" title="取 content 第一段为标题">⚡ 提取标题</button>
     </form>
-    {% endif %}
   </div>
 </div>
 {% else %}
