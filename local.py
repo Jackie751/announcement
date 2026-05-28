@@ -746,6 +746,9 @@ def render_page(tab="arktips", message="", message_type="success"):
     body = f"""
 <div class="topbar">
   <h1>📋 Local Manager</h1>
+  <span style="font-family:'Share Tech Mono',monospace;font-size:11px;color:rgba(180,200,255,.65);letter-spacing:.04em;">
+    P=保存 &nbsp;E=编辑 &nbsp;A=顶部 &nbsp;D=底部 &nbsp;G=跳转 &nbsp;M=Pull &nbsp;I=Push &nbsp;Esc=关闭
+  </span>
   <button class="tab-btn {arktips_active}" onclick="switchTab('arktips')">资源区</button>
   <button class="tab-btn {ann_active}" onclick="switchTab('announcements')">公告</button>
   <form method="post" action="/pull?tab={tab}" style="display:inline" onsubmit="return confirm('拉取远程？')">
@@ -1081,5 +1084,3 @@ if __name__ == "__main__":
         webbrowser.open(url)
     threading.Timer(1.2, open_browser).start()
     app.run(host="127.0.0.1", port=5000, debug=False)
-
-
