@@ -638,7 +638,7 @@ document.addEventListener('keydown', function(event) {
       fetch('/pull?tab=' + currentTab, {method:'POST'}).then(function() { location.reload(); });
     }
   }
-  if (event.ctrlKey && key === 'n') {
+  if (event.ctrlKey && key === 'i') {
     event.preventDefault();
     if (confirm('推送到 GitHub？')) {
       fetch('/push?tab=' + currentTab, {method:'POST'}).then(function() { location.reload(); });
@@ -1081,3 +1081,5 @@ if __name__ == "__main__":
         webbrowser.open(url)
     threading.Timer(1.2, open_browser).start()
     app.run(host="127.0.0.1", port=5000, debug=False)
+
+
