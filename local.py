@@ -282,6 +282,14 @@ textarea{resize:vertical;min-height:72px;}
 .sentinel{height:48px;display:flex;align-items:center;justify-content:center;font-family:'Share Tech Mono',monospace;color:rgba(180,200,255,.18);font-size:11px;}
 .sentinel.loading::after{content:'';width:17px;height:17px;border:2px solid rgba(180,126,255,.2);border-top-color:#b47eff;border-radius:50%;animation:spin .8s linear infinite;display:inline-block;}
 @keyframes spin{to{transform:rotate(360deg)}}
+#float-nav{position:fixed;bottom:24px;right:24px;z-index:999;display:flex;flex-direction:column;align-items:center;gap:8px;}
+.fnav-btn{width:40px;height:40px;border-radius:50%;border:1px solid rgba(180,126,255,.25);background:rgba(8,5,28,.85);backdrop-filter:blur(10px);color:rgba(180,200,255,.7);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;box-shadow:0 4px 14px rgba(0,0,0,.4);}
+.fnav-btn:hover{background:rgba(180,126,255,.2);border-color:#b47eff;color:#fff;}
+.fnav-jump{display:flex;align-items:center;gap:4px;background:rgba(8,5,28,.85);backdrop-filter:blur(10px);border:1px solid rgba(180,126,255,.25);border-radius:20px;padding:4px 8px;}
+.fnav-jump input{width:64px;height:32px;padding:4px 8px;border-radius:8px;border:1px solid rgba(180,126,255,.2);background:rgba(255,255,255,.05);color:#eef;font-size:14px;text-align:center;outline:none;}
+.fnav-jump input:focus{border-color:rgba(180,126,255,.5);}
+.fnav-jump button{width:26px;height:26px;border-radius:50%;border:none;background:rgba(180,126,255,.2);color:#d0b0ff;font-size:12px;cursor:pointer;transition:all .2s;}
+.fnav-jump button:hover{background:rgba(180,126,255,.4);color:#fff;}
 </style>
 </head>
 <body>
@@ -305,6 +313,15 @@ HTML_JS = """
   </div>
 </div>
 
+<div id="float-nav">
+  <button class="fnav-btn" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="回到顶部">↑</button>
+  <div class="fnav-jump">
+    <input type="number" id="jumpNum" min="1" placeholder="N" title="跳到第N条">
+    <button onclick="jumpToCard()" title="跳转">→</button>
+  </div>
+  <button class="fnav-btn" onclick="window.scrollTo({top:document.body.scrollHeight,behavior:'smooth'})" title="到底部">↓</button>
+</div>
+
 <script>
 var currentTab   = '__TAB__';
 var allItems     = [];
@@ -316,6 +333,32 @@ var filteredItems = [];
 var BATCH = 30;
 
 function switchTab(tab) { window.location.href = '/?tab=' + tab; }
+
+function jumpToCard() {
+  var n = parseInt(document.getElementById('jumpNum').value);
+  if (!n || n < 1) return;
+  // 先确保足够多的数据已渲染
+  while (rendered < Math.min(n, filteredItems.length)) {
+    renderBatch();
+  }
+  var cards = document.querySelectorAll('#itemList .item-card');
+  var target = cards[n - 1];
+  if (target) {
+    target.scrollIntoView({behavior:'smooth', block:'center'});
+    target.style.transition = 'outline .3s';
+    target.style.outline = '2px solid rgba(180,126,255,.8)';
+    setTimeout(function() { target.style.outline = ''; }, 1500);
+  }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  var jn = document.getElementById('jumpNum');
+  if (jn) {
+    jn.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') { e.preventDefault(); jumpToCard(); }
+    });
+  }
+});
 
 function loadData() {
   fetch('/api/items?tab=' + currentTab).then(function(r) { return r.json(); }).then(function(d) {
@@ -381,7 +424,7 @@ function renderCard(item, idx) {
                 (cat ? '<span class="badge badge-cat">' + cat + '</span>' : '') +
                 (ch  ? '<span class="badge badge-ch">'  + ch  + '</span>' : '');
   var imgHtml = imgs.slice(0,3).map(function(u) {
-    var img = '<img class="item-img" src="' + esc(u) + '">';return img;
+    return '<img class="item-img" src="' + esc(u) + '">';
   }).join('');
   var contentHtml = content
     ? '<div class="item-content" id="ct-' + idx + '">' + content + '</div>' +
@@ -580,13 +623,22 @@ document.addEventListener('keydown', function(event) {
     event.preventDefault();
     window.scrollTo({top:document.body.scrollHeight, behavior:'smooth'});
   }
+  if (event.ctrlKey && key === 'g') {
+    event.preventDefault();
+    var jn = document.getElementById('jumpNum');
+    if (jn) { jn.focus(); jn.select(); }
+  }
+  if (event.ctrlKey && key === 'e') {
+    event.preventDefault();
+    quickEdit();
+  }
   if (event.ctrlKey && key === 'm') {
     event.preventDefault();
     if (confirm('拉取远程？')) {
       fetch('/pull?tab=' + currentTab, {method:'POST'}).then(function() { location.reload(); });
     }
   }
-  if (event.ctrlKey && key === 'k') {
+  if (event.ctrlKey && key === 'n') {
     event.preventDefault();
     if (confirm('推送到 GitHub？')) {
       fetch('/push?tab=' + currentTab, {method:'POST'}).then(function() { location.reload(); });
