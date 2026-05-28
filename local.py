@@ -1,129 +1,139 @@
-from flask import Flask, request, redirect, render_template_string
+# local.py — 本地管理工具 v2
+# 支持：分页文件统一展示、编辑、删除、置顶同步到 arktips.json
+
+from flask import Flask, request, redirect, jsonify, render_template_string
 import json
 from pathlib import Path
-from datetime import datetime, date
+from datetime import datetime
 import shutil
 import webbrowser
 import threading
 import subprocess
 import urllib.parse
+import re
 
 app = Flask(__name__)
 
-BASE_DIR = Path(__file__).resolve().parent
-
-JSON_FILES = {
-    "announcements": BASE_DIR / "announcements.json",
-    "arktips":       BASE_DIR / "arktips.json",
-}
-
+BASE_DIR   = Path(__file__).resolve().parent
 BACKUP_DIR = BASE_DIR / "json_backups"
 
+ANN_FILE     = BASE_DIR / "announcements.json"
+ARKTIPS_FILE = BASE_DIR / "arktips.json"   # 只存置顶
+PAGE_PREFIX  = "arktips-"                  # arktips-1.json, arktips-2.json ...
+PAGE_SIZE    = 100
 
-def get_json_file(file_key="announcements"):
-    return JSON_FILES.get(file_key, JSON_FILES["announcements"])
 
-
-def ensure_files(json_file=None):
+# ──────────────────────────────────────────────────────────────
+# 工具函数
+# ──────────────────────────────────────────────────────────────
+def backup(path: Path):
     BACKUP_DIR.mkdir(exist_ok=True)
-    if json_file is None:
-        json_file = get_json_file()
-    if not json_file.exists():
-        json_file.parent.mkdir(parents=True, exist_ok=True)
-        json_file.write_text("[]", encoding="utf-8")
+    ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+    shutil.copy2(path, BACKUP_DIR / f"{path.stem}_backup_{ts}.json")
 
 
-def backup_json(json_file=None):
-    if json_file is None:
-        json_file = get_json_file()
-    ensure_files(json_file)
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    backup_path = BACKUP_DIR / f"{json_file.stem}_backup_{timestamp}.json"
-    shutil.copy2(json_file, backup_path)
-    return backup_path
-
-
-def load_data(json_file=None):
-    if json_file is None:
-        json_file = get_json_file()
-
-    ensure_files(json_file)
-    text = json_file.read_text(encoding="utf-8").strip()
-
-    if not text:
-        return [], "list"
-
+def load_json(path: Path) -> list | dict:
+    if not path.exists():
+        return []
     try:
-        raw = json.loads(text)
-    except json.JSONDecodeError as e:
-        return [], f"broken: {e}"
-
-    if isinstance(raw, list):
-        return raw, "list"
-
-    if isinstance(raw, dict) and isinstance(raw.get("announcements"), list):
-        return raw["announcements"], "dict_announcements"
-
-    return [], "unknown"
+        return json.loads(path.read_text(encoding="utf-8"))
+    except Exception:
+        return []
 
 
-def save_data(items, json_file=None):
-    if json_file is None:
-        json_file = get_json_file()
-
-    ensure_files(json_file)
-    backup_json(json_file)
-
-    _, mode = load_data(json_file)
-
-    if mode == "dict_announcements":
-        output = {"announcements": items}
-    else:
-        output = items
-
-    json_file.write_text(
-        json.dumps(output, ensure_ascii=False, indent=2),
-        encoding="utf-8"
-    )
+def save_json(path: Path, data):
+    backup(path)
+    path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
-def parse_bool(value):
+def parse_bool(value) -> bool:
     return value in ("on", "true", "True", "1", 1, True)
 
 
-def parse_pin_order(value):
-    value = str(value or "").strip()
-    if not value:
-        return 999999
-
+def parse_pin_order(value) -> int:
     try:
-        num = int(value)
-        return num if num > 0 else 999999
+        n = int(str(value or "").strip())
+        return n if n > 0 else 999999
     except ValueError:
         return 999999
 
 
+# ──────────────────────────────────────────────────────────────
+# 分页文件管理
+# ──────────────────────────────────────────────────────────────
+def get_page_files() -> list[Path]:
+    """返回所有分页文件，按页码排序"""
+    files = []
+    for f in BASE_DIR.glob(f"{PAGE_PREFIX}*.json"):
+        m = re.match(r'arktips-(\d+)\.json', f.name)
+        if m:
+            files.append((int(m.group(1)), f))
+    files.sort(key=lambda x: x[0])
+    return [f for _, f in files]
+
+
+def load_page(path: Path) -> list:
+    data = load_json(path)
+    return data if isinstance(data, list) else []
+
+
+def find_item_page(item_id) -> tuple[Path | None, int]:
+    """根据 id 找到条目在哪个分页文件的哪个位置"""
+    for page_file in get_page_files():
+        items = load_page(page_file)
+        for i, item in enumerate(items):
+            if str(item.get("id")) == str(item_id):
+                return page_file, i
+    return None, -1
+
+
+# ──────────────────────────────────────────────────────────────
+# arktips.json 置顶管理（只存置顶）
+# ──────────────────────────────────────────────────────────────
+def arktips_upsert(item: dict):
+    """把条目写入/更新 arktips.json（置顶列表）"""
+    data = load_json(ARKTIPS_FILE)
+    if not isinstance(data, list):
+        data = []
+    # 去重
+    data = [e for e in data if str(e.get("id")) != str(item.get("id"))]
+    data.insert(0, item)
+    save_json(ARKTIPS_FILE, data)
+
+
+def arktips_remove(item_id):
+    """从 arktips.json 删除指定条目"""
+    data = load_json(ARKTIPS_FILE)
+    if not isinstance(data, list):
+        return
+    data = [e for e in data if str(e.get("id")) != str(item_id)]
+    save_json(ARKTIPS_FILE, data)
+
+
+# ──────────────────────────────────────────────────────────────
+# Git 操作
+# ──────────────────────────────────────────────────────────────
 def run_cmd(args, cwd=None):
     result = subprocess.run(
-        args,
-        cwd=str(cwd or BASE_DIR),
-        capture_output=True,
-        text=True,
-        shell=False
+        args, cwd=str(cwd or BASE_DIR),
+        capture_output=True, text=True, shell=False
     )
     output = ((result.stdout or "") + "\n" + (result.stderr or "")).strip()
     return result.returncode == 0, output
 
 
+def get_current_branch():
+    ok, out = run_cmd(["git", "branch", "--show-current"])
+    branch = out.strip() if ok and out else ""
+    return branch if branch and branch != "HEAD" else "main"
+
+
 def ensure_gitignore():
     gitignore = BASE_DIR / ".gitignore"
     line = "json_backups/"
-
     if gitignore.exists():
         text = gitignore.read_text(encoding="utf-8", errors="ignore")
-        lines = [x.strip() for x in text.splitlines()]
-
-        if line not in lines:
+        if line not in [x.strip() for x in text.splitlines()]:
             with gitignore.open("a", encoding="utf-8") as f:
                 if text and not text.endswith("\n"):
                     f.write("\n")
@@ -132,872 +142,699 @@ def ensure_gitignore():
         gitignore.write_text(line + "\n", encoding="utf-8")
 
 
-def get_current_branch():
-    """
-    获取当前分支名。
-
-    修复点：
-    之前使用 git rev-parse --abbrev-ref HEAD。
-    如果仓库处于 detached HEAD 状态，它会返回 HEAD，
-    然后程序会执行 git push origin HEAD，导致 Git 报：
-
-    The destination you provided is not a full refname
-
-    现在优先使用 git branch --show-current。
-    如果取不到分支，就默认推 main。
-    """
-    ok, out = run_cmd(["git", "branch", "--show-current"])
-    branch = out.strip() if ok and out else ""
-
-    if branch and branch != "HEAD":
-        return branch
-
-    return "main"
-
-
-def git_push_current_head_to_branch(branch):
-    """
-    明确把当前 HEAD 推送到远程分支。
-
-    等价于：
-    git push origin HEAD:refs/heads/main
-
-    这样即使本地处于 detached HEAD，也不会再出现 full refname 错误。
-    """
-    return run_cmd(["git", "push", "origin", f"HEAD:refs/heads/{branch}"])
-
-
-def commit_local_changes_if_any():
+def git_push():
     ensure_gitignore()
-
-    ok, out = run_cmd(["git", "add", "-A"])
+    branch = get_current_branch()
+    ok, out = run_cmd(["git", "add", "."])
     if not ok:
-        return False, "git add 失败：\n" + out
-
+        return False, "git add 失败：" + out
     msg = f"Update {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
-    ok_commit, commit_out = run_cmd(["git", "commit", "-m", msg])
-
-    text = (commit_out or "").lower()
-
-    if ok_commit:
-        return True, "已提交本地修改。"
-
-    nothing_cases = [
-        "nothing to commit",
-        "no changes added to commit",
-        "nothing added to commit"
-    ]
-
-    if any(x in text for x in nothing_cases):
-        return True, "没有新的本地修改需要提交。"
-
-    return False, "git commit 失败：\n" + commit_out
+    run_cmd(["git", "commit", "-m", msg])
+    ok2, out2 = run_cmd(["git", "pull", "--rebase", "origin", branch])
+    if not ok2:
+        return False, "git pull 失败：" + out2
+    ok3, out3 = run_cmd(["git", "push", "origin", f"HEAD:refs/heads/{branch}"])
+    if not ok3:
+        return False, "git push 失败：" + out3
+    return True, f"已推送到 origin/{branch}"
 
 
-def run_git_pull_only():
-    ok, out = run_cmd(["git", "rev-parse", "--is-inside-work-tree"])
-    if not ok or "true" not in out.lower():
-        return False, f"当前目录不是 Git 仓库：{BASE_DIR}"
-
+def git_pull():
     branch = get_current_branch()
-
-    ok_commit, commit_msg = commit_local_changes_if_any()
-    if not ok_commit:
-        return False, commit_msg
-
-    ok_pull, pull_out = run_cmd(["git", "pull", "--rebase", "origin", branch])
-    if not ok_pull:
-        return False, "拉取失败：\n" + pull_out
-
-    return True, f"已拉取远程 origin/{branch}。"
+    ensure_gitignore()
+    run_cmd(["git", "add", "."])
+    run_cmd(["git", "commit", "-m", f"local save {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"])
+    ok, out = run_cmd(["git", "pull", "--rebase", "origin", branch])
+    return ok, out
 
 
-def run_git_pull_then_push():
-    ok, out = run_cmd(["git", "rev-parse", "--is-inside-work-tree"])
-    if not ok or "true" not in out.lower():
-        return False, f"当前目录不是 Git 仓库：{BASE_DIR}"
-
-    branch = get_current_branch()
-
-    ok_commit, commit_msg = commit_local_changes_if_any()
-    if not ok_commit:
-        return False, commit_msg
-
-    ok_pull, pull_out = run_cmd(["git", "pull", "--rebase", "origin", branch])
-    if not ok_pull:
-        return False, "git pull --rebase 失败：\n" + pull_out
-
-    ok_push, push_out = git_push_current_head_to_branch(branch)
-    if not ok_push:
-        return False, "git push 失败：\n" + push_out
-
-    return True, f"已完成：提交 → 拉取 origin/{branch} → 推送。"
-
-
-def run_git_push():
-    try:
-        ok, out = run_cmd(["git", "rev-parse", "--is-inside-work-tree"])
-        if not ok or "true" not in out.lower():
-            return False, "当前目录不是 Git 仓库。"
-
-        ensure_gitignore()
-
-        branch = get_current_branch()
-
-        ok, out = run_cmd(["git", "add", "."])
-        if not ok:
-            return False, "git add 失败：\n" + out
-
-        commit_msg = f"Update {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
-        ok_commit, commit_out = run_cmd(["git", "commit", "-m", commit_msg])
-
-        commit_text = (commit_out or "").lower()
-
-        if not ok_commit:
-            nothing_cases = [
-                "nothing to commit",
-                "no changes added to commit",
-                "nothing added to commit"
-            ]
-            if not any(x in commit_text for x in nothing_cases):
-                return False, "git commit 失败：\n" + commit_out
-
-        ok_pull, pull_out = run_cmd(["git", "pull", "--rebase", "origin", branch])
-        if not ok_pull:
-            return False, "git pull --rebase 失败：\n" + pull_out
-
-        ok_push, push_out = git_push_current_head_to_branch(branch)
-        if not ok_push:
-            return False, "git push 失败：\n" + push_out
-
-        return True, f"已推送到 origin/{branch}。"
-
-    except FileNotFoundError:
-        return False, "找不到 git，请安装 Git 并加入 PATH。"
-    except Exception as e:
-        return False, str(e)
-
-
-HTML = """
+# ──────────────────────────────────────────────────────────────
+# HTML 模板
+# ──────────────────────────────────────────────────────────────
+TEMPLATE = r"""
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh">
 <head>
 <meta charset="UTF-8">
-<title>JSON 编辑器</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>本地管理 · Local Manager</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:"Microsoft YaHei",Arial,sans-serif;background:#0f0f1e;color:#f0f0ff;padding:28px 20px;}
-.container{max-width:1000px;margin:auto;}
-.topbar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid #2a2a4a;}
-.topbar h1{font-size:1.3em;color:#8be9ff;letter-spacing:.04em;}
-.file-path{font-family:Consolas,monospace;font-size:12px;color:#6688aa;margin-top:3px;}
-.switch-btn{display:inline-flex;align-items:center;gap:6px;padding:7px 16px;border-radius:999px;background:rgba(180,126,255,.15);border:1px solid rgba(180,126,255,.4);color:#d0a0ff;font-size:13px;font-weight:600;text-decoration:none;transition:all .2s;}
-.switch-btn:hover{background:rgba(180,126,255,.28);border-color:#b47eff;color:#fff;}
-.msg{padding:11px 16px;border-radius:10px;margin-bottom:16px;font-size:14px;white-space:pre-wrap;}
-.success{background:#0d2b18;border:1px solid #1e6b36;color:#7fffaa;}
-.warning{background:#2b1e08;border:1px solid #7a4a00;color:#ffd166;}
-.panel{background:#181830;border:1px solid #2a2a4a;border-radius:16px;padding:22px;margin-bottom:20px;}
-.panel h2{font-size:1em;font-weight:700;color:#c0d8ff;margin-bottom:16px;letter-spacing:.06em;text-transform:uppercase;}
-label{font-size:13px;color:#8899bb;display:block;margin-bottom:4px;margin-top:12px;}
-label:first-child{margin-top:0;}
-input,select,textarea{width:100%;padding:10px 13px;border-radius:10px;border:1px solid #333355;background:#0a0a1a;color:#f0f0ff;font-size:14px;transition:border-color .2s;}
-input:focus,select:focus,textarea:focus{outline:none;border-color:#6688ff;}
-textarea{min-height:160px;line-height:1.65;resize:vertical;}
-.row2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
-.hint{font-size:11px;color:#556688;margin-top:3px;}
-.pin-row{display:flex;align-items:center;gap:16px;margin-top:14px;padding:12px 14px;background:#12122a;border-radius:10px;border:1px solid #2a2a4a;}
-.pin-row label{margin:0;color:#ffd166;font-size:13px;font-weight:600;display:flex;align-items:center;gap:6px;cursor:pointer;}
-.pin-row input[type=checkbox]{width:16px;height:16px;accent-color:#ffd166;cursor:pointer;}
-.pin-row input[type=number]{width:100px;padding:6px 10px;font-size:13px;}
-.btn{display:inline-flex;align-items:center;gap:5px;padding:9px 20px;border-radius:999px;border:none;font-weight:700;font-size:14px;cursor:pointer;transition:opacity .18s;}
-.btn:hover{opacity:.82;}
-.btn-save{background:#7ddcff;color:#0a0a1a;}
-.btn-cancel{background:#444466;color:#ccc;}
-.btn-del{background:#ff5f7e;color:#fff;}
-.btn-edit{background:#d6b2ff;color:#0a0a1a;}
-.btn-pull{background:#a6ff8f;color:#0a0a1a;}
-.btn-push{background:#7ddcff;color:#0a0a1a;}
-.btn-push2{background:#ffd166;color:#0a0a1a;}
-.btn-gap{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:6px;}
-.card-list{display:flex;flex-direction:column;gap:12px;}
-.card{background:#181830;border:1px solid #2a2a4a;border-radius:14px;padding:16px 18px;transition:border-color .2s;}
-.card:hover{border-color:#445588;}
-.card-header{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:8px;}
-.card-title{font-size:14px;font-weight:700;color:#c8e0ff;line-height:1.4;flex:1;}
-.card-badges{display:flex;gap:6px;flex-wrap:wrap;align-items:center;flex-shrink:0;}
-.badge{display:inline-block;padding:2px 9px;border-radius:999px;font-size:11px;font-weight:600;}
-.badge-pin{border:1px solid rgba(255,210,90,.5);background:rgba(255,210,90,.1);color:#ffd76a;}
-.badge-cat{border:1px solid rgba(139,233,255,.35);background:rgba(139,233,255,.08);color:#8be9ff;}
-.badge-ch{border:1px solid rgba(180,126,255,.35);background:rgba(180,126,255,.08);color:#c09aff;}
-.card-meta{font-size:12px;color:#556688;margin-bottom:8px;}
-.card-text{font-size:13px;color:#aabbcc;line-height:1.6;white-space:pre-wrap;word-break:break-word;max-height:80px;overflow:hidden;}
-.card-text.expanded{max-height:none;}
-.expand-btn{font-size:11px;color:#7799ff;cursor:pointer;margin-top:4px;display:inline-block;}
-.card-img{margin-top:8px;}
-.card-img img{max-width:120px;max-height:80px;border-radius:8px;object-fit:cover;border:1px solid #333355;}
-.card-actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;}
-.card-actions.right{justify-content:flex-end;}
-.section-title{font-size:1.1em;font-weight:700;color:#c0d8ff;margin:24px 0 12px;letter-spacing:.04em;}
-.count-badge{display:inline-block;margin-left:8px;padding:1px 10px;border-radius:999px;background:#1e2a3a;border:1px solid #334466;color:#7799aa;font-size:12px;font-weight:400;}
-.search-bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:16px;padding:14px;background:#12122a;border-radius:12px;border:1px solid #2a2a4a;}
-.search-bar input,.search-bar select{padding:8px 12px;border-radius:8px;border:1px solid #333355;background:#0a0a1a;color:#f0f0ff;font-size:13px;flex:1;min-width:120px;}
-.search-bar input:focus,.search-bar select:focus{outline:none;border-color:#6688ff;}
-.search-bar label{margin:0;color:#8899bb;font-size:12px;white-space:nowrap;}
-@media(max-width:700px){.row2{grid-template-columns:1fr;}.search-bar{flex-direction:column;}}
+body{background:#0a0a14;color:#dde;font-family:'Segoe UI',Arial,sans-serif;font-size:14px;}
+.topbar{position:sticky;top:0;z-index:100;background:rgba(8,5,28,.95);border-bottom:1px solid rgba(180,126,255,.2);padding:10px 20px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;backdrop-filter:blur(12px);}
+.topbar h1{font-size:1em;color:#b47eff;flex-shrink:0;}
+.tab-btn{padding:5px 14px;border-radius:999px;border:1px solid rgba(180,126,255,.3);background:transparent;color:#b47eff;cursor:pointer;font-size:12px;transition:all .2s;}
+.tab-btn.active,.tab-btn:hover{background:rgba(180,126,255,.15);border-color:#b47eff;}
+.git-btn{padding:5px 14px;border-radius:999px;border:1px solid rgba(0,229,255,.3);background:transparent;color:#00e5ff;cursor:pointer;font-size:12px;transition:all .2s;margin-left:auto;}
+.git-btn:hover{background:rgba(0,229,255,.1);}
+.git-btn.push{border-color:rgba(74,222,128,.3);color:#4ade80;}
+.git-btn.push:hover{background:rgba(74,222,128,.1);}
+.msg{padding:8px 20px;font-size:12px;border-bottom:1px solid rgba(255,255,255,.06);}
+.msg.success{color:#4ade80;background:rgba(74,222,128,.06);}
+.msg.warning{color:#fbbf24;background:rgba(251,191,36,.06);}
+.msg.error{color:#f87171;background:rgba(248,113,113,.06);}
+.container{max-width:900px;margin:0 auto;padding:16px;}
 
-/* 右下角导航 */
-#float-nav{
-  position:fixed;bottom:24px;right:24px;z-index:999;
-  display:flex;flex-direction:column;align-items:center;gap:8px;
-}
-.fnav-btn{
-  width:40px;height:40px;border-radius:50%;border:1px solid #334466;
-  background:rgba(10,10,30,.85);backdrop-filter:blur(10px);
-  color:#c0d8ff;font-size:16px;cursor:pointer;
-  display:flex;align-items:center;justify-content:center;
-  transition:all .2s;box-shadow:0 4px 14px rgba(0,0,0,.4);
-}
-.fnav-btn:hover{background:rgba(180,126,255,.25);border-color:#b47eff;color:#fff;}
-.fnav-jump{
-  display:flex;align-items:center;gap:4px;
-  background:rgba(10,10,30,.85);backdrop-filter:blur(10px);
-  border:1px solid #334466;border-radius:20px;
-  padding:4px 8px;
-}
-.fnav-jump input{
-  width:72px;
-  height:34px;
-  padding:6px 10px;
-  border-radius:10px;
-  border:1px solid #333355;
-  background:#0a0a1a;
-  color:#f0f0ff;
-  font-size:15px;
-  text-align:center;
-}
-.fnav-jump button{
-  width:28px;height:28px;border-radius:50%;border:none;
-  background:rgba(180,126,255,.2);color:#c0d8ff;
-  font-size:12px;cursor:pointer;transition:all .2s;
-}
-.fnav-jump button:hover{background:rgba(180,126,255,.4);color:#fff;}
+/* 新增表单 */
+.add-form{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:16px;margin-bottom:20px;}
+.add-form h2{font-size:.9em;color:#888;margin-bottom:12px;letter-spacing:.08em;}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.form-full{grid-column:1/-1;}
+.form-row{display:flex;flex-direction:column;gap:4px;}
+label{font-size:11px;color:#666;letter-spacing:.06em;}
+input[type=text],input[type=date],textarea,select{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:6px;color:#dde;padding:7px 10px;font-size:13px;width:100%;outline:none;transition:border-color .2s;}
+input:focus,textarea:focus,select:focus{border-color:rgba(180,126,255,.5);}
+textarea{resize:vertical;min-height:70px;font-family:inherit;}
+.checkbox-row{display:flex;align-items:center;gap:8px;padding:4px 0;}
+.checkbox-row input[type=checkbox]{width:16px;height:16px;accent-color:#b47eff;}
+.checkbox-row label{font-size:13px;color:#aab;cursor:pointer;}
+.btn{padding:7px 18px;border-radius:6px;border:none;cursor:pointer;font-size:13px;transition:all .2s;}
+.btn-primary{background:#b47eff;color:#0a0a14;font-weight:600;}
+.btn-primary:hover{background:#c87fff;}
+.btn-sm{padding:3px 10px;font-size:11px;border-radius:4px;}
+.btn-edit{background:rgba(0,229,255,.12);color:#00e5ff;border:1px solid rgba(0,229,255,.25);}
+.btn-edit:hover{background:rgba(0,229,255,.2);}
+.btn-delete{background:rgba(248,113,113,.12);color:#f87171;border:1px solid rgba(248,113,113,.25);}
+.btn-delete:hover{background:rgba(248,113,113,.2);}
+.btn-pin{background:rgba(255,210,90,.12);color:#ffd76a;border:1px solid rgba(255,210,90,.25);}
+.btn-pin:hover{background:rgba(255,210,90,.2);}
+.btn-unpin{background:rgba(180,126,255,.12);color:#b47eff;border:1px solid rgba(180,126,255,.25);}
+.btn-unpin:hover{background:rgba(180,126,255,.2);}
 
-/* 快捷提取按钮 */
-.btn-extract{background:#a8edbe;color:#0a0a1a;font-size:12px;padding:6px 12px;}
-.btn-toggle-cat{background:#ffb347;color:#0a0a1a;font-size:12px;padding:6px 12px;}
+/* 列表 */
+.list-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.list-count{font-size:12px;color:#555;}
+.item-card{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:8px;padding:12px 14px;margin-bottom:8px;transition:border-color .2s;}
+.item-card:hover{border-color:rgba(180,126,255,.2);}
+.item-card.is-pinned{border-color:rgba(255,210,90,.3);background:rgba(255,210,90,.03);}
+.item-top{display:flex;align-items:flex-start;gap:8px;margin-bottom:6px;}
+.item-num{font-size:10px;color:#444;flex-shrink:0;padding-top:2px;min-width:28px;}
+.item-title{font-size:13px;color:#dde;flex:1;line-height:1.5;word-break:break-word;}
+.item-badges{display:flex;gap:5px;flex-wrap:wrap;margin-left:auto;flex-shrink:0;}
+.badge{display:inline-flex;align-items:center;padding:1px 7px;border-radius:999px;font-size:10px;border:1px solid currentColor;}
+.badge-pin{color:#ffd76a;}
+.badge-cat{color:#b47eff;}
+.badge-ch{color:#6ee7b7;}
+.item-meta{font-size:11px;color:#444;margin-bottom:8px;}
+.item-content{font-size:12px;color:#667;background:rgba(255,255,255,.02);border-left:2px solid rgba(255,255,255,.06);padding:6px 10px;border-radius:0 4px 4px 0;margin-bottom:8px;white-space:pre-wrap;max-height:80px;overflow:hidden;}
+.item-content.expanded{max-height:none;}
+.expand-btn{font-size:10px;color:#555;cursor:pointer;background:none;border:none;padding:2px 4px;}
+.expand-btn:hover{color:#b47eff;}
+.item-images{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;}
+.item-img{width:60px;height:60px;object-fit:cover;border-radius:5px;border:1px solid rgba(255,255,255,.08);}
+.item-actions{display:flex;gap:6px;flex-wrap:wrap;}
+.page-label{font-size:10px;color:#333;padding:4px 0 8px;letter-spacing:.04em;}
+
+/* 编辑弹窗 */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:500;overflow-y:auto;}
+.modal-overlay.show{display:flex;align-items:flex-start;justify-content:center;padding:40px 16px;}
+.modal{background:#0e0e1e;border:1px solid rgba(180,126,255,.3);border-radius:12px;padding:24px;width:100%;max-width:600px;}
+.modal h2{font-size:1em;color:#b47eff;margin-bottom:16px;}
+.modal-actions{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap;}
+.btn-cancel{background:rgba(255,255,255,.06);color:#888;border:1px solid rgba(255,255,255,.1);}
+.btn-cancel:hover{background:rgba(255,255,255,.1);}
+
+/* 无限滚动 */
+.sentinel{height:40px;display:flex;align-items:center;justify-content:center;color:#333;font-size:11px;}
+.sentinel.loading::after{content:'';width:16px;height:16px;border:2px solid rgba(180,126,255,.2);border-top-color:#b47eff;border-radius:50%;animation:spin .8s linear infinite;display:inline-block;}
+@keyframes spin{to{transform:rotate(360deg)}}
 </style>
 </head>
 <body>
-<div class="container">
 
 <div class="topbar">
-  <div>
-    <h1>📋 JSON 编辑器</h1>
-    <div class="file-path">{{ json_path }}</div>
-  </div>
-  <a class="switch-btn" href="/?file={{ other_file }}">🔄 {{ other_label }}</a>
+  <h1>📋 Local Manager</h1>
+  <button class="tab-btn active" onclick="switchTab('arktips')">资源区</button>
+  <button class="tab-btn" onclick="switchTab('announcements')">公告</button>
+  <form method="post" action="/pull" style="display:inline" onsubmit="return confirm('拉取远程？')">
+    <button class="git-btn" type="submit">⬇ Pull</button>
+  </form>
+  <form method="post" action="/push" style="display:inline" onsubmit="return confirm('推送到 GitHub？')">
+    <button class="git-btn push" type="submit">⬆ Push</button>
+  </form>
 </div>
 
 {% if message %}
 <div class="msg {{ message_type }}">{{ message }}</div>
 {% endif %}
 
-<div class="panel">
-<h2>{% if editing %}✏️ 编辑条目{% else %}➕ 新增条目{% endif %}</h2>
+<div class="container">
 
-{% if file_key == "arktips" %}
-<form method="post" action="{% if editing %}/update/{{ edit_index }}?file=arktips{% else %}/add?file=arktips{% endif %}">
-  <div class="row2">
-    <div>
-      <label>频道 channel</label>
-      <input name="channel" placeholder="例如：@ARKTIPS" value="{{ edit_item.get('channel', '') }}">
-    </div>
-    <div>
-      <label>日期 date</label>
-      <input name="date" value="{{ edit_item.get('date', today) }}">
-    </div>
-  </div>
-  <label>标题 title（可留空，留空则取正文前50字）</label>
-  <input name="title" placeholder="自定义标题..." value="{{ edit_item.get('title', '') }}">
-  <label>正文 text</label>
-  <textarea name="text" placeholder="消息正文...">{{ edit_item.get('text', '') }}</textarea>
-  <div class="row2">
-    <div>
-      <label>图片链接 images（每行一个，可多张）</label>
-      <textarea name="images" placeholder="https://图片1&#10;https://图片2" style="min-height:80px;">{{ '\n'.join(edit_item.get('images', []) or ([edit_item.get('image')] if edit_item.get('image') else [])) }}</textarea>
-    </div>
-    <div>
-      <label>分类 category</label>
-      <select name="category">
-        {% for cat in categories %}
-        <option value="{{ cat }}" {% if edit_item.get('category', '活动') == cat %}selected{% endif %}>{{ cat }}</option>
-        {% endfor %}
-      </select>
-    </div>
-  </div>
-  <div class="pin-row">
-    <label>
-      <input type="checkbox" name="important" {% if edit_item.get('important') %}checked{% endif %}>
-      📌 置顶
-    </label>
-    <div>
-      <input type="number" name="pinOrder" min="1" placeholder="顺序（1最前）"
-        value="{{ edit_item.get('pinOrder', '') if edit_item.get('pinOrder', 999999) != 999999 else '' }}">
-    </div>
-    <div>
-      <label style="margin:0;color:#ff9966;font-size:12px;">⏰ 到期日</label>
-      <input type="date" name="pinExpiry"
-        value="{{ edit_item.get('pinExpiry', '') }}"
-        style="width:140px;padding:6px 10px;font-size:13px;">
-      <div class="hint">到期后自动取消置顶，留空永久有效</div>
-    </div>
-  </div>
-  <div class="btn-gap" style="margin-top:18px;">
-    <button class="btn btn-save" type="submit">{% if editing %}💾 保存修改{% else %}✅ 保存{% endif %}</button>
-    {% if editing %}
-    <a href="/?file=arktips" style="text-decoration:none;">
-      <button class="btn btn-cancel" type="button">取消</button>
-    </a>
-    {% endif %}
-  </div>
-</form>
-
-{% else %}
-<form method="post" action="{% if editing %}/update/{{ edit_index }}?file=announcements{% else %}/add?file=announcements{% endif %}">
-  <div class="row2">
-    <div>
-      <label>标题 title</label>
-      <input name="title" placeholder="例如：站点更新公告" value="{{ edit_item.get('title', '') }}" required>
-    </div>
-    <div>
-      <label>日期 date</label>
-      <input name="date" value="{{ edit_item.get('date', today) }}" required>
-    </div>
-  </div>
-  <div class="row2">
-    <div>
-      <label>分类 category</label>
-      <select name="category">
-        {% for cat in categories %}
-        <option value="{{ cat }}" {% if edit_item.get('category', '') == cat %}selected{% endif %}>{{ cat }}</option>
-        {% endfor %}
-      </select>
-    </div>
-    <div>
-      <label>图片链接（可留空）</label>
-      <input name="image" placeholder="https://..." value="{{ edit_item.get('image', '') }}">
-    </div>
-  </div>
-  <label>正文 content</label>
-  <textarea name="content" placeholder="可多行，支持换行和编号。" required>{{ edit_item.get('content', '') }}</textarea>
-  <div class="pin-row">
-    <label>
-      <input type="checkbox" name="important" {% if edit_item.get('important') %}checked{% endif %}>
-      📌 置顶
-    </label>
-    <div>
-      <input type="number" name="pinOrder" min="1" placeholder="顺序（1最前）"
-        value="{{ edit_item.get('pinOrder', '') if edit_item.get('pinOrder', 999999) != 999999 else '' }}">
-      <div class="hint">数字越小越靠前，不填则按时间排</div>
-    </div>
-    <div>
-      <label style="margin:0;color:#ff9966;font-size:12px;">⏰ 到期日</label>
-      <input type="date" name="pinExpiry"
-        value="{{ edit_item.get('pinExpiry', '') }}"
-        style="width:140px;padding:6px 10px;font-size:13px;">
-      <div class="hint">到期后自动取消置顶，留空永久有效</div>
-    </div>
-  </div>
-  <div class="btn-gap" style="margin-top:18px;">
-    <button class="btn btn-save" type="submit">{% if editing %}💾 保存修改{% else %}✅ 保存公告{% endif %}</button>
-    {% if editing %}
-    <a href="/?file=announcements" style="text-decoration:none;">
-      <button class="btn btn-cancel" type="button">取消</button>
-    </a>
-    {% endif %}
-  </div>
-</form>
-{% endif %}
-</div>
-
-<div class="panel">
-<h2>🔄 同步 Git</h2>
-<div class="btn-gap">
-  <form method="post" action="/pull" style="margin:0;">
-    <button class="btn btn-pull" type="submit">① Pull 拉取</button>
-  </form>
-  <form method="post" action="/pull-push" style="margin:0;">
-    <button class="btn btn-push" type="submit">② Pull → Push（推荐）</button>
-  </form>
-  <form method="post" action="/push" style="margin:0;">
-    <button class="btn btn-push2" type="submit">普通 Push</button>
-  </form>
-</div>
-<div class="hint" style="margin-top:10px;">推荐用②，执行：git add -A → commit → pull --rebase → push</div>
-</div>
-
-<div class="search-bar">
-  <label>🔍</label>
-  <input type="text" id="searchInput" placeholder="搜索标题/正文/频道..." oninput="filterCards()">
-  <label>日期</label>
-  <input type="text" id="dateInput" placeholder="例如：2026-05" oninput="filterCards()">
-  <label>分类</label>
-  <select id="catSelect" onchange="filterCards()">
-    <option value="">全部</option>
-    {% for cat in categories %}
-    <option value="{{ cat }}">{{ cat }}</option>
-    {% endfor %}
-  </select>
-</div>
-
-<div class="section-title">
-  已有条目
-  <span class="count-badge" id="cardCount">{{ items|length }} 条</span>
-</div>
-
-<div class="card-list" id="cardList">
-{% for item in items %}
-<div class="card" data-title="{{ (item.get('title','') or item.get('text','') or '')|lower }}" data-date="{{ item.get('time', item.get('date','')) }}" data-cat="{{ item.get('category','') }}" data-channel="{{ item.get('channel','') }}">
-  <div class="card-header">
-    <div class="card-title">
-      {% if file_key == "arktips" %}
-        {{ loop.index }}. {{ item.get("title","") or (item.get("text","") or "")[:60] }}{% if not item.get("title") and (item.get("text","") or "")|length > 60 %}…{% endif %}
+  <!-- 新增表单 -->
+  <div class="add-form" id="addForm">
+    <h2>＋ 新增条目（{{ 'arktips' if tab == 'arktips' else 'announcements' }}）</h2>
+    <form method="post" action="/add?tab={{ tab }}">
+      {% if tab == 'arktips' %}
+      <div class="form-grid">
+        <div class="form-row"><label>频道</label><input type="text" name="channel" placeholder="@ARKTIPS"></div>
+        <div class="form-row"><label>日期</label><input type="date" name="date" value="{{ today }}"></div>
+        <div class="form-row form-full"><label>标题</label><input type="text" name="title" placeholder="标题（留空则取文本前50字）"></div>
+        <div class="form-row form-full"><label>文本内容</label><textarea name="text" rows="3" placeholder="消息正文"></textarea></div>
+        <div class="form-row form-full"><label>图片链接（每行一个）</label><textarea name="images" rows="2" placeholder="https://..."></textarea></div>
+        <div class="form-row"><label>分类</label>
+          <select name="category">
+            <option value="活动">活动</option>
+            <option value="资源更新">资源更新</option>
+            <option value="其他">其他</option>
+          </select>
+        </div>
+        <div class="form-row"><label>置顶顺序</label><input type="text" name="pinOrder" placeholder="留空=不置顶"></div>
+        <div class="form-row"><label>截止日期</label><input type="date" name="pinExpiry"></div>
+        <div class="form-row form-full checkbox-row">
+          <input type="checkbox" name="important" id="imp_new">
+          <label for="imp_new">📌 置顶（勾选后自动同步到 arktips.json）</label>
+        </div>
+      </div>
       {% else %}
-        {{ loop.index }}. {{ item.get("title", "无标题") }}
+      <div class="form-grid">
+        <div class="form-row form-full"><label>标题</label><input type="text" name="title" placeholder="公告标题"></div>
+        <div class="form-row"><label>日期</label><input type="date" name="date" value="{{ today }}"></div>
+        <div class="form-row"><label>分类</label>
+          <select name="category">
+            <option value="重要">重要</option>
+            <option value="更新">更新</option>
+            <option value="维护">维护</option>
+            <option value="活动">活动</option>
+            <option value="其他">其他</option>
+          </select>
+        </div>
+        <div class="form-row form-full"><label>内容</label><textarea name="content" rows="3"></textarea></div>
+        <div class="form-row form-full"><label>图片链接</label><input type="text" name="image" placeholder="https://..."></div>
+        <div class="form-row"><label>置顶顺序</label><input type="text" name="pinOrder" placeholder="留空=不置顶"></div>
+        <div class="form-row"><label>截止日期</label><input type="date" name="pinExpiry"></div>
+        <div class="form-row form-full checkbox-row">
+          <input type="checkbox" name="important" id="imp_new2">
+          <label for="imp_new2">📌 置顶</label>
+        </div>
+      </div>
       {% endif %}
-    </div>
-    <div class="card-badges">
-      {% if item.get("important") %}<span class="badge badge-pin">📌 #{{ item.get("pinOrder","?") }}</span>{% endif %}
-      {% if item.get("category") %}<span class="badge badge-cat">{{ item.get("category") }}</span>{% endif %}
-      {% if item.get("channel") %}<span class="badge badge-ch">{{ item.get("channel") }}</span>{% endif %}
-    </div>
-  </div>
-  <div class="card-meta">
-    {% if file_key == "arktips" %}{{ item.get("time", item.get("date","")) }}
-    {% else %}{{ item.get("date","") }}{% endif %}
-  </div>
-  {% if file_key == "arktips" %}
-    <div class="card-text" id="ct-{{ loop.index0 }}">{{ (item.get("text",""))[:200] }}{% if (item.get("text",""))|length > 200 %}…{% endif %}</div>
-    {% if (item.get("text",""))|length > 200 %}
-    <span class="expand-btn" onclick="toggleText({{ loop.index0 }}, this)">展开 ▾</span>
-    {% endif %}
-  {% else %}
-    <div class="card-text">{{ (item.get("content","") or "")[:200] }}{% if (item.get("content","") or "")|length > 200 %}…{% endif %}</div>
-  {% endif %}
-  {% if item.get("image") %}
-  <div class="card-img"><img src="{{ item.get('image') }}" alt="img" onerror="this.style.display='none'"></div>
-  {% endif %}
-  <div class="card-actions{% if file_key == 'arktips' %} right{% endif %}">
-    {% if file_key == "arktips" %}
-    <form method="post" action="/toggle-category/{{ loop.index0 }}?file=arktips" style="margin:0;">
-      <button class="btn btn-toggle-cat" type="submit" title="切换分类：活动 ↔ 其他 ↔ 资源更新">🔀 {{ item.get('category','活动') }}</button>
-    </form>
-    {% endif %}
-    <form method="post" action="/edit/{{ loop.index0 }}" style="margin:0;">
-      <input type="hidden" name="file" value="{{ file_key }}">
-      <button class="btn btn-edit" type="submit">✏️ 编辑</button>
-    </form>
-    <form method="post" action="/delete/{{ loop.index0 }}" style="margin:0;"
-          onsubmit="return confirm('确定删除这条吗？')">
-      <input type="hidden" name="file" value="{{ file_key }}">
-      <button class="btn btn-del" type="submit">🗑 删除</button>
-    </form>
-    <form method="post" action="/extract-title/{{ loop.index0 }}?file={{ file_key }}" style="margin:0;">
-      <button class="btn btn-extract" type="submit" title="取 content 第一段为标题">⚡ 提取标题</button>
+      <div style="margin-top:12px"><button class="btn btn-primary" type="submit">保存</button></div>
     </form>
   </div>
-</div>
-{% else %}
-<div style="color:#556688;text-align:center;padding:30px;">暂无条目</div>
-{% endfor %}
-</div><!-- end card-list -->
 
+  <!-- 列表 -->
+  <div class="list-header">
+    <span class="list-count" id="listCount">加载中...</span>
+  </div>
+  <div id="itemList"></div>
+  <div class="sentinel" id="sentinel"></div>
 </div>
 
-<!-- 右下角导航 -->
-<div id="float-nav">
-  <button class="fnav-btn" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="回到顶部">↑</button>
-  <div class="fnav-jump">
-    <input type="number" id="jumpNum" min="1" placeholder="N" onkeydown="handleJumpEnter(event)">
-    <button onclick="jumpToCard()" title="跳到第N条">→</button>
+<!-- 编辑弹窗 -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <h2>✏️ 编辑条目</h2>
+    <form method="post" id="editForm" action="">
+      <input type="hidden" name="tab" id="editTab">
+      <input type="hidden" name="item_id" id="editItemId">
+      <input type="hidden" name="page_file" id="editPageFile">
+      <div class="form-grid" id="editFields"></div>
+      <div class="modal-actions">
+        <button class="btn btn-primary" type="submit">保存</button>
+        <button class="btn btn-cancel" type="button" onclick="closeModal()">取消</button>
+      </div>
+    </form>
   </div>
-  <button class="fnav-btn" onclick="window.scrollTo({top:document.body.scrollHeight,behavior:'smooth'})" title="到底部">↓</button>
 </div>
 
 <script>
-function jumpToCard() {
-  const n = parseInt(document.getElementById('jumpNum').value);
-  if (!n || n < 1) return;
-  const cards = document.querySelectorAll('#cardList .card');
-  const visible = Array.from(cards).filter(c => c.style.display !== 'none');
-  const target = visible[n - 1];
-  if (target) target.scrollIntoView({behavior:'smooth', block:'center'});
+let currentTab = '{{ tab }}';
+let allItems   = [];   // 全部数据（懒加载）
+let rendered   = 0;
+const BATCH    = 30;
+let isLoading  = false;
+
+// ── 切换 Tab ──
+function switchTab(tab) {
+  window.location.href = '/?tab=' + tab;
 }
 
-function handleJumpEnter(event) {
-  if (event.key === 'Enter') {
-    event.preventDefault();
-    jumpToCard();
-  }
+// ── 加载数据 ──
+async function loadData() {
+  const r = await fetch('/api/items?tab=' + currentTab);
+  const d = await r.json();
+  allItems = d.items || [];
+  rendered = 0;
+  document.getElementById('itemList').innerHTML = '';
+  document.getElementById('listCount').textContent = `共 ${allItems.length} 条`;
+  renderBatch();
 }
 
-document.addEventListener('keydown', function(event) {
-  const key = event.key.toLowerCase();
-
-  const active = document.activeElement;
-  const tag = active && active.tagName ? active.tagName.toLowerCase() : '';
-  const isTyping =
-    tag === 'input' ||
-    tag === 'textarea' ||
-    tag === 'select' ||
-    (active && active.isContentEditable);
-
-  // Ctrl + P = 保存（任何状态下都生效，包括正在输入时）
-  if (event.ctrlKey && key === 'p') {
-    event.preventDefault();
-    const saveBtn = document.querySelector('.panel form .btn-save');
-    if (saveBtn) saveBtn.closest('form').requestSubmit();
+// ── 渲染一批 ──
+function renderBatch() {
+  if (rendered >= allItems.length) {
+    document.getElementById('sentinel').textContent = '— 已全部加载 —';
+    document.getElementById('sentinel').classList.remove('loading');
     return;
   }
+  const batch = allItems.slice(rendered, rendered + BATCH);
+  const list  = document.getElementById('itemList');
+  let html = '';
+  let lastPage = '';
+  batch.forEach((item, i) => {
+    const idx = rendered + i;
+    if (item._page && item._page !== lastPage) {
+      html += `<div class="page-label">── ${item._page} ──</div>`;
+      lastPage = item._page;
+    }
+    html += renderCard(item, idx);
+  });
+  list.insertAdjacentHTML('beforeend', html);
+  rendered += batch.length;
+}
 
-  // 正在输入内容时，不拦截快捷键：
-  // Ctrl + A 仍然保留为“全选文字”，避免编辑公告时难用。
-  if (isTyping) return;
+// ── 渲染卡片 ──
+function renderCard(item, idx) {
+  const title   = esc(item.title || item.text?.slice(0,60) || '无标题');
+  const cat     = esc(item.category || '');
+  const ch      = esc(item.channel || '');
+  const date    = esc(item.date || item.time || '');
+  const content = esc(item.content || item.text || '');
+  const pinned  = item.important === true || item.important === 'true' || item.important === 1;
+  const imgs    = Array.isArray(item.images) ? item.images.filter(Boolean) : (item.image ? [item.image] : []);
 
-  // Ctrl + A = 等于点击右下角向上按钮，回到顶部
-  if (event.ctrlKey && key === 'a') {
-    event.preventDefault();
-    window.scrollTo({
-      top: 0,
-      behavior: 'smooth'
-    });
+  const pinBadge   = pinned ? `<span class="badge badge-pin">📌 置顶</span>` : '';
+  const catBadge   = cat ? `<span class="badge badge-cat">${cat}</span>` : '';
+  const chBadge    = ch ? `<span class="badge badge-ch">${ch}</span>` : '';
+  const imgHtml    = imgs.slice(0,3).map(u => `<img class="item-img" src="${esc(u)}" onerror="this.style.display='none'">`).join('');
+  const contentHtml = content
+    ? `<div class="item-content" id="ct-${idx}">${content}</div>
+       <button class="expand-btn" onclick="toggleContent(${idx})">展开 ▾</button>`
+    : '';
+
+  const pinBtn = pinned
+    ? `<button class="btn btn-sm btn-unpin" onclick="togglePin('${esc(item.id)}','${currentTab}',false)">取消置顶</button>`
+    : `<button class="btn btn-sm btn-pin" onclick="togglePin('${esc(item.id)}','${currentTab}',true)">📌 置顶</button>`;
+
+  return `
+  <div class="item-card ${pinned?'is-pinned':''}" id="card-${idx}">
+    <div class="item-top">
+      <span class="item-num">${String(idx+1).padStart(3,'0')}</span>
+      <span class="item-title">${title}</span>
+      <div class="item-badges">${pinBadge}${catBadge}${chBadge}</div>
+    </div>
+    <div class="item-meta">${date}${item._page?' &nbsp;·&nbsp; '+esc(item._page):''}</div>
+    ${contentHtml}
+    ${imgHtml ? `<div class="item-images">${imgHtml}</div>` : ''}
+    <div class="item-actions">
+      <button class="btn btn-sm btn-edit" onclick="openEdit(${idx})">编辑</button>
+      ${pinBtn}
+      <button class="btn btn-sm btn-delete" onclick="deleteItem('${esc(item.id)}','${currentTab}')">删除</button>
+    </div>
+  </div>`;
+}
+
+function esc(s) {
+  const d = document.createElement('div');
+  d.textContent = String(s ?? '');
+  return d.innerHTML;
+}
+
+function toggleContent(idx) {
+  const el  = document.getElementById(`ct-${idx}`);
+  const btn = el?.nextElementSibling;
+  if (!el) return;
+  el.classList.toggle('expanded');
+  if (btn) btn.textContent = el.classList.contains('expanded') ? '收起 ▴' : '展开 ▾';
+}
+
+// ── 编辑弹窗 ──
+function openEdit(idx) {
+  const item = allItems[idx];
+  if (!item) return;
+  document.getElementById('editTab').value      = currentTab;
+  document.getElementById('editItemId').value   = item.id;
+  document.getElementById('editPageFile').value = item._page_file || '';
+  document.getElementById('editForm').action    = '/update';
+
+  let fields = '';
+  if (currentTab === 'arktips') {
+    const imgs = Array.isArray(item.images) ? item.images.join('\n') : (item.image || '');
+    fields = `
+      <div class="form-row"><label>频道</label><input type="text" name="channel" value="${esc(item.channel||'')}"></div>
+      <div class="form-row"><label>日期</label><input type="date" name="date" value="${esc(item.date||'')}"></div>
+      <div class="form-row form-full"><label>标题</label><input type="text" name="title" value="${esc(item.title||'')}"></div>
+      <div class="form-row form-full"><label>文本内容</label><textarea name="text" rows="4">${esc(item.text||item.content||'')}</textarea></div>
+      <div class="form-row form-full"><label>图片链接（每行一个）</label><textarea name="images" rows="3">${esc(imgs)}</textarea></div>
+      <div class="form-row"><label>分类</label>
+        <select name="category">
+          <option value="活动" ${item.category==='活动'?'selected':''}>活动</option>
+          <option value="资源更新" ${item.category==='资源更新'?'selected':''}>资源更新</option>
+          <option value="其他" ${item.category==='其他'?'selected':''}>其他</option>
+        </select>
+      </div>
+      <div class="form-row"><label>置顶顺序</label><input type="text" name="pinOrder" value="${esc(item.pinOrder===999999?'':item.pinOrder)}"></div>
+      <div class="form-row"><label>截止日期</label><input type="date" name="pinExpiry" value="${esc(item.pinExpiry||'')}"></div>
+      <div class="form-row form-full checkbox-row">
+        <input type="checkbox" name="important" id="imp_edit" ${(item.important===true||item.important==='true'||item.important===1)?'checked':''}>
+        <label for="imp_edit">📌 置顶（保存后自动同步 arktips.json）</label>
+      </div>`;
+  } else {
+    fields = `
+      <div class="form-row form-full"><label>标题</label><input type="text" name="title" value="${esc(item.title||'')}"></div>
+      <div class="form-row"><label>日期</label><input type="date" name="date" value="${esc(item.date||'')}"></div>
+      <div class="form-row"><label>分类</label>
+        <select name="category">
+          <option value="重要" ${item.category==='重要'?'selected':''}>重要</option>
+          <option value="更新" ${item.category==='更新'?'selected':''}>更新</option>
+          <option value="维护" ${item.category==='维护'?'selected':''}>维护</option>
+          <option value="活动" ${item.category==='活动'?'selected':''}>活动</option>
+          <option value="其他" ${item.category==='其他'?'selected':''}>其他</option>
+        </select>
+      </div>
+      <div class="form-row form-full"><label>内容</label><textarea name="content" rows="4">${esc(item.content||'')}</textarea></div>
+      <div class="form-row form-full"><label>图片链接</label><input type="text" name="image" value="${esc(item.image||'')}"></div>
+      <div class="form-row"><label>置顶顺序</label><input type="text" name="pinOrder" value="${esc(item.pinOrder===999999?'':item.pinOrder)}"></div>
+      <div class="form-row"><label>截止日期</label><input type="date" name="pinExpiry" value="${esc(item.pinExpiry||'')}"></div>
+      <div class="form-row form-full checkbox-row">
+        <input type="checkbox" name="important" id="imp_edit2" ${(item.important===true||item.important==='true'||item.important===1)?'checked':''}>
+        <label for="imp_edit2">📌 置顶</label>
+      </div>`;
   }
+  document.getElementById('editFields').innerHTML = fields;
+  document.getElementById('modalOverlay').classList.add('show');
+}
 
-  // Ctrl + D = 等于点击右下角向下按钮，到达底部
-  if (event.ctrlKey && key === 'd') {
-    event.preventDefault();
-    window.scrollTo({
-      top: document.body.scrollHeight,
-      behavior: 'smooth'
-    });
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('show');
+}
+
+// ── 快速置顶/取消置顶 ──
+async function togglePin(itemId, tab, pin) {
+  const r = await fetch('/api/toggle-pin', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({item_id: itemId, tab, pin})
+  });
+  const d = await r.json();
+  if (d.ok) loadData();
+  else alert('操作失败：' + d.msg);
+}
+
+// ── 删除 ──
+async function deleteItem(itemId, tab) {
+  if (!confirm('确认删除这条？')) return;
+  const r = await fetch('/api/delete', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({item_id: itemId, tab})
+  });
+  const d = await r.json();
+  if (d.ok) loadData();
+  else alert('删除失败：' + d.msg);
+}
+
+// ── IntersectionObserver 懒加载 ──
+const observer = new IntersectionObserver(entries => {
+  if (entries[0].isIntersecting && !isLoading) {
+    isLoading = true;
+    document.getElementById('sentinel').classList.add('loading');
+    setTimeout(() => {
+      renderBatch();
+      isLoading = false;
+      document.getElementById('sentinel').classList.remove('loading');
+    }, 100);
   }
+}, { rootMargin: '200px' });
+observer.observe(document.getElementById('sentinel'));
+
+// ── 关闭弹窗点击背景 ──
+document.getElementById('modalOverlay').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
 });
 
-function filterCards() {
-  const q    = document.getElementById('searchInput').value.toLowerCase();
-  const d    = document.getElementById('dateInput').value.toLowerCase();
-  const cat  = document.getElementById('catSelect').value.toLowerCase();
-  const cards = document.querySelectorAll('#cardList .card');
-  let shown = 0;
-  cards.forEach(card => {
-    const title   = (card.dataset.title   || '').toLowerCase();
-    const date    = (card.dataset.date    || '').toLowerCase();
-    const cardCat = (card.dataset.cat     || '').toLowerCase();
-    const ch      = (card.dataset.channel || '').toLowerCase();
-    const match =
-      (!q   || title.includes(q) || ch.includes(q)) &&
-      (!d   || date.includes(d)) &&
-      (!cat || cardCat === cat);
-    card.style.display = match ? '' : 'none';
-    if (match) shown++;
-  });
-  const el = document.getElementById('cardCount');
-  if (el) el.textContent = shown + ' 条';
-}
-
-function toggleText(idx, btn) {
-  const el = document.getElementById('ct-' + idx);
-  if (!el) return;
-  if (el.classList.contains('expanded')) {
-    el.classList.remove('expanded');
-    btn.textContent = '展开 ▾';
-  } else {
-    el.classList.add('expanded');
-    btn.textContent = '收起 ▴';
-  }
-}
+loadData();
 </script>
 </body>
 </html>
 """
 
 
-def render_page(message="", message_type="success", edit_index=None, file_key="announcements"):
-    json_file = get_json_file(file_key)
-    items, mode = load_data(json_file)
-    editing = edit_index is not None and 0 <= edit_index < len(items)
-
-    if file_key == "arktips":
-        default_item = {
-            "channel": "",
-            "date": str(date.today()),
-            "text": "",
-            "image": "",
-            "category": "活动",
-            "important": False,
-            "pinOrder": 999999
-        }
-    else:
-        default_item = {
-            "title": "",
-            "date": str(date.today()),
-            "category": "更新",
-            "content": "",
-            "image": "",
-            "important": False,
-            "pinOrder": 999999
-        }
-
-    edit_item = items[edit_index] if editing else default_item
-
+# ──────────────────────────────────────────────────────────────
+# 路由
+# ──────────────────────────────────────────────────────────────
+@app.route("/")
+def index():
+    tab          = request.args.get("tab", "arktips")
+    message      = request.args.get("message", "")
+    message_type = request.args.get("type", "success")
+    today        = datetime.now().strftime("%Y-%m-%d")
     return render_template_string(
-        HTML,
-        items=items,
-        mode=mode,
-        today=str(date.today()),
-        json_path=str(json_file),
+        TEMPLATE,
+        tab=tab,
         message=message,
         message_type=message_type,
-        categories=["重要", "更新", "维护", "活动", "资源更新", "其他"],
-        editing=editing,
-        edit_index=edit_index if editing else "",
-        edit_item=edit_item,
-        file_key=file_key,
-        other_file="arktips" if file_key == "announcements" else "announcements",
-        other_label="切换到 arktips.json" if file_key == "announcements" else "切换到 announcements.json",
+        today=today,
     )
 
 
-@app.route("/")
-def index():
-    message = request.args.get("message", "")
-    message_type = request.args.get("type", "success")
-    file_key = request.args.get("file", "announcements")
-    return render_page(message=message, message_type=message_type, file_key=file_key)
+@app.route("/api/items")
+def api_items():
+    tab = request.args.get("tab", "arktips")
+    items = []
+
+    if tab == "arktips":
+        page_files = get_page_files()
+        if page_files:
+            for pf in page_files:
+                page_items = load_page(pf)
+                for item in page_items:
+                    item["_page"]      = pf.name
+                    item["_page_file"] = str(pf)
+                    items.append(item)
+        else:
+            # 降级：读旧 arktips.json
+            data = load_json(ARKTIPS_FILE)
+            if isinstance(data, list):
+                for item in data:
+                    item["_page"]      = "arktips.json"
+                    item["_page_file"] = str(ARKTIPS_FILE)
+                    items.append(item)
+    else:
+        data = load_json(ANN_FILE)
+        if isinstance(data, list):
+            for item in data:
+                item["_page"]      = "announcements.json"
+                item["_page_file"] = str(ANN_FILE)
+                items.append(item)
+
+    return jsonify({"items": items, "total": len(items)})
 
 
 @app.route("/add", methods=["POST"])
 def add():
-    file_key = request.args.get("file", "announcements")
-    json_file = get_json_file(file_key)
-    items, mode = load_data(json_file)
+    tab = request.args.get("tab", "arktips")
 
-    if mode.startswith("broken"):
-        msg = urllib.parse.quote(f"JSON 格式损坏，无法安全新增 {json_file.name}。")
-        return redirect(f"/?message={msg}&type=warning&file={file_key}")
-
-    if file_key == "arktips":
+    if tab == "arktips":
+        imgs_raw = request.form.get("images", "").strip()
+        imgs     = [x.strip() for x in imgs_raw.splitlines() if x.strip()]
+        raw_text = request.form.get("text", "").strip()
+        raw_title= request.form.get("title", "").strip()
+        important= parse_bool(request.form.get("important"))
         item = {
             "id":        int(datetime.now().timestamp()),
             "channel":   request.form.get("channel", "").strip(),
             "date":      request.form.get("date", "").strip(),
             "time":      datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            "text":      request.form.get("text", "").strip(),
-            "image":     request.form.get("image", "").strip(),
-            "images":    [request.form.get("image", "").strip()] if request.form.get("image", "").strip() else [],
+            "title":     raw_title if raw_title else raw_text[:50],
+            "text":      raw_text,
+            "content":   raw_text,
+            "image":     imgs[0] if imgs else "",
+            "images":    imgs,
+            "videos":    [],
             "category":  request.form.get("category", "活动").strip(),
-            "important": parse_bool(request.form.get("important")),
+            "important": important,
             "pinOrder":  parse_pin_order(request.form.get("pinOrder")),
+            "pinExpiry": request.form.get("pinExpiry", "").strip(),
         }
+        # 写入当前分页文件
+        page_files = get_page_files()
+        if page_files:
+            last_page = page_files[-1]
+            data = load_page(last_page)
+            if len(data) >= PAGE_SIZE:
+                # 新建下一页
+                next_num = len(page_files) + 1
+                last_page = BASE_DIR / f"{PAGE_PREFIX}{next_num}.json"
+                data = []
+            data.insert(0, item)
+            save_json(last_page, data)
+        else:
+            # 没有分页文件，写旧 arktips.json
+            data = load_json(ARKTIPS_FILE)
+            if not isinstance(data, list):
+                data = []
+            data.insert(0, item)
+            save_json(ARKTIPS_FILE, data)
+
+        # 同步置顶
+        if important:
+            arktips_upsert(item)
+
     else:
+        important = parse_bool(request.form.get("important"))
         item = {
             "title":     request.form.get("title", "").strip(),
             "date":      request.form.get("date", "").strip(),
             "category":  request.form.get("category", "").strip(),
             "content":   request.form.get("content", "").strip(),
             "image":     request.form.get("image", "").strip(),
-            "important": parse_bool(request.form.get("important")),
+            "important": important,
             "pinOrder":  parse_pin_order(request.form.get("pinOrder")),
             "pinExpiry": request.form.get("pinExpiry", "").strip(),
         }
+        data = load_json(ANN_FILE)
+        if not isinstance(data, list):
+            data = []
+        data.insert(0, item)
+        save_json(ANN_FILE, data)
 
-    items.insert(0, item)
-    save_data(items, json_file)
-
-    msg = urllib.parse.quote(f"已保存到 {json_file.name}。")
-    return redirect(f"/?message={msg}&type=success&file={file_key}")
-
-
-@app.route("/edit/<int:index>", methods=["GET", "POST"])
-def edit(index):
-    file_key = request.form.get("file") or request.args.get("file", "announcements")
-    json_file = get_json_file(file_key)
-    items, mode = load_data(json_file)
-
-    if not (0 <= index < len(items)):
-        msg = urllib.parse.quote("编辑失败：索引不存在。")
-        return redirect(f"/?message={msg}&type=warning&file={file_key}")
-
-    return render_page(edit_index=index, file_key=file_key)
+    msg = urllib.parse.quote("已保存。")
+    return redirect(f"/?message={msg}&type=success&tab={tab}")
 
 
-@app.route("/update/<int:index>", methods=["POST"])
-def update(index):
-    file_key = request.form.get("file") or request.args.get("file", "announcements")
-    json_file = get_json_file(file_key)
-    items, mode = load_data(json_file)
+@app.route("/update", methods=["POST"])
+def update():
+    tab       = request.form.get("tab", "arktips")
+    item_id   = request.form.get("item_id", "")
+    page_file = request.form.get("page_file", "")
+    important = parse_bool(request.form.get("important"))
 
-    if mode.startswith("broken"):
-        msg = urllib.parse.quote(f"JSON 格式损坏，无法安全修改 {json_file.name}。")
-        return redirect(f"/?message={msg}&type=warning&file={file_key}")
-
-    if not (0 <= index < len(items)):
-        msg = urllib.parse.quote("修改失败：索引不存在。")
-        return redirect(f"/?message={msg}&type=warning&file={file_key}")
-
-    old_item = items[index]
-
-    if file_key == "arktips":
-        imgs_raw  = request.form.get("images", "").strip()
-        imgs      = [x.strip() for x in imgs_raw.splitlines() if x.strip()]
-        raw_title = request.form.get("title", "").strip()
-        raw_text  = request.form.get("text", "").strip()
-        items[index] = {
-            **old_item,
-            "channel":   request.form.get("channel", "").strip(),
-            "date":      request.form.get("date", "").strip(),
-            "title":     raw_title if raw_title else raw_text[:50],
-            "text":      raw_text,
-            "content":   raw_text,
-            "image":     imgs[0] if imgs else "",
-            "images":    imgs,
-            "category":  request.form.get("category", "活动").strip(),
-            "important": parse_bool(request.form.get("important")),
-            "pinOrder":  parse_pin_order(request.form.get("pinOrder")),
-            "pinExpiry": request.form.get("pinExpiry", "").strip(),
-        }
+    if tab == "arktips":
+        if page_file and Path(page_file).exists():
+            pf   = Path(page_file)
+            data = load_page(pf)
+            idx  = next((i for i, e in enumerate(data) if str(e.get("id")) == str(item_id)), -1)
+            if idx >= 0:
+                imgs_raw = request.form.get("images", "").strip()
+                imgs     = [x.strip() for x in imgs_raw.splitlines() if x.strip()]
+                raw_text = request.form.get("text", "").strip()
+                raw_title= request.form.get("title", "").strip()
+                old = data[idx]
+                data[idx] = {
+                    **old,
+                    "channel":   request.form.get("channel", "").strip(),
+                    "date":      request.form.get("date", "").strip(),
+                    "title":     raw_title if raw_title else raw_text[:50],
+                    "text":      raw_text,
+                    "content":   raw_text,
+                    "image":     imgs[0] if imgs else "",
+                    "images":    imgs,
+                    "category":  request.form.get("category", "活动").strip(),
+                    "important": important,
+                    "pinOrder":  parse_pin_order(request.form.get("pinOrder")),
+                    "pinExpiry": request.form.get("pinExpiry", "").strip(),
+                }
+                save_json(pf, data)
+                # 同步置顶
+                if important:
+                    arktips_upsert(data[idx])
+                else:
+                    arktips_remove(item_id)
     else:
-        items[index] = {
-            **old_item,
-            "title":     request.form.get("title", "").strip(),
-            "date":      request.form.get("date", "").strip(),
-            "category":  request.form.get("category", "").strip(),
-            "content":   request.form.get("content", "").strip(),
-            "image":     request.form.get("image", "").strip(),
-            "important": parse_bool(request.form.get("important")),
-            "pinOrder":  parse_pin_order(request.form.get("pinOrder")),
-            "pinExpiry": request.form.get("pinExpiry", "").strip(),
-        }
-
-    save_data(items, json_file)
+        data = load_json(ANN_FILE)
+        if isinstance(data, list):
+            idx = next((i for i, e in enumerate(data)
+                       if str(e.get("id","")) == str(item_id) or
+                          str(e.get("title","")) == request.form.get("title","")), -1)
+            if idx >= 0:
+                old = data[idx]
+                data[idx] = {
+                    **old,
+                    "title":     request.form.get("title", "").strip(),
+                    "date":      request.form.get("date", "").strip(),
+                    "category":  request.form.get("category", "").strip(),
+                    "content":   request.form.get("content", "").strip(),
+                    "image":     request.form.get("image", "").strip(),
+                    "important": important,
+                    "pinOrder":  parse_pin_order(request.form.get("pinOrder")),
+                    "pinExpiry": request.form.get("pinExpiry", "").strip(),
+                }
+                save_json(ANN_FILE, data)
 
     msg = urllib.parse.quote("已修改并保存。")
-    return redirect(f"/?message={msg}&type=success&file={file_key}")
+    return redirect(f"/?message={msg}&type=success&tab={tab}")
 
 
-@app.route("/delete/<int:index>", methods=["POST"])
-def delete(index):
-    file_key = request.form.get("file") or request.args.get("file", "announcements")
-    json_file = get_json_file(file_key)
-    items, mode = load_data(json_file)
+@app.route("/api/toggle-pin", methods=["POST"])
+def api_toggle_pin():
+    d       = request.get_json()
+    item_id = str(d.get("item_id", ""))
+    tab     = d.get("tab", "arktips")
+    pin     = d.get("pin", False)
 
-    if mode.startswith("broken"):
-        msg = urllib.parse.quote(f"JSON 格式损坏，无法安全删除 {json_file.name}。")
-        return redirect(f"/?message={msg}&type=warning&file={file_key}")
+    if tab == "arktips":
+        pf, idx = find_item_page(item_id)
+        if pf is None:
+            return jsonify({"ok": False, "msg": "找不到条目"})
+        data = load_page(pf)
+        data[idx]["important"] = pin
+        save_json(pf, data)
+        if pin:
+            arktips_upsert(data[idx])
+        else:
+            arktips_remove(item_id)
+    else:
+        data = load_json(ANN_FILE)
+        if isinstance(data, list):
+            for item in data:
+                if str(item.get("id","")) == item_id:
+                    item["important"] = pin
+                    break
+            save_json(ANN_FILE, data)
 
-    if 0 <= index < len(items):
-        items.pop(index)
-        save_data(items, json_file)
-
-        msg = urllib.parse.quote("已删除，并已自动备份。")
-        return redirect(f"/?message={msg}&type=success&file={file_key}")
-
-    msg = urllib.parse.quote("删除失败：索引不存在。")
-    return redirect(f"/?message={msg}&type=warning&file={file_key}")
-
-
-@app.route("/extract-title/<int:index>", methods=["POST"])
-def extract_title(index):
-    file_key  = request.args.get("file", "announcements")
-    json_file = get_json_file(file_key)
-    items, mode = load_data(json_file)
-
-    if not (0 <= index < len(items)):
-        msg = urllib.parse.quote("索引不存在。")
-        return redirect(f"/?message={msg}&type=warning&file={file_key}")
-
-    item = items[index]
-    # 取 content 或 text 的第一段（第一个非空行）
-    raw = (item.get("content") or item.get("text") or "").strip()
-    first_para = next((line.strip() for line in raw.splitlines() if line.strip()), "")
-
-    if not first_para:
-        msg = urllib.parse.quote("内容为空，无法提取标题。")
-        return redirect(f"/?message={msg}&type=warning&file={file_key}")
-
-    items[index]["title"] = first_para[:80]
-    save_data(items, json_file)
-
-    msg = urllib.parse.quote(f"已提取标题：{first_para[:30]}…")
-    return redirect(f"/?message={msg}&type=success&file={file_key}")
+    return jsonify({"ok": True})
 
 
+@app.route("/api/delete", methods=["POST"])
+def api_delete():
+    d       = request.get_json()
+    item_id = str(d.get("item_id", ""))
+    tab     = d.get("tab", "arktips")
 
-@app.route("/toggle-category/<int:index>", methods=["POST"])
-def toggle_category(index):
-    file_key  = request.args.get("file", "arktips")
-    json_file = get_json_file(file_key)
-    items, mode = load_data(json_file)
+    if tab == "arktips":
+        pf, idx = find_item_page(item_id)
+        if pf is None:
+            # 降级：旧 arktips.json
+            data = load_json(ARKTIPS_FILE)
+            if isinstance(data, list):
+                data = [e for e in data if str(e.get("id","")) != item_id]
+                save_json(ARKTIPS_FILE, data)
+        else:
+            data = load_page(pf)
+            data = [e for e in data if str(e.get("id","")) != item_id]
+            save_json(pf, data)
+        arktips_remove(item_id)
+    else:
+        data = load_json(ANN_FILE)
+        if isinstance(data, list):
+            data = [e for e in data if str(e.get("id","")) != item_id]
+            save_json(ANN_FILE, data)
 
-    if not (0 <= index < len(items)):
-        msg = urllib.parse.quote("索引不存在。")
-        return redirect(f"/?message={msg}&type=warning&file={file_key}")
-
-    cycle = ["活动", "其他", "资源更新"]
-    current = items[index].get("category", "活动")
-    try:
-        next_cat = cycle[(cycle.index(current) + 1) % len(cycle)]
-    except ValueError:
-        next_cat = "活动"
-
-    items[index]["category"] = next_cat
-    save_data(items, json_file)
-
-    msg = urllib.parse.quote(f"分类已切换为：{next_cat}")
-    return redirect(f"/?message={msg}&type=success&file={file_key}")
+    return jsonify({"ok": True})
 
 
 @app.route("/pull", methods=["POST"])
-def pull_remote():
-    file_key = request.args.get("file", "announcements")
-    ok, msg = run_git_pull_only()
-    safe_msg = urllib.parse.quote(msg)
-
-    if ok:
-        return redirect(f"/?message={safe_msg}&type=success&file={file_key}")
-
-    return redirect(f"/?message={urllib.parse.quote('Git 拉取失败：' + msg)}&type=warning&file={file_key}")
-
-
-@app.route("/pull-push", methods=["POST"])
-def pull_then_push():
-    file_key = request.args.get("file", "announcements")
-    ok, msg = run_git_pull_then_push()
-    safe_msg = urllib.parse.quote(msg)
-
-    if ok:
-        return redirect(f"/?message={safe_msg}&type=success&file={file_key}")
-
-    return redirect(f"/?message={urllib.parse.quote('Git 操作失败：' + msg)}&type=warning&file={file_key}")
+def pull():
+    tab    = request.args.get("tab", "arktips")
+    ok, msg = git_pull()
+    safe   = urllib.parse.quote(msg)
+    t      = "success" if ok else "warning"
+    return redirect(f"/?message={safe}&type={t}&tab={tab}")
 
 
 @app.route("/push", methods=["POST"])
 def push():
-    file_key = request.args.get("file", "announcements")
-    ok, msg = run_git_push()
-    safe_msg = urllib.parse.quote(msg)
-
-    if ok:
-        return redirect(f"/?message={safe_msg}&type=success&file={file_key}")
-
-    return redirect(f"/?message={urllib.parse.quote('Git 推送失败：' + msg)}&type=warning&file={file_key}")
+    tab    = request.args.get("tab", "arktips")
+    ok, msg = git_push()
+    safe   = urllib.parse.quote(msg)
+    t      = "success" if ok else "warning"
+    return redirect(f"/?message={safe}&type={t}&tab={tab}")
 
 
 if __name__ == "__main__":
     url = "http://127.0.0.1:5000"
-
     def open_browser():
         webbrowser.open(url)
-
     threading.Timer(1.2, open_browser).start()
     app.run(host="127.0.0.1", port=5000, debug=False)
