@@ -59,6 +59,53 @@ def parse_pin_order(value) -> int:
 
 
 # ──────────────────────────────────────────────────────────────
+# 启动时清理过期置顶
+# ──────────────────────────────────────────────────────────────
+def cleanup_expired_pins():
+    """
+    检查 arktips.json 里所有置顶条目：
+    - pinExpiry 有值且已过期 → 从 arktips.json 删除，并在分页文件里把 important 设为 False
+    - 同时把分页文件里 important=True 但 pinExpiry 已过期的条目也清掉
+    """
+    data = load_json(ARKTIPS_FILE)
+    if not isinstance(data, list):
+        return
+
+    today = datetime.now().date()
+    removed_ids = []
+
+    cleaned = []
+    for item in data:
+        expiry = item.get("pinExpiry", "")
+        if expiry:
+            try:
+                exp_date = datetime.strptime(expiry, "%Y-%m-%d").date()
+                if exp_date < today:
+                    removed_ids.append(str(item.get("id", "")))
+                    print(f"[CLEANUP] 置顶已过期，移除: id={item.get('id')} expiry={expiry}")
+                    continue
+            except ValueError:
+                pass
+        cleaned.append(item)
+
+    if removed_ids:
+        save_json(ARKTIPS_FILE, cleaned)
+        # 同步更新分页文件里的 important 字段
+        for pf in get_page_files():
+            items = load_page(pf)
+            changed = False
+            for item in items:
+                if str(item.get("id", "")) in removed_ids and item.get("important"):
+                    item["important"] = False
+                    changed = True
+            if changed:
+                save_json(pf, items)
+        print(f"[CLEANUP] 清理完成，共移除 {len(removed_ids)} 条过期置顶")
+    else:
+        print(f"[CLEANUP] 无过期置顶，arktips.json 共 {len(cleaned)} 条有效置顶")
+
+
+# ──────────────────────────────────────────────────────────────
 # 分页文件管理
 # ──────────────────────────────────────────────────────────────
 def get_page_files() -> list[Path]:
@@ -833,6 +880,8 @@ def push():
 
 
 if __name__ == "__main__":
+    print("[STARTUP] 检查过期置顶...")
+    cleanup_expired_pins()
     url = "http://127.0.0.1:5000"
     def open_browser():
         webbrowser.open(url)
