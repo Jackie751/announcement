@@ -836,7 +836,7 @@ def api_items():
     if tab == "arktips":
         page_files = get_page_files()
         if page_files:
-            for pf in page_files:
+            for pf in reversed(page_files):
                 for item in load_page(pf):
                     item["_page"]      = pf.name
                     item["_page_file"] = str(pf)
