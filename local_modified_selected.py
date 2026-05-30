@@ -335,19 +335,24 @@ var BATCH = 30;
 function switchTab(tab) { window.location.href = '/?tab=' + tab; }
 
 function jumpToCard() {
-  var n = parseInt(document.getElementById('jumpNum').value);
+  var input = document.getElementById('jumpNum');
+  var n = parseInt(input.value);
   if (!n || n < 1) return;
+
   // 先确保足够多的数据已渲染
   while (rendered < Math.min(n, filteredItems.length)) {
     renderBatch();
   }
+
   var cards = document.querySelectorAll('#itemList .item-card');
   var target = cards[n - 1];
   if (target) {
+    // 跳转后直接设为“当前选中条目”，这样后续 E/C/置顶/删除等快捷操作都能直接作用在它身上
+    selectCard(n - 1);
     target.scrollIntoView({behavior:'smooth', block:'center'});
-    target.style.transition = 'outline .3s';
-    target.style.outline = '2px solid rgba(180,126,255,.8)';
-    setTimeout(function() { target.style.outline = ''; }, 1500);
+
+    // 退出输入框焦点，否则键盘仍被当作正在输入，其他快捷键会被 isTyping 拦住
+    if (input) input.blur();
   }
 }
 
