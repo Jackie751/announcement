@@ -11,7 +11,6 @@ import threading
 import subprocess
 import urllib.parse
 import re
-import os
 
 app = Flask(__name__)
 
@@ -22,16 +21,6 @@ ANN_FILE     = BASE_DIR / "announcements.json"
 ARKTIPS_FILE = BASE_DIR / "arktips.json"
 PAGE_PREFIX  = "arktips-"
 PAGE_SIZE    = 100
-
-# VPS 模式：push 后自毁仓库
-VPS_MODE = os.environ.get("VPS_MODE", "0") == "1"
-
-# 引入前端密码验证（需要 auth.py 在同目录）
-try:
-    from auth import init_auth
-    _auth_available = True
-except ImportError:
-    _auth_available = False
 
 
 # ──────────────────────────────────────────────────────────────
@@ -174,7 +163,6 @@ def ensure_gitignore():
         gitignore.write_text(line + "\n", encoding="utf-8")
 
 def git_push():
-    """普通 push，本地模式用"""
     ensure_gitignore()
     branch = get_current_branch()
     run_cmd(["git", "add", "."])
@@ -187,32 +175,6 @@ def git_push():
     if not ok3:
         return False, "git push 失败：" + out3
     return True, f"已推送到 origin/{branch}"
-
-def git_push_and_destroy():
-    """VPS 模式：push 成功后延迟 1.5 秒销毁整个仓库目录并退出进程"""
-    ensure_gitignore()
-    branch = get_current_branch()
-    run_cmd(["git", "add", "."])
-    msg = f"Update {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
-    run_cmd(["git", "commit", "-m", msg])
-
-    ok_pull, out_pull = run_cmd(["git", "pull", "--rebase", "origin", branch])
-    if not ok_pull:
-        return False, "git pull 失败：" + out_pull
-
-    ok_push, out_push = run_cmd(["git", "push", "origin", f"HEAD:refs/heads/{branch}"])
-    if not ok_push:
-        return False, "git push 失败：" + out_push
-
-    def self_destruct():
-        import time
-        time.sleep(1.5)
-        print("[VPS] Push 成功，正在销毁仓库目录...")
-        shutil.rmtree(BASE_DIR, ignore_errors=True)
-        os._exit(0)
-
-    threading.Thread(target=self_destruct, daemon=True).start()
-    return True, f"✅ 已推送到 origin/{branch}，仓库将在 1 秒后自动销毁，请关闭此页面。"
 
 def git_pull():
     branch = get_current_branch()
@@ -240,15 +202,12 @@ html,body{min-height:100%;background:#05050f;color:#dde;font-family:'Noto Sans S
 canvas#particles{position:fixed;inset:0;pointer-events:none;z-index:0;}
 .topbar{position:sticky;top:0;z-index:100;background:rgba(6,4,20,.88);border-bottom:1px solid rgba(180,126,255,.18);padding:10px 24px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;backdrop-filter:blur(18px);}
 .topbar h1{font-family:'Orbitron',monospace;font-size:.9em;color:#b47eff;flex-shrink:0;letter-spacing:.1em;}
-.vps-badge{padding:3px 10px;border-radius:999px;border:1px solid rgba(251,191,36,.35);background:rgba(251,191,36,.08);color:#fbbf24;font-family:'Share Tech Mono',monospace;font-size:11px;letter-spacing:.05em;}
 .tab-btn{padding:5px 16px;border-radius:999px;border:1px solid rgba(180,126,255,.3);background:transparent;color:#b47eff;cursor:pointer;font-size:13px;transition:all .2s;}
 .tab-btn.active,.tab-btn:hover{background:rgba(180,126,255,.15);border-color:#b47eff;}
 .git-btn{padding:5px 16px;border-radius:999px;border:1px solid rgba(0,229,255,.3);background:transparent;color:#00e5ff;cursor:pointer;font-size:13px;transition:all .2s;}
 .git-btn:hover{background:rgba(0,229,255,.1);}
 .git-btn.push{border-color:rgba(74,222,128,.3);color:#4ade80;}
 .git-btn.push:hover{background:rgba(74,222,128,.1);}
-.git-btn.push-destroy{border-color:rgba(251,191,36,.4);color:#fbbf24;}
-.git-btn.push-destroy:hover{background:rgba(251,191,36,.1);}
 .msg{padding:9px 24px;font-size:13px;border-bottom:1px solid rgba(255,255,255,.06);position:relative;z-index:1;}
 .msg.success{color:#4ade80;background:rgba(74,222,128,.07);}
 .msg.warning{color:#fbbf24;background:rgba(251,191,36,.07);}
@@ -331,24 +290,13 @@ textarea{resize:vertical;min-height:72px;}
 .fnav-jump input:focus{border-color:rgba(180,126,255,.5);}
 .fnav-jump button{width:26px;height:26px;border-radius:50%;border:none;background:rgba(180,126,255,.2);color:#d0b0ff;font-size:12px;cursor:pointer;transition:all .2s;}
 .fnav-jump button:hover{background:rgba(180,126,255,.4);color:#fff;}
-/* 销毁倒计时覆盖层 */
-#destroy-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:9999;flex-direction:column;align-items:center;justify-content:center;gap:18px;backdrop-filter:blur(8px);}
-#destroy-overlay.show{display:flex;}
-#destroy-overlay h2{font-family:'Orbitron',monospace;color:#fbbf24;font-size:1.1em;letter-spacing:.1em;}
-#destroy-overlay p{font-family:'Share Tech Mono',monospace;color:rgba(200,210,255,.5);font-size:13px;}
-#destroy-counter{font-family:'Orbitron',monospace;font-size:3em;color:#f87171;}
 </style>
 </head>
 <body>
 <canvas id="particles"></canvas>
-<div id="destroy-overlay">
-  <h2>⚠ 仓库销毁中</h2>
-  <div id="destroy-counter">3</div>
-  <p>Push 成功，服务即将关闭，请关闭此页面</p>
-</div>
 """
 
-HTML_JS_TEMPLATE = """
+HTML_JS = """
 <div class="modal-overlay" id="modalOverlay">
   <div class="modal">
     <h2>✏️ 编辑条目</h2>
@@ -376,7 +324,6 @@ HTML_JS_TEMPLATE = """
 
 <script>
 var currentTab   = '__TAB__';
-var vpsMode      = __VPS_MODE__;
 var allItems     = [];
 var rendered     = 0;
 var isLoading    = false;
@@ -638,20 +585,6 @@ function openEdit(idx) {
 
 function closeModal() { document.getElementById('modalOverlay').classList.remove('show'); }
 
-// ── 销毁倒计时 ──
-function startDestroyCountdown() {
-  var overlay = document.getElementById('destroy-overlay');
-  var counter = document.getElementById('destroy-counter');
-  overlay.classList.add('show');
-  var n = 5;
-  counter.textContent = n;
-  var iv = setInterval(function() {
-    n--;
-    counter.textContent = n;
-    if (n <= 0) { clearInterval(iv); counter.textContent = '💥'; }
-  }, 1000);
-}
-
 var observer = new IntersectionObserver(function(entries) {
   if (entries[0].isIntersecting && !isLoading) {
     isLoading = true;
@@ -712,14 +645,8 @@ document.addEventListener('keydown', function(event) {
   }
   if (event.ctrlKey && key === 'i') {
     event.preventDefault();
-    var confirmMsg = vpsMode
-      ? '⚠️ VPS 模式：Push 后服务器将自动销毁仓库并关闭！确认继续？'
-      : '推送到 GitHub？';
-    if (confirm(confirmMsg)) {
-      if (vpsMode) startDestroyCountdown();
-      fetch('/push?tab=' + currentTab, {method:'POST'}).then(function() {
-        if (!vpsMode) location.reload();
-      });
+    if (confirm('推送到 GitHub？')) {
+      fetch('/push?tab=' + currentTab, {method:'POST'}).then(function() { location.reload(); });
     }
   }
 });
@@ -825,25 +752,9 @@ def render_page(tab="arktips", message="", message_type="success"):
     msg_html = f'<div class="msg {h(message_type)}">{h(message)}</div>' if message else ""
     form_html = build_form_html(tab, today)
 
-    # VPS 模式：Push 按钮换色换文字，弹出更醒目的警告
-    if VPS_MODE:
-        push_btn = f"""
-  <form method="post" action="/push?tab={tab}" style="display:inline"
-        onsubmit="event.preventDefault();if(confirm('⚠️ VPS 模式\\nPush 成功后服务器将自动销毁仓库并关闭！\\n\\n确认推送？')){{startDestroyCountdown();fetch(this.action,{{method:'POST'}});}}">
-    <button class="git-btn push-destroy" type="submit">⬆ Push &amp; 销毁</button>
-  </form>"""
-        vps_badge = '<span class="vps-badge">⚡ VPS MODE</span>'
-    else:
-        push_btn = f"""
-  <form method="post" action="/push?tab={tab}" style="display:inline" onsubmit="return confirm('推送到 GitHub？')">
-    <button class="git-btn push" type="submit">⬆ Push</button>
-  </form>"""
-        vps_badge = ""
-
     body = f"""
 <div class="topbar">
   <h1>📋 Local Manager</h1>
-  {vps_badge}
   <span style="font-family:'Share Tech Mono',monospace;font-size:11px;color:rgba(180,200,255,.65);letter-spacing:.04em;">
     P=保存 &nbsp;E=编辑 &nbsp;C=切换分类 &nbsp;A=顶部 &nbsp;D=底部 &nbsp;G=跳转 &nbsp;M=Pull &nbsp;I=Push &nbsp;Esc=关闭
   </span>
@@ -852,7 +763,9 @@ def render_page(tab="arktips", message="", message_type="success"):
   <form method="post" action="/pull?tab={tab}" style="display:inline" onsubmit="return confirm('拉取远程？')">
     <button class="git-btn" type="submit">⬇ Pull</button>
   </form>
-  {push_btn}
+  <form method="post" action="/push?tab={tab}" style="display:inline" onsubmit="return confirm('推送到 GitHub？')">
+    <button class="git-btn push" type="submit">⬆ Push</button>
+  </form>
 </div>
 
 {msg_html}
@@ -909,8 +822,7 @@ def render_page(tab="arktips", message="", message_type="success"):
   </div>
 </div>
 """
-    vps_js_flag = "true" if VPS_MODE else "false"
-    js = HTML_JS_TEMPLATE.replace("__TAB__", tab).replace("__VPS_MODE__", vps_js_flag)
+    js = HTML_JS.replace("__TAB__", tab)
     return HTML_HEAD + body + js
 
 
@@ -1017,6 +929,7 @@ def add():
 
 @app.route("/update", methods=["POST"])
 def update():
+    from flask import jsonify
     tab       = request.form.get("tab", "arktips")
     item_id   = request.form.get("item_id", "")
     page_file = request.form.get("page_file", "")
@@ -1165,36 +1078,18 @@ def pull():
 
 @app.route("/push", methods=["POST"])
 def push():
-    tab = request.args.get("tab", "arktips")
-    if VPS_MODE:
-        ok, msg = git_push_and_destroy()
-    else:
-        ok, msg = git_push()
-    safe = urllib.parse.quote(msg)
-    t    = "success" if ok else "warning"
-    # VPS 模式 push 成功后不 redirect（进程即将退出），直接返回纯文本
-    if VPS_MODE and ok:
-        return Response(msg, mimetype="text/plain")
+    tab    = request.args.get("tab", "arktips")
+    ok, msg = git_push()
+    safe   = urllib.parse.quote(msg)
+    t      = "success" if ok else "warning"
     return redirect(f"/?message={safe}&type={t}&tab={tab}")
 
 
 if __name__ == "__main__":
-    import argparse
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--port", type=int, default=5000)
-    args, _ = parser.parse_known_args()
-
     print("[STARTUP] 检查过期置顶...")
     cleanup_expired_pins()
-    if _auth_available:
-        init_auth(app)
-    if VPS_MODE:
-        print("[VPS MODE] Push 后将自动销毁仓库目录")
-        host = "0.0.0.0"
-    else:
-        url = f"http://127.0.0.1:{args.port}"
-        def open_browser():
-            webbrowser.open(url)
-        threading.Timer(1.2, open_browser).start()
-        host = "127.0.0.1"
-    app.run(host=host, port=args.port, debug=False)
+    url = "http://127.0.0.1:5000"
+    def open_browser():
+        webbrowser.open(url)
+    threading.Timer(1.2, open_browser).start()
+    app.run(host="127.0.0.1", port=5000, debug=False)
