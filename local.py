@@ -335,19 +335,20 @@ var BATCH = 30;
 function switchTab(tab) { window.location.href = '/?tab=' + tab; }
 
 function jumpToCard() {
-  var n = parseInt(document.getElementById('jumpNum').value);
+  var input = document.getElementById('jumpNum');
+  var n = parseInt(input.value);
   if (!n || n < 1) return;
-  // 先确保足够多的数据已渲染
+
   while (rendered < Math.min(n, filteredItems.length)) {
     renderBatch();
   }
+
   var cards = document.querySelectorAll('#itemList .item-card');
   var target = cards[n - 1];
   if (target) {
+    selectCard(n - 1);
     target.scrollIntoView({behavior:'smooth', block:'center'});
-    target.style.transition = 'outline .3s';
-    target.style.outline = '2px solid rgba(180,126,255,.8)';
-    setTimeout(function() { target.style.outline = ''; }, 1500);
+    if (input) input.blur();
   }
 }
 
@@ -499,7 +500,7 @@ function quickTogglePin(pin) {
 
 function quickCycleCategory() {
   var item = getSelected(); if (!item) return;
-  var cycle = ['活动','资源更新','其他'];
+  var cycle = ['活动','资源更新','预告资讯','社区周边','其他'];
   var next  = cycle[(cycle.indexOf(item.category||'活动') + 1) % cycle.length];
   postJson('/api/set-field', {item_id:item.id, tab:currentTab, field:'category', value:next}, function(d) {
     if (d.ok) { alert('✅ 分类：' + next); loadData(); } else alert('失败：' + d.msg);
@@ -551,7 +552,7 @@ function openEdit(idx) {
   var fields = '';
   if (currentTab === 'arktips') {
     var imgs = Array.isArray(item.images) ? item.images.join('\\n') : (item.image||'');
-    var cats = ['活动','资源更新','其他'].map(function(c) {
+    var cats = ['活动','资源更新','预告资讯','社区周边','其他'].map(function(c) {
       return '<option value="' + c + '"' + (item.category===c?' selected':'') + '>' + c + '</option>';
     }).join('');
     fields = '<div class="form-row"><label>频道</label><input type="text" name="channel" value="' + esc(item.channel||'') + '"></div>' +
@@ -565,7 +566,7 @@ function openEdit(idx) {
       '<div class="form-row form-full checkbox-row"><input type="checkbox" name="important" id="imp_edit"' + ((item.important===true||item.important==='true'||item.important===1)?' checked':'') + '>' +
       '<label for="imp_edit" style="text-transform:none;letter-spacing:0;font-size:13px;color:#ccb;">📌 置顶（保存后自动同步 arktips.json）</label></div>';
   } else {
-    var cats2 = ['重要','更新','维护','活动','其他'].map(function(c) {
+    var cats2 = ['重要','更新','维护','活动','预告资讯','社区周边','其他'].map(function(c) {
       return '<option value="' + c + '"' + (item.category===c?' selected':'') + '>' + c + '</option>';
     }).join('');
     fields = '<div class="form-row form-full"><label>标题</label><input type="text" name="title" value="' + esc(item.title||'') + '"></div>' +
@@ -597,7 +598,7 @@ document.getElementById('modalOverlay').addEventListener('click', function(e) {
   if (e.target === this) closeModal();
 });
 
-// ── 快捷键（旧版风格）──
+// ── 快捷键 ──
 document.addEventListener('keydown', function(event) {
   var key = event.key.toLowerCase();
   var active = document.activeElement;
@@ -631,6 +632,10 @@ document.addEventListener('keydown', function(event) {
   if (event.ctrlKey && key === 'e') {
     event.preventDefault();
     quickEdit();
+  }
+  if (key === 'c') {
+    event.preventDefault();
+    quickCycleCategory();
   }
   if (event.ctrlKey && key === 'm') {
     event.preventDefault();
@@ -696,6 +701,8 @@ def build_form_html(tab: str, today: str) -> str:
             <select name="category">
               <option value="活动">活动</option>
               <option value="资源更新">资源更新</option>
+              <option value="预告资讯">预告资讯</option>
+              <option value="社区周边">社区周边</option>
               <option value="其他">其他</option>
             </select>
           </div>
@@ -720,6 +727,8 @@ def build_form_html(tab: str, today: str) -> str:
               <option value="更新">更新</option>
               <option value="维护">维护</option>
               <option value="活动">活动</option>
+              <option value="预告资讯">预告资讯</option>
+              <option value="社区周边">社区周边</option>
               <option value="其他">其他</option>
             </select>
           </div>
@@ -747,7 +756,7 @@ def render_page(tab="arktips", message="", message_type="success"):
 <div class="topbar">
   <h1>📋 Local Manager</h1>
   <span style="font-family:'Share Tech Mono',monospace;font-size:11px;color:rgba(180,200,255,.65);letter-spacing:.04em;">
-    P=保存 &nbsp;E=编辑 &nbsp;A=顶部 &nbsp;D=底部 &nbsp;G=跳转 &nbsp;M=Pull &nbsp;I=Push &nbsp;Esc=关闭
+    P=保存 &nbsp;E=编辑 &nbsp;C=切换分类 &nbsp;A=顶部 &nbsp;D=底部 &nbsp;G=跳转 &nbsp;M=Pull &nbsp;I=Push &nbsp;Esc=关闭
   </span>
   <button class="tab-btn {arktips_active}" onclick="switchTab('arktips')">资源区</button>
   <button class="tab-btn {ann_active}" onclick="switchTab('announcements')">公告</button>
