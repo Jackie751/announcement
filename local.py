@@ -648,7 +648,11 @@ function startDestroyCountdown() {
   var iv = setInterval(function() {
     n--;
     counter.textContent = n;
-    if (n <= 0) { clearInterval(iv); counter.textContent = '💥'; }
+    if (n <= 0) {
+      clearInterval(iv);
+      counter.textContent = '💥';
+      setTimeout(function(){ window.location.href = '/launcher/'; }, 800);
+    }
   }, 1000);
 }
 
@@ -1012,7 +1016,7 @@ def add():
         data.insert(0, item)
         save_json(ANN_FILE, data)
     msg = urllib.parse.quote("已保存。")
-    return redirect(f"/?message={msg}&type=success&tab={tab}")
+    return redirect(f"/manage/?message={msg}&type=success&tab={tab}")
 
 
 @app.route("/update", methods=["POST"])
@@ -1067,7 +1071,7 @@ def update():
                 }
                 save_json(ANN_FILE, data)
     msg = urllib.parse.quote("已修改并保存。")
-    return redirect(f"/?message={msg}&type=success&tab={tab}")
+    return redirect(f"/manage/?message={msg}&type=success&tab={tab}")
 
 
 @app.route("/api/toggle-pin", methods=["POST"])
@@ -1160,7 +1164,7 @@ def pull():
     ok, msg = git_pull()
     safe   = urllib.parse.quote(msg)
     t      = "success" if ok else "warning"
-    return redirect(f"/?message={safe}&type={t}&tab={tab}")
+    return redirect(f"/manage/?message={safe}&type={t}&tab={tab}")
 
 
 @app.route("/push", methods=["POST"])
@@ -1175,7 +1179,7 @@ def push():
     # VPS 模式 push 成功后不 redirect（进程即将退出），直接返回纯文本
     if VPS_MODE and ok:
         return Response(msg, mimetype="text/plain")
-    return redirect(f"/?message={safe}&type={t}&tab={tab}")
+    return redirect(f"/manage/?message={safe}&type={t}&tab={tab}")
 
 
 if __name__ == "__main__":
