@@ -337,6 +337,386 @@ textarea{resize:vertical;min-height:72px;}
 #destroy-overlay h2{font-family:'Orbitron',monospace;color:#fbbf24;font-size:1.1em;letter-spacing:.1em;}
 #destroy-overlay p{font-family:'Share Tech Mono',monospace;color:rgba(200,210,255,.5);font-size:13px;}
 #destroy-counter{font-family:'Orbitron',monospace;font-size:3em;color:#f87171;}
+
+/* ─────────────────────────────────────────────
+   Mobile Responsive Layout
+   移动端适配：不改功能，只改布局和触控体验
+───────────────────────────────────────────── */
+
+@media (max-width: 900px) {
+  html, body {
+    font-size: 14px;
+    overflow-x: hidden;
+  }
+
+  body {
+    background:
+      radial-gradient(circle at top, rgba(80, 35, 150, .28), transparent 42%),
+      #05050f;
+  }
+
+  .topbar {
+    position: sticky;
+    top: 0;
+    padding: 10px 12px;
+    gap: 8px;
+    align-items: center;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .topbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .topbar h1 {
+    font-size: .78em;
+    white-space: nowrap;
+    margin-right: 2px;
+  }
+
+  .topbar > span {
+    display: none !important;
+  }
+
+  .vps-badge {
+    white-space: nowrap;
+    font-size: 10px;
+    padding: 3px 8px;
+  }
+
+  .tab-btn,
+  .git-btn {
+    flex: 0 0 auto;
+    min-height: 34px;
+    padding: 7px 13px;
+    font-size: 12px;
+    white-space: nowrap;
+  }
+
+  .msg {
+    padding: 9px 12px;
+    font-size: 12px;
+    line-height: 1.5;
+  }
+
+  .layout {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .main-col {
+    width: 100%;
+    padding: 12px;
+    order: 2;
+  }
+
+  .side-col {
+    width: 100%;
+    padding: 12px 12px 0;
+    order: 1;
+  }
+
+  .side-panel {
+    position: relative;
+    top: auto;
+    border-radius: 14px;
+    padding: 14px;
+  }
+
+  .side-panel h3 {
+    font-size: .7em;
+    margin-bottom: 10px;
+  }
+
+  .side-section {
+    margin-bottom: 12px;
+  }
+
+  .quick-btn {
+    min-height: 38px;
+    padding: 8px 10px;
+    font-size: 13px;
+  }
+
+  .search-input-side,
+  .expiry-mini input {
+    min-height: 38px;
+    font-size: 14px;
+  }
+
+  .add-form {
+    padding: 15px;
+    border-radius: 14px;
+    margin-bottom: 14px;
+  }
+
+  .add-form h2 {
+    font-size: .72em;
+    margin-bottom: 12px;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+    gap: 9px;
+  }
+
+  .form-full {
+    grid-column: 1;
+  }
+
+  label {
+    font-size: 10px;
+  }
+
+  input[type=text],
+  input[type=date],
+  textarea,
+  select {
+    min-height: 40px;
+    padding: 9px 10px;
+    font-size: 14px;
+    border-radius: 9px;
+  }
+
+  textarea {
+    min-height: 86px;
+  }
+
+  .checkbox-row {
+    align-items: flex-start;
+    gap: 9px;
+  }
+
+  .checkbox-row input[type=checkbox] {
+    width: 18px;
+    height: 18px;
+    margin-top: 2px;
+    flex-shrink: 0;
+  }
+
+  .checkbox-row label {
+    line-height: 1.45;
+  }
+
+  .btn {
+    min-height: 40px;
+    padding: 9px 14px;
+    border-radius: 9px;
+    font-size: 14px;
+  }
+
+  .btn-primary {
+    width: 100%;
+  }
+
+  .item-card {
+    padding: 13px 13px;
+    border-radius: 13px;
+    margin-bottom: 10px;
+  }
+
+  .item-top {
+    gap: 7px;
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .item-num {
+    min-width: 26px;
+    font-size: 10px;
+    padding-top: 4px;
+  }
+
+  .item-title {
+    font-size: 14px;
+    line-height: 1.55;
+  }
+
+  .item-badges {
+    width: 100%;
+    margin-top: 3px;
+  }
+
+  .item-meta {
+    font-size: 10px;
+    line-height: 1.5;
+    margin-bottom: 7px;
+  }
+
+  .item-content {
+    font-size: 13px;
+    line-height: 1.6;
+    max-height: 90px;
+    padding: 8px 10px;
+  }
+
+  .expand-btn {
+    font-size: 11px;
+    padding: 5px 2px;
+  }
+
+  .item-images {
+    gap: 7px;
+  }
+
+  .item-img {
+    width: 72px;
+    height: 72px;
+    border-radius: 8px;
+  }
+
+  .item-actions {
+    gap: 7px;
+  }
+
+  .btn-sm {
+    min-height: 34px;
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+
+  .page-label {
+    font-size: 10px;
+    padding: 9px 0;
+  }
+
+  .modal-overlay.show {
+    padding: 18px 10px;
+    align-items: flex-start;
+  }
+
+  .modal {
+    max-width: 100%;
+    padding: 18px 14px;
+    border-radius: 14px;
+  }
+
+  .modal h2 {
+    font-size: .78em;
+    margin-bottom: 14px;
+  }
+
+  .modal-actions {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .modal-actions .btn {
+    width: 100%;
+  }
+
+  #float-nav {
+    right: 12px;
+    bottom: 14px;
+    gap: 6px;
+  }
+
+  .fnav-btn {
+    width: 38px;
+    height: 38px;
+    font-size: 15px;
+  }
+
+  .fnav-jump {
+    padding: 4px 6px;
+  }
+
+  .fnav-jump input {
+    width: 50px;
+    height: 30px;
+    font-size: 13px;
+  }
+
+  .fnav-jump button {
+    width: 25px;
+    height: 25px;
+  }
+
+  #destroy-overlay h2 {
+    font-size: .95em;
+  }
+
+  #destroy-counter {
+    font-size: 2.5em;
+  }
+
+  #destroy-overlay p {
+    font-size: 12px;
+    padding: 0 18px;
+    text-align: center;
+  }
+}
+
+@media (max-width: 520px) {
+  .topbar {
+    padding: 9px 10px;
+    gap: 6px;
+  }
+
+  .topbar h1 {
+    font-size: .72em;
+  }
+
+  .tab-btn,
+  .git-btn {
+    min-height: 32px;
+    padding: 6px 11px;
+    font-size: 11px;
+  }
+
+  .main-col {
+    padding: 10px;
+  }
+
+  .side-col {
+    padding: 10px 10px 0;
+  }
+
+  .side-panel {
+    padding: 12px;
+    background: rgba(8,5,28,.72);
+  }
+
+  .add-form {
+    padding: 13px;
+    background: rgba(8,5,28,.68);
+  }
+
+  .item-card {
+    padding: 12px;
+    background: rgba(8,5,28,.62);
+  }
+
+  .item-title {
+    font-size: 13.5px;
+  }
+
+  .item-content {
+    font-size: 12.8px;
+  }
+
+  .item-img {
+    width: 66px;
+    height: 66px;
+  }
+
+  .badge {
+    font-size: 9px;
+    padding: 2px 7px;
+  }
+
+  .quick-btn {
+    font-size: 12.5px;
+  }
+
+  canvas#particles {
+    opacity: .45;
+  }
+}
+
 </style>
 </head>
 <body>
