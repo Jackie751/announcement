@@ -215,7 +215,7 @@ def init_auth(app):
         from flask import jsonify
         data = request.get_json(silent=True) or {}
         pwd  = data.get("password", "")
-        next_url = request.args.get("next", "/manage/")
+        next_url = request.args.get("next", "/launcher")
         if pwd == PASSWORD:
             ts  = str(time.time())
             sig = _make_token(ts)
