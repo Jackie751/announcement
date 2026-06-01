@@ -765,7 +765,7 @@ var searchTerm   = '';
 var filteredItems = [];
 var BATCH = 30;
 
-function switchTab(tab) { window.location.href = '/?tab=' + tab; }
+function switchTab(tab) { window.location.href = '/manage/?tab=' + tab; }
 
 function jumpToCard() {
   var input = document.getElementById('jumpNum');
