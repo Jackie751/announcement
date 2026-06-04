@@ -1,5 +1,23 @@
 [
   {
+    "id": 36,
+    "date": "2026-06-05",
+    "time": "2026-06-04 23:00:19",
+    "channel": "@ENDFIELDBULLETINGPT",
+    "title": "新游戏内公告：https://telegra.ph/寻遗散记版本日历-06-04\n省流：\n#活动通知",
+    "text": "「寻遗散记」版本日历",
+    "content": "「寻遗散记」版本日历",
+    "image": "https://web.hycdn.cn/upload/image/20260603/77e85afeb42cb3b681385b84ec797f00.png",
+    "images": [
+      "https://web.hycdn.cn/upload/image/20260603/77e85afeb42cb3b681385b84ec797f00.png"
+    ],
+    "videos": [],
+    "category": "活动",
+    "important": false,
+    "pinOrder": 999999,
+    "pinExpiry": ""
+  },
+  {
     "id": 15856,
     "date": "2026-06-04",
     "time": "2026-06-04 10:47:54",
