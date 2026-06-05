@@ -421,11 +421,15 @@ function renderCard(item, idx) {
   var content = esc(item.content || item.text || '');
   var pinned  = item.important === true || item.important === 'true' || item.important === 1;
   var imgs    = Array.isArray(item.images) ? item.images.filter(Boolean) : (item.image ? [item.image] : []);
+  var vids    = Array.isArray(item.videos) ? item.videos.filter(Boolean) : [];
   var badges  = (pinned ? '<span class="badge badge-pin">📌</span>' : '') +
                 (cat ? '<span class="badge badge-cat">' + cat + '</span>' : '') +
                 (ch  ? '<span class="badge badge-ch">'  + ch  + '</span>' : '');
   var imgHtml = imgs.slice(0,3).map(function(u) {
     return '<img class="item-img" src="' + esc(u) + '">';
+  }).join('');
+  var vidHtml = vids.slice(0,2).map(function(u) {
+    return '<video src="' + esc(u) + '" controls preload="metadata" style="max-width:100%;max-height:120px;border-radius:7px;border:1px solid rgba(180,126,255,.15);margin-top:4px;display:block;"></video>';
   }).join('');
   var contentHtml = content
     ? '<div class="item-content" id="ct-' + idx + '">' + content + '</div>' +
@@ -440,6 +444,7 @@ function renderCard(item, idx) {
     '<div class="item-meta">' + date + (item.id ? ' &nbsp;·&nbsp; id:' + esc(String(item.id)) : '') + '</div>' +
     contentHtml +
     (imgHtml ? '<div class="item-images">' + imgHtml + '</div>' : '') +
+    (vidHtml ? '<div style="margin-top:6px">' + vidHtml + '</div>' : '') +
     '</div>';
 }
 
@@ -552,6 +557,7 @@ function openEdit(idx) {
   var fields = '';
   if (currentTab === 'arktips') {
     var imgs = Array.isArray(item.images) ? item.images.join('\\n') : (item.image||'');
+    var vids = Array.isArray(item.videos) ? item.videos.join('\\n') : '';
     var cats = ['活动','资源更新','预告资讯','社区周边','其他'].map(function(c) {
       return '<option value="' + c + '"' + (item.category===c?' selected':'') + '>' + c + '</option>';
     }).join('');
@@ -560,6 +566,7 @@ function openEdit(idx) {
       '<div class="form-row form-full"><label>标题</label><input type="text" name="title" value="' + esc(item.title||'') + '"></div>' +
       '<div class="form-row form-full"><label>文本内容</label><textarea name="text" rows="4">' + esc(item.text||item.content||'') + '</textarea></div>' +
       '<div class="form-row form-full"><label>图片链接（每行一个）</label><textarea name="images" rows="3">' + esc(imgs) + '</textarea></div>' +
+      '<div class="form-row form-full"><label>视频链接（每行一个）</label><textarea name="videos" rows="3" placeholder="https://...">' + esc(vids) + '</textarea></div>' +
       '<div class="form-row"><label>分类</label><select name="category">' + cats + '</select></div>' +
       '<div class="form-row"><label>置顶顺序</label><input type="text" name="pinOrder" value="' + esc(item.pinOrder===999999?'':item.pinOrder) + '"></div>' +
       '<div class="form-row"><label>截止日期</label><input type="date" name="pinExpiry" value="' + esc(item.pinExpiry||'') + '"></div>' +
@@ -942,6 +949,8 @@ def update():
             if idx >= 0:
                 imgs_raw  = request.form.get("images", "").strip()
                 imgs      = [x.strip() for x in imgs_raw.splitlines() if x.strip()]
+                vids_raw  = request.form.get("videos", "").strip()
+                vids      = [x.strip() for x in vids_raw.splitlines() if x.strip()]
                 raw_text  = request.form.get("text", "").strip()
                 raw_title = request.form.get("title", "").strip()
                 old = data[idx]
@@ -953,6 +962,7 @@ def update():
                     "text":      raw_text, "content": raw_text,
                     "image":     imgs[0] if imgs else "",
                     "images":    imgs,
+                    "videos":    vids,
                     "category":  request.form.get("category", "活动").strip(),
                     "important": important,
                     "pinOrder":  parse_pin_order(request.form.get("pinOrder")),
