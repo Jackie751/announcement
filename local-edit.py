@@ -315,6 +315,7 @@ HTML_JS = """
 
 <div id="float-nav">
   <button class="fnav-btn" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="回到顶部">↑</button>
+  <button class="fnav-btn" onclick="loadData();window.scrollTo({top:0,behavior:'smooth'})" title="刷新缓存" style="font-size:13px;">↺</button>
   <div class="fnav-jump">
     <input type="number" id="jumpNum" min="1" placeholder="N" title="跳到第N条">
     <button onclick="jumpToCard()" title="跳转">→</button>
@@ -331,6 +332,8 @@ var selectedIdx  = -1;
 var searchTerm   = '';
 var filteredItems = [];
 var BATCH = 30;
+var topRemoved   = 0;
+var RECYCLE_KEEP = 60;
 
 function switchTab(tab) { window.location.href = '/?tab=' + tab; }
 
@@ -366,6 +369,7 @@ function loadData() {
     allItems = d.items || [];
     filteredItems = allItems;
     rendered = 0;
+    topRemoved = 0;
     selectedIdx = -1;
     document.getElementById('selectedId').textContent = '— 点击卡片选中 —';
     document.getElementById('itemList').innerHTML = '';
@@ -380,7 +384,7 @@ function onSearch() {
     var s = (item.title||'') + (item.text||'') + (item.content||'') + (item.channel||'') + String(item.id||'');
     return s.toLowerCase().indexOf(searchTerm) >= 0;
   }) : allItems;
-  rendered = 0; selectedIdx = -1;
+  rendered = 0; topRemoved = 0; selectedIdx = -1;
   document.getElementById('itemList').innerHTML = '';
   document.getElementById('listCountBar').textContent = searchTerm
     ? '找到 ' + filteredItems.length + ' / ' + allItems.length + ' 条'
@@ -411,6 +415,29 @@ function renderBatch() {
   }
   list.insertAdjacentHTML('beforeend', html);
   rendered += batch.length;
+  recycleTop();
+}
+
+function recycleTop() {
+  var list = document.getElementById('itemList');
+  var cards = list.querySelectorAll('.item-card');
+  if (cards.length <= RECYCLE_KEEP) return;
+  var removeCount = cards.length - RECYCLE_KEEP;
+  for (var i = 0; i < removeCount; i++) {
+    var card = list.querySelector('.item-card');
+    if (!card) break;
+    // 只回收已滚出视口上方的
+    if (card.getBoundingClientRect().bottom > 0) break;
+    var cardIdx = parseInt(card.id.replace('card-', ''));
+    if (cardIdx === selectedIdx) selectedIdx = -1;
+    // 移除前面可能的 page-label
+    var first = list.firstChild;
+    if (first && first !== card && first.classList && first.classList.contains('page-label')) {
+      list.removeChild(first);
+    }
+    list.removeChild(card);
+    topRemoved++;
+  }
 }
 
 function renderCard(item, idx) {
@@ -475,6 +502,9 @@ function selectCard(idx) {
     var title = (item.title || (item.text||'').slice(0,20) || '无标题').slice(0,24);
     document.getElementById('selectedId').textContent = '#' + (idx+1) + ' · ' + title;
     if (item.pinExpiry) document.getElementById('quickExpiryDate').value = item.pinExpiry;
+    var po = document.getElementById('quickPinOrderInput');
+    if (po) po.value = (item.pinOrder && item.pinOrder !== 999999) ? item.pinOrder : '';
+    initCatButtons(item.category || '');
   }
 }
 
@@ -509,6 +539,47 @@ function quickCycleCategory() {
   var next  = cycle[(cycle.indexOf(item.category||'活动') + 1) % cycle.length];
   postJson('/api/set-field', {item_id:item.id, tab:currentTab, field:'category', value:next}, function(d) {
     if (d.ok) { alert('✅ 分类：' + next); loadData(); } else alert('失败：' + d.msg);
+  });
+}
+
+function quickSetPinOrder() {
+  var item = getSelected(); if (!item) return;
+  var val = parseInt(document.getElementById('quickPinOrderInput').value);
+  if (!val || val < 1) { alert('请输入有效编号'); return; }
+  postJson('/api/set-field', {item_id:item.id, tab:currentTab, field:'pinOrder', value:val}, function(d) {
+    if (d.ok) { alert('✅ 置顶编号：' + val); loadData(); } else alert('失败：' + d.msg);
+  });
+}
+
+function quickClearPinOrder() {
+  var item = getSelected(); if (!item) return;
+  postJson('/api/set-field', {item_id:item.id, tab:currentTab, field:'pinOrder', value:999999}, function(d) {
+    if (d.ok) { alert('✅ 已清除置顶编号'); loadData(); } else alert('失败：' + d.msg);
+  });
+}
+
+function quickSetCategory(cat) {
+  var item = getSelected(); if (!item) return;
+  postJson('/api/set-field', {item_id:item.id, tab:currentTab, field:'category', value:cat}, function(d) {
+    if (d.ok) { initCatButtons(cat); loadData(); } else alert('失败：' + d.msg);
+  });
+}
+
+function initCatButtons(activeCat) {
+  var cats = currentTab === 'arktips'
+    ? ['活动','资源更新','预告资讯','社区周边','其他']
+    : ['重要','更新','维护','活动','预告资讯','社区周边','其他'];
+  var container = document.getElementById('quickCatButtons');
+  if (!container) return;
+  container.innerHTML = cats.map(function(c) {
+    var isActive = c === (activeCat || '');
+    var style = isActive
+      ? 'background:rgba(180,126,255,.35);border-color:#b47eff;color:#fff;'
+      : '';
+    return '<button data-cat="' + c + '" style="padding:3px 9px;border-radius:999px;border:1px solid rgba(180,126,255,.25);background:rgba(180,126,255,.08);color:rgba(200,200,255,.7);cursor:pointer;font-size:11px;font-family:sans-serif;transition:all .15s;' + style + '">' + c + '</button>';
+  }).join('');
+  Array.prototype.forEach.call(container.querySelectorAll('button[data-cat]'), function(btn) {
+    btn.addEventListener('click', function() { quickSetCategory(this.getAttribute('data-cat')); });
   });
 }
 
@@ -600,6 +671,11 @@ var observer = new IntersectionObserver(function(entries) {
   }
 }, {rootMargin:'200px'});
 observer.observe(document.getElementById('sentinel'));
+
+// 滚动时自动回收顶部卡片
+window.addEventListener('scroll', function() {
+  if (rendered >= filteredItems.length) recycleTop();
+}, {passive: true});
 
 document.getElementById('modalOverlay').addEventListener('click', function(e) {
   if (e.target === this) closeModal();
@@ -808,8 +884,19 @@ def render_page(tab="arktips", message="", message_type="success"):
         <button class="quick-btn" onclick="quickExtractTitle()"><span class="qicon">📝</span> 提取标题</button>
         <button class="quick-btn" onclick="quickTogglePin(true)"><span class="qicon">📌</span> 设为置顶</button>
         <button class="quick-btn" onclick="quickTogglePin(false)"><span class="qicon">🔓</span> 取消置顶</button>
-        <button class="quick-btn" onclick="quickCycleCategory()"><span class="qicon">🏷️</span> 切换分类</button>
         <button class="quick-btn" onclick="quickDelete()"><span class="qicon">🗑️</span> 删除选中</button>
+      </div>
+      <div class="side-section">
+        <div class="side-section-title">快捷置顶编号</div>
+        <div style="display:flex;gap:5px;align-items:center;margin-bottom:5px;">
+          <input type="number" id="quickPinOrderInput" min="1" placeholder="编号" style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:7px;color:#eef;padding:7px 10px;font-size:13px;width:100%;outline:none;">
+          <button class="btn btn-sm btn-pin" onclick="quickSetPinOrder()" style="white-space:nowrap">设置</button>
+        </div>
+        <button class="btn btn-sm btn-unpin" style="width:100%" onclick="quickClearPinOrder()">清除编号</button>
+      </div>
+      <div class="side-section">
+        <div class="side-section-title">快捷分类</div>
+        <div id="quickCatButtons" style="display:flex;flex-wrap:wrap;gap:4px;"></div>
       </div>
       <div class="side-section">
         <div class="side-section-title">快捷截止日期</div>
@@ -916,7 +1003,11 @@ def add():
             arktips_upsert(item)
     else:
         important = parse_bool(request.form.get("important"))
+        data = load_json(ANN_FILE)
+        if not isinstance(data, list): data = []
+        new_id = len(data) + 1
         item = {
+            "id":        new_id,
             "title":     request.form.get("title", "").strip(),
             "date":      request.form.get("date", "").strip(),
             "category":  request.form.get("category", "").strip(),
@@ -926,9 +1017,10 @@ def add():
             "pinOrder":  parse_pin_order(request.form.get("pinOrder")),
             "pinExpiry": request.form.get("pinExpiry", "").strip(),
         }
-        data = load_json(ANN_FILE)
-        if not isinstance(data, list): data = []
         data.insert(0, item)
+        # 插入后重新编号保持连续
+        for i, e in enumerate(data):
+            e["id"] = i + 1
         save_json(ANN_FILE, data)
     msg = urllib.parse.quote("已保存。")
     return redirect(f"/?message={msg}&type=success&tab={tab}")
@@ -1073,6 +1165,9 @@ def api_delete():
         data = load_json(ANN_FILE)
         if isinstance(data, list):
             data = [e for e in data if str(e.get("id","")) != item_id]
+            # 删除后重新连续编号，保证 id 始终从 1 连续排列
+            for i, e in enumerate(data):
+                e["id"] = i + 1
             save_json(ANN_FILE, data)
     return jsonify({"ok": True})
 
