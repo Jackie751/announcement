@@ -292,7 +292,7 @@ textarea{resize:vertical;min-height:72px;}
 .item-img{width:64px;height:64px;object-fit:cover;border-radius:7px;border:1px solid rgba(180,126,255,.15);}
 .item-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;}
 .page-label{font-family:'Share Tech Mono',monospace;font-size:10px;color:rgba(180,126,255,.2);padding:8px 0 10px;letter-spacing:.1em;text-transform:uppercase;}
-.side-panel{background:rgba(8,5,28,.55);border:1px solid rgba(180,126,255,.15);border-radius:14px;padding:18px 16px;backdrop-filter:blur(12px);position:sticky;top:60px;max-height:calc(100vh - 76px);overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:rgba(180,126,255,.35) rgba(255,255,255,.04);} 
+.side-panel{background:rgba(8,5,28,.55);border:1px solid rgba(180,126,255,.15);border-radius:14px;padding:18px 16px;backdrop-filter:blur(12px);position:sticky;top:60px;max-height:calc(100vh - 76px);overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;}
 .side-panel::-webkit-scrollbar{width:6px;}
 .side-panel::-webkit-scrollbar-thumb{background:rgba(180,126,255,.28);border-radius:999px;}
 .side-panel::-webkit-scrollbar-track{background:rgba(255,255,255,.03);}
@@ -316,7 +316,6 @@ textarea{resize:vertical;min-height:72px;}
 .quick-cat-btn{padding:5px 10px;border-radius:999px;border:1px solid rgba(180,126,255,.25);background:rgba(180,126,255,.08);color:rgba(200,200,255,.72);cursor:pointer;font-size:12px;font-family:'Noto Sans SC',sans-serif;transition:all .15s;}
 .quick-cat-btn:hover{background:rgba(180,126,255,.18);color:#fff;}
 .quick-cat-btn.active{background:rgba(180,126,255,.35);border-color:#b47eff;color:#fff;}
-
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:500;overflow-y:auto;backdrop-filter:blur(4px);}
 .modal-overlay.show{display:flex;align-items:flex-start;justify-content:center;padding:36px 16px;}
 .modal{background:rgba(8,5,28,.97);border:1px solid rgba(180,126,255,.3);border-radius:16px;padding:26px;width:100%;max-width:640px;box-shadow:0 20px 60px rgba(0,0,0,.5);}
@@ -329,7 +328,7 @@ textarea{resize:vertical;min-height:72px;}
   .layout{flex-direction:column;}
   .side-col{width:100%;padding:12px;order:1;}
   .main-col{padding:12px;order:2;}
-  .side-panel{position:sticky;top:54px;max-height:46vh;overflow-y:auto;padding:14px;}
+  .side-panel{position:sticky;top:54px;max-height:48vh;overflow-y:auto;padding:14px;}
   .topbar{padding:8px 12px;gap:6px;}
   .topbar-shortcuts{display:none !important;}
   .tab-btn{font-size:12px;padding:5px 12px;}
@@ -365,7 +364,7 @@ HTML_JS = """
 <div class="modal-overlay" id="modalOverlay">
   <div class="modal">
     <h2>✏️ 编辑条目</h2>
-    <form method="post" id="editForm" action="/update">
+    <form method="post" id="editForm" action="update">
       <input type="hidden" name="tab" id="editTab">
       <input type="hidden" name="item_id" id="editItemId">
       <input type="hidden" name="page_file" id="editPageFile">
@@ -392,7 +391,18 @@ var BATCH = 30;
 var topRemoved   = 0;
 var RECYCLE_KEEP = 60;
 
-function switchTab(tab) { window.location.href = '/?tab=' + tab; }
+function appUrl(path) {
+  var base = window.location.pathname;
+  if (!base.endsWith('/')) {
+    base = base.slice(0, base.lastIndexOf('/') + 1);
+  }
+  if (!base) base = '/';
+  path = String(path || '');
+  if (path.charAt(0) === '/') path = path.replace(/^[/]+/, '');
+  return base + path;
+}
+
+function switchTab(tab) { window.location.href = appUrl('?tab=' + encodeURIComponent(tab)); }
 
 function jumpToCard() {
   var input = document.getElementById('jumpNum');
@@ -422,7 +432,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function loadData() {
-  fetch('/api/items?tab=' + currentTab).then(function(r) { return r.json(); }).then(function(d) {
+  fetch(appUrl('api/items?tab=' + encodeURIComponent(currentTab))).then(function(r) { return r.json(); }).then(function(d) {
     allItems = d.items || [];
     filteredItems = allItems;
     rendered = 0;
@@ -586,7 +596,7 @@ function postJson(url, data, cb) {
 
 function quickTogglePin(pin) {
   var item = getSelected(); if (!item) return;
-  postJson('/api/toggle-pin', {item_id:item.id, tab:currentTab, pin:pin}, function(d) {
+  postJson(appUrl('api/toggle-pin'), {item_id:item.id, tab:currentTab, pin:pin}, function(d) {
     if (d.ok) { alert(pin ? '✅ 已置顶' : '✅ 已取消置顶'); loadData(); } else alert('失败：' + d.msg);
   });
 }
@@ -595,7 +605,7 @@ function quickCycleCategory() {
   var item = getSelected(); if (!item) return;
   var cycle = ['活动','资源更新','预告资讯','社区周边','其他'];
   var next  = cycle[(cycle.indexOf(item.category||'活动') + 1) % cycle.length];
-  postJson('/api/set-field', {item_id:item.id, tab:currentTab, field:'category', value:next}, function(d) {
+  postJson(appUrl('api/set-field'), {item_id:item.id, tab:currentTab, field:'category', value:next}, function(d) {
     if (d.ok) { alert('✅ 分类：' + next); loadData(); } else alert('失败：' + d.msg);
   });
 }
@@ -604,21 +614,21 @@ function quickSetPinOrder() {
   var item = getSelected(); if (!item) return;
   var val = parseInt(document.getElementById('quickPinOrderInput').value);
   if (!val || val < 1) { alert('请输入有效编号'); return; }
-  postJson('/api/set-field', {item_id:item.id, tab:currentTab, field:'pinOrder', value:val}, function(d) {
+  postJson(appUrl('api/set-field'), {item_id:item.id, tab:currentTab, field:'pinOrder', value:val}, function(d) {
     if (d.ok) { alert('✅ 置顶编号：' + val); loadData(); } else alert('失败：' + d.msg);
   });
 }
 
 function quickClearPinOrder() {
   var item = getSelected(); if (!item) return;
-  postJson('/api/set-field', {item_id:item.id, tab:currentTab, field:'pinOrder', value:999999}, function(d) {
+  postJson(appUrl('api/set-field'), {item_id:item.id, tab:currentTab, field:'pinOrder', value:999999}, function(d) {
     if (d.ok) { alert('✅ 已清除置顶编号'); loadData(); } else alert('失败：' + d.msg);
   });
 }
 
 function quickSetCategory(cat) {
   var item = getSelected(); if (!item) return;
-  postJson('/api/set-field', {item_id:item.id, tab:currentTab, field:'category', value:cat}, function(d) {
+  postJson(appUrl('api/set-field'), {item_id:item.id, tab:currentTab, field:'category', value:cat}, function(d) {
     if (d.ok) { initCatButtons(cat); loadData(); } else alert('失败：' + d.msg);
   });
 }
@@ -627,15 +637,21 @@ function initCatButtons(activeCat) {
   var cats = currentTab === 'arktips'
     ? ['活动','资源更新','预告资讯','社区周边','其他']
     : ['重要','更新','维护','活动','预告资讯','社区周边','其他'];
+
   var container = document.getElementById('quickCatButtons');
   if (!container) return;
+
   container.className = 'quick-cat-buttons';
+
   container.innerHTML = cats.map(function(c) {
     var isActive = c === (activeCat || '');
     return '<button type="button" data-cat="' + esc(c) + '" class="quick-cat-btn' + (isActive ? ' active' : '') + '">' + esc(c) + '</button>';
   }).join('');
+
   Array.prototype.forEach.call(container.querySelectorAll('button[data-cat]'), function(btn) {
-    btn.addEventListener('click', function() { quickSetCategory(this.getAttribute('data-cat')); });
+    btn.addEventListener('click', function() {
+      quickSetCategory(this.getAttribute('data-cat'));
+    });
   });
 }
 
@@ -647,7 +663,7 @@ function quickExtractTitle() {
   for (var i = 0; i < lines.length; i++) { if (lines[i].trim()) { first = lines[i].trim(); break; } }
   if (!first) { alert('内容为空'); return; }
   var title = first.slice(0,80);
-  postJson('/api/set-field', {item_id:item.id, tab:currentTab, field:'title', value:title}, function(d) {
+  postJson(appUrl('api/set-field'), {item_id:item.id, tab:currentTab, field:'title', value:title}, function(d) {
     if (d.ok) { alert('✅ 标题：' + title.slice(0,30)); loadData(); } else alert('失败：' + d.msg);
   });
 }
@@ -656,14 +672,14 @@ function quickSetExpiry() {
   var item = getSelected(); if (!item) return;
   var val  = document.getElementById('quickExpiryDate').value;
   if (!val) { alert('请先选择日期'); return; }
-  postJson('/api/set-field', {item_id:item.id, tab:currentTab, field:'pinExpiry', value:val}, function(d) {
+  postJson(appUrl('api/set-field'), {item_id:item.id, tab:currentTab, field:'pinExpiry', value:val}, function(d) {
     if (d.ok) { alert('✅ 截止：' + val); loadData(); } else alert('失败：' + d.msg);
   });
 }
 
 function quickClearExpiry() {
   var item = getSelected(); if (!item) return;
-  postJson('/api/set-field', {item_id:item.id, tab:currentTab, field:'pinExpiry', value:''}, function(d) {
+  postJson(appUrl('api/set-field'), {item_id:item.id, tab:currentTab, field:'pinExpiry', value:''}, function(d) {
     if (d.ok) { alert('✅ 已清除截止日期'); loadData(); } else alert('失败：' + d.msg);
   });
 }
@@ -671,7 +687,7 @@ function quickClearExpiry() {
 function quickDelete() {
   var item = getSelected(); if (!item) return;
   if (!confirm('确认删除？')) return;
-  postJson('/api/delete', {item_id:item.id, tab:currentTab}, function(d) {
+  postJson(appUrl('api/delete'), {item_id:item.id, tab:currentTab}, function(d) {
     if (d.ok) { selectedIdx = -1; loadData(); } else alert('失败：' + d.msg);
   });
 }
@@ -779,13 +795,13 @@ document.addEventListener('keydown', function(event) {
   if (event.ctrlKey && key === 'm') {
     event.preventDefault();
     if (confirm('拉取远程？')) {
-      fetch('/pull?tab=' + currentTab, {method:'POST'}).then(function() { location.reload(); });
+      fetch(appUrl('pull?tab=' + encodeURIComponent(currentTab)), {method:'POST'}).then(function() { location.reload(); });
     }
   }
   if (event.ctrlKey && key === 'i') {
     event.preventDefault();
     if (confirm('推送到 GitHub？')) {
-      fetch('/push?tab=' + currentTab, {method:'POST'}).then(function() { location.reload(); });
+      fetch(appUrl('push?tab=' + encodeURIComponent(currentTab)), {method:'POST'}).then(function() { location.reload(); });
     }
   }
 });
@@ -829,7 +845,7 @@ loadData();
 def build_form_html(tab: str, today: str) -> str:
     if tab == "arktips":
         return f"""
-      <form method="post" action="/add?tab=arktips">
+      <form method="post" action="add?tab=arktips">
         <div class="form-grid">
           <div class="form-row"><label>频道</label><input type="text" name="channel" placeholder="@ARKTIPS"></div>
           <div class="form-row"><label>日期</label><input type="date" name="date" value="{today}"></div>
@@ -856,7 +872,7 @@ def build_form_html(tab: str, today: str) -> str:
       </form>"""
     else:
         return f"""
-      <form method="post" action="/add?tab=announcements">
+      <form method="post" action="add?tab=announcements">
         <div class="form-grid">
           <div class="form-row form-full"><label>标题</label><input type="text" name="title" placeholder="公告标题"></div>
           <div class="form-row"><label>日期</label><input type="date" name="date" value="{today}"></div>
@@ -899,10 +915,10 @@ def render_page(tab="arktips", message="", message_type="success"):
   </span>
   <button class="tab-btn {arktips_active}" onclick="switchTab('arktips')">资源区</button>
   <button class="tab-btn {ann_active}" onclick="switchTab('announcements')">公告</button>
-  <form method="post" action="/pull?tab={tab}" style="display:inline" onsubmit="return confirm('拉取远程？')">
+  <form method="post" action="pull?tab={tab}" style="display:inline" onsubmit="return confirm('拉取远程？')">
     <button class="git-btn" type="submit">⬇ Pull</button>
   </form>
-  <form method="post" action="/push?tab={tab}" style="display:inline" onsubmit="return confirm('推送到 GitHub？')">
+  <form method="post" action="push?tab={tab}" style="display:inline" onsubmit="return confirm('推送到 GitHub？')">
     <button class="git-btn push" type="submit">⬆ Push</button>
   </form>
 </div>
@@ -959,10 +975,6 @@ def render_page(tab="arktips", message="", message_type="success"):
         <div class="selected-id" id="selectedId">— 点击卡片选中 —</div>
       </div>
       <div class="side-section">
-        <div class="side-section-title">快捷分类</div>
-        <div id="quickCatButtons" class="quick-cat-buttons"></div>
-      </div>
-      <div class="side-section">
         <div class="side-section-title">操作</div>
         <button class="quick-btn" onclick="quickEdit()"><span class="qicon">✏️</span> 编辑选中</button>
         <button class="quick-btn" onclick="quickExtractTitle()"><span class="qicon">📝</span> 提取标题</button>
@@ -977,6 +989,10 @@ def render_page(tab="arktips", message="", message_type="success"):
           <button class="btn btn-sm btn-pin" onclick="quickSetPinOrder()" style="white-space:nowrap">设置</button>
         </div>
         <button class="btn btn-sm btn-unpin" style="width:100%" onclick="quickClearPinOrder()">清除编号</button>
+      </div>
+      <div class="side-section">
+        <div class="side-section-title">快捷分类</div>
+        <div id="quickCatButtons" class="quick-cat-buttons"></div>
       </div>
       <div class="side-section">
         <div class="side-section-title">快捷截止日期</div>
@@ -1098,7 +1114,7 @@ def add():
             e["id"] = i + 1
         save_json(ANN_FILE, data)
     msg = urllib.parse.quote("已保存。")
-    return redirect(f"/?message={msg}&type=success&tab={tab}")
+    return redirect(f"./?message={msg}&type=success&tab={tab}")
 
 
 @app.route("/update", methods=["POST"])
@@ -1157,7 +1173,7 @@ def update():
                 }
                 save_json(ANN_FILE, data)
     msg = urllib.parse.quote("已修改并保存。")
-    return redirect(f"/?message={msg}&type=success&tab={tab}")
+    return redirect(f"./?message={msg}&type=success&tab={tab}")
 
 
 @app.route("/api/toggle-pin", methods=["POST"])
@@ -1253,7 +1269,7 @@ def pull():
     ok, msg = git_pull()
     safe   = urllib.parse.quote(msg)
     t      = "success" if ok else "warning"
-    return redirect(f"/?message={safe}&type={t}&tab={tab}")
+    return redirect(f"./?message={safe}&type={t}&tab={tab}")
 
 
 @app.route("/push", methods=["POST"])
@@ -1267,7 +1283,7 @@ def push():
     t    = "success" if ok else "warning"
     if VPS_MODE and ok:
         return Response(msg, mimetype="text/plain")
-    return redirect(f"/?message={safe}&type={t}&tab={tab}")
+    return redirect(f"./?message={safe}&type={t}&tab={tab}")
 
 
 if __name__ == "__main__":
