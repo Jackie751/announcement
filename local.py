@@ -344,6 +344,69 @@ textarea{resize:vertical;min-height:72px;}
   .quick-jump-box{grid-column:1 / -1;}
   .side-panel{max-height:56vh;}
 }
+
+/* 手机端右下角独立浮动操作 */
+#mobile-float-actions{
+  display:none;
+}
+
+.mobile-float-btn{
+  width:46px;
+  height:46px;
+  border-radius:50%;
+  border:1px solid rgba(180,126,255,.28);
+  background:rgba(8,5,28,.88);
+  backdrop-filter:blur(12px);
+  color:rgba(230,230,255,.9);
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  box-shadow:0 8px 24px rgba(0,0,0,.42);
+  transition:transform .16s,background .18s,border-color .18s,color .18s;
+}
+
+.mobile-float-btn:active{
+  transform:scale(.94);
+}
+
+.mobile-float-btn.edit{
+  background:linear-gradient(135deg,rgba(180,126,255,.92),rgba(124,79,255,.9));
+  color:#fff;
+  border-color:rgba(210,180,255,.65);
+}
+
+@media(max-width:560px){
+  .nav-section{
+    display:none;
+  }
+
+  #mobile-float-actions{
+    position:fixed;
+    right:14px;
+    bottom:18px;
+    z-index:450;
+    display:flex;
+    flex-direction:column;
+    gap:13px;
+    align-items:center;
+    pointer-events:auto;
+  }
+
+  .mobile-float-btn{
+    width:48px;
+    height:48px;
+  }
+
+  .mobile-float-btn:nth-child(2){
+    margin-right:10px;
+  }
+
+  .main-col{
+    padding-bottom:118px;
+  }
+}
+
 .sentinel.loading::after{content:'';width:17px;height:17px;border:2px solid rgba(180,126,255,.2);border-top-color:#b47eff;border-radius:50%;animation:spin .8s linear infinite;display:inline-block;}
 @keyframes spin{to{transform:rotate(360deg)}}
 #float-nav{position:fixed;bottom:24px;right:24px;z-index:999;display:flex;flex-direction:column;align-items:center;gap:8px;}
@@ -938,7 +1001,7 @@ def render_page(tab="arktips", message="", message_type="success"):
   <div class="side-col">
     <div class="side-panel">
       <h3>⚡ 快捷操作</h3>
-      <div class="side-section">
+      <div class="side-section nav-section">
         <div class="side-section-title">导航 &nbsp;<span style="font-size:9px;opacity:.3">Ctrl+A/D</span></div>
         <div class="quick-nav-row">
           <button class="fnav-btn quick-nav-btn" onclick="window.scrollTo({{top:0,behavior:'smooth'}})" title="顶部">
@@ -1006,6 +1069,28 @@ def render_page(tab="arktips", message="", message_type="success"):
     </div>
   </div>
 </div>
+
+<div id="mobile-float-actions" aria-label="手机快捷操作">
+  <button class="mobile-float-btn" type="button" onclick="window.scrollTo({{top:0,behavior:'smooth'}})" title="到顶部" aria-label="到顶部">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="18 15 12 9 6 15"></polyline>
+      <line x1="12" y1="20" x2="12" y2="10"></line>
+    </svg>
+  </button>
+  <button class="mobile-float-btn edit" type="button" onclick="quickEdit()" title="编辑选中" aria-label="编辑选中">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 20h9"></path>
+      <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+    </svg>
+  </button>
+  <button class="mobile-float-btn" type="button" onclick="window.scrollTo({{top:document.body.scrollHeight,behavior:'smooth'}})" title="到底部" aria-label="到底部">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="6 9 12 15 18 9"></polyline>
+      <line x1="12" y1="4" x2="12" y2="14"></line>
+    </svg>
+  </button>
+</div>
+
 """
     js = HTML_JS.replace("__TAB__", tab)
     return HTML_HEAD + body + js
