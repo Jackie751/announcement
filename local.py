@@ -323,7 +323,7 @@ textarea{resize:vertical;min-height:72px;}
 .sentinel{height:48px;display:flex;align-items:center;justify-content:center;font-family:'Share Tech Mono',monospace;color:rgba(180,200,255,.18);font-size:11px;}
 .sentinel.loading::after{content:'';width:17px;height:17px;border:2px solid rgba(180,126,255,.2);border-top-color:#b47eff;border-radius:50%;animation:spin .8s linear infinite;display:inline-block;}
 @keyframes spin{to{transform:rotate(360deg)}}
-#float-nav{position:fixed;bottom:24px;right:24px;z-index:999;display:flex;flex-direction:column;align-items:center;gap:8px;}
+#float-nav{position:fixed;bottom:24px;left:24px;z-index:999;display:flex;flex-direction:column;align-items:center;gap:8px;}
 .fnav-btn{width:40px;height:40px;border-radius:50%;border:1px solid rgba(180,126,255,.25);background:rgba(8,5,28,.85);backdrop-filter:blur(10px);color:rgba(180,200,255,.7);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;box-shadow:0 4px 14px rgba(0,0,0,.4);}
 .fnav-btn:hover{background:rgba(180,126,255,.2);border-color:#b47eff;color:#fff;}
 .fnav-jump{display:flex;align-items:center;gap:4px;background:rgba(8,5,28,.85);backdrop-filter:blur(10px);border:1px solid rgba(180,126,255,.25);border-radius:20px;padding:4px 8px;}
@@ -609,7 +609,8 @@ textarea{resize:vertical;min-height:72px;}
   }
 
   #float-nav {
-    right: 12px;
+    left: 12px;
+    right: auto;
     bottom: 14px;
     gap: 6px;
   }
@@ -746,13 +747,15 @@ HTML_JS_TEMPLATE = """
 </div>
 
 <div id="float-nav">
-  <button class="fnav-btn" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="回到顶部">↑</button>
-  <button class="fnav-btn" onclick="loadData();window.scrollTo({top:0,behavior:'smooth'})" title="刷新缓存" style="font-size:13px;">↺</button>
+  <div style="display:flex;gap:6px;justify-content:center;">
+    <button class="fnav-btn" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="回到顶部">↑</button>
+    <button class="fnav-btn" onclick="loadData();window.scrollTo({top:0,behavior:'smooth'})" title="刷新缓存" style="font-size:13px;">↺</button>
+    <button class="fnav-btn" onclick="window.scrollTo({top:document.body.scrollHeight,behavior:'smooth'})" title="到底部">↓</button>
+  </div>
   <div class="fnav-jump">
     <input type="number" id="jumpNum" min="1" placeholder="N" title="跳到第N条">
     <button onclick="jumpToCard()" title="跳转">→</button>
   </div>
-  <button class="fnav-btn" onclick="window.scrollTo({top:document.body.scrollHeight,behavior:'smooth'})" title="到底部">↓</button>
 </div>
 
 <script>
