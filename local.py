@@ -292,7 +292,7 @@ textarea{resize:vertical;min-height:72px;}
 .item-img{width:64px;height:64px;object-fit:cover;border-radius:7px;border:1px solid rgba(180,126,255,.15);}
 .item-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;}
 .page-label{font-family:'Share Tech Mono',monospace;font-size:10px;color:rgba(180,126,255,.2);padding:8px 0 10px;letter-spacing:.1em;text-transform:uppercase;}
-.side-panel{background:rgba(8,5,28,.55);border:1px solid rgba(180,126,255,.15);border-radius:14px;padding:18px 16px;backdrop-filter:blur(12px);position:sticky;top:60px;}
+.side-panel{background:rgba(8,5,28,.55);border:1px solid rgba(180,126,255,.15);border-radius:14px;padding:18px 16px;backdrop-filter:blur(12px);position:sticky;top:60px;max-height:calc(100vh - 80px);overflow-y:auto;overflow-x:hidden;scrollbar-width:thin;scrollbar-color:rgba(180,126,255,.25) transparent;}
 .side-panel h3{font-family:'Orbitron',monospace;font-size:.72em;color:rgba(180,126,255,.6);letter-spacing:.12em;margin-bottom:14px;}
 .side-section{margin-bottom:16px;}
 .side-section-title{font-family:'Share Tech Mono',monospace;font-size:10px;color:rgba(180,200,255,.25);letter-spacing:.1em;text-transform:uppercase;margin-bottom:7px;}
@@ -789,6 +789,7 @@ document.addEventListener('keydown', function(event) {
 })();
 
 loadData();
+initCatButtons('');
 </script>
 </body>
 </html>
@@ -894,25 +895,25 @@ def render_page(tab="arktips", message="", message_type="success"):
       <div class="side-section">
         <div class="side-section-title">导航 &nbsp;<span style="font-size:9px;opacity:.3">Ctrl+A/D</span></div>
         <div style="display:flex;gap:5px;align-items:center;margin-bottom:6px;">
-          <button class="fnav-btn" style="width:34px;height:34px;flex-shrink:0;" onclick="window.scrollTo({{top:0,behavior:'smooth'}})" title="顶部">
+          <button class="fnav-btn" style="width:34px;height:34px;flex:1;" onclick="window.scrollTo({{top:0,behavior:'smooth'}})" title="顶部">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
           </button>
-          <button class="fnav-btn" style="width:34px;height:34px;flex-shrink:0;" onclick="window.scrollTo({{top:document.body.scrollHeight,behavior:'smooth'}})" title="底部">
+          <button class="fnav-btn" style="width:34px;height:34px;flex:1;" onclick="window.scrollTo({{top:document.body.scrollHeight,behavior:'smooth'}})" title="底部">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
           </button>
-          <button class="fnav-btn" style="width:34px;height:34px;flex-shrink:0;" onclick="scrollToSelected()" title="定位选中">
+          <button class="fnav-btn" style="width:34px;height:34px;flex:1;" onclick="scrollToSelected()" title="定位选中">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3"/></svg>
           </button>
-          <button class="fnav-btn" style="width:34px;height:34px;flex-shrink:0;" onclick="loadData();window.scrollTo({{top:0,behavior:'smooth'}})" title="刷新">
+          <button class="fnav-btn" style="width:34px;height:34px;flex:1;" onclick="loadData();window.scrollTo({{top:0,behavior:'smooth'}})" title="刷新">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
           </button>
-          <div class="fnav-jump" style="flex:1;padding:4px 8px;">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(180,126,255,.5)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-            <input type="number" id="jumpNum" min="1" placeholder="N" title="跳到第N条" style="width:100%;">
-            <button onclick="jumpToCard()" title="跳转" style="width:24px;height:24px;">
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-            </button>
-          </div>
+        </div>
+        <div class="fnav-jump" style="width:100%;padding:5px 10px;border-radius:10px;">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(180,126,255,.5)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="number" id="jumpNum" min="1" placeholder="跳到第 N 条" title="跳到第N条" style="flex:1;min-width:0;">
+          <button onclick="jumpToCard()" title="跳转" style="width:24px;height:24px;">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          </button>
         </div>
       </div>
       <div class="side-section">
