@@ -13,6 +13,16 @@ import urllib.parse
 import re
 import os
 
+# VPS 模式：export VPS_MODE=1 启动即为 VPS 模式，否则为本地模式
+VPS_MODE = os.environ.get("VPS_MODE", "0") == "1"
+
+# 前端密码验证（VPS 模式可选，需要 auth.py 在同目录）
+try:
+    from auth import init_auth
+    _auth_available = True
+except ImportError:
+    _auth_available = False
+
 app = Flask(__name__)
 
 BASE_DIR   = Path(__file__).resolve().parent
@@ -22,16 +32,6 @@ ANN_FILE     = BASE_DIR / "announcements.json"
 ARKTIPS_FILE = BASE_DIR / "arktips.json"
 PAGE_PREFIX  = "arktips-"
 PAGE_SIZE    = 100
-
-# VPS 模式：push 后自毁仓库
-VPS_MODE = os.environ.get("VPS_MODE", "0") == "1"
-
-# 引入前端密码验证（需要 auth.py 在同目录）
-try:
-    from auth import init_auth
-    _auth_available = True
-except ImportError:
-    _auth_available = False
 
 
 # ──────────────────────────────────────────────────────────────
@@ -174,7 +174,6 @@ def ensure_gitignore():
         gitignore.write_text(line + "\n", encoding="utf-8")
 
 def git_push():
-    """普通 push，本地模式用"""
     ensure_gitignore()
     branch = get_current_branch()
     run_cmd(["git", "add", "."])
@@ -195,22 +194,18 @@ def git_push_and_destroy():
     run_cmd(["git", "add", "."])
     msg = f"Update {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
     run_cmd(["git", "commit", "-m", msg])
-
     ok_pull, out_pull = run_cmd(["git", "pull", "--rebase", "origin", branch])
     if not ok_pull:
         return False, "git pull 失败：" + out_pull
-
     ok_push, out_push = run_cmd(["git", "push", "origin", f"HEAD:refs/heads/{branch}"])
     if not ok_push:
         return False, "git push 失败：" + out_push
-
     def self_destruct():
         import time
         time.sleep(1.5)
         print("[VPS] Push 成功，正在销毁仓库目录...")
         shutil.rmtree(BASE_DIR, ignore_errors=True)
         os._exit(0)
-
     threading.Thread(target=self_destruct, daemon=True).start()
     return True, f"✅ 已推送到 origin/{branch}，仓库将在 1 秒后自动销毁，请关闭此页面。"
 
@@ -240,15 +235,12 @@ html,body{min-height:100%;background:#05050f;color:#dde;font-family:'Noto Sans S
 canvas#particles{position:fixed;inset:0;pointer-events:none;z-index:0;}
 .topbar{position:sticky;top:0;z-index:100;background:rgba(6,4,20,.88);border-bottom:1px solid rgba(180,126,255,.18);padding:10px 24px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;backdrop-filter:blur(18px);}
 .topbar h1{font-family:'Orbitron',monospace;font-size:.9em;color:#b47eff;flex-shrink:0;letter-spacing:.1em;}
-.vps-badge{padding:3px 10px;border-radius:999px;border:1px solid rgba(251,191,36,.35);background:rgba(251,191,36,.08);color:#fbbf24;font-family:'Share Tech Mono',monospace;font-size:11px;letter-spacing:.05em;}
 .tab-btn{padding:5px 16px;border-radius:999px;border:1px solid rgba(180,126,255,.3);background:transparent;color:#b47eff;cursor:pointer;font-size:13px;transition:all .2s;}
 .tab-btn.active,.tab-btn:hover{background:rgba(180,126,255,.15);border-color:#b47eff;}
 .git-btn{padding:5px 16px;border-radius:999px;border:1px solid rgba(0,229,255,.3);background:transparent;color:#00e5ff;cursor:pointer;font-size:13px;transition:all .2s;}
 .git-btn:hover{background:rgba(0,229,255,.1);}
 .git-btn.push{border-color:rgba(74,222,128,.3);color:#4ade80;}
 .git-btn.push:hover{background:rgba(74,222,128,.1);}
-.git-btn.push-destroy{border-color:rgba(251,191,36,.4);color:#fbbf24;}
-.git-btn.push-destroy:hover{background:rgba(251,191,36,.1);}
 .msg{padding:9px 24px;font-size:13px;border-bottom:1px solid rgba(255,255,255,.06);position:relative;z-index:1;}
 .msg.success{color:#4ade80;background:rgba(74,222,128,.07);}
 .msg.warning{color:#fbbf24;background:rgba(251,191,36,.07);}
@@ -323,7 +315,7 @@ textarea{resize:vertical;min-height:72px;}
 .sentinel{height:48px;display:flex;align-items:center;justify-content:center;font-family:'Share Tech Mono',monospace;color:rgba(180,200,255,.18);font-size:11px;}
 .sentinel.loading::after{content:'';width:17px;height:17px;border:2px solid rgba(180,126,255,.2);border-top-color:#b47eff;border-radius:50%;animation:spin .8s linear infinite;display:inline-block;}
 @keyframes spin{to{transform:rotate(360deg)}}
-#float-nav{position:fixed;bottom:24px;left:24px;z-index:999;display:flex;flex-direction:column;align-items:center;gap:8px;}
+#float-nav{position:fixed;bottom:24px;right:24px;z-index:999;display:flex;flex-direction:column;align-items:center;gap:8px;}
 .fnav-btn{width:40px;height:40px;border-radius:50%;border:1px solid rgba(180,126,255,.25);background:rgba(8,5,28,.85);backdrop-filter:blur(10px);color:rgba(180,200,255,.7);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;box-shadow:0 4px 14px rgba(0,0,0,.4);}
 .fnav-btn:hover{background:rgba(180,126,255,.2);border-color:#b47eff;color:#fff;}
 .fnav-jump{display:flex;align-items:center;gap:4px;background:rgba(8,5,28,.85);backdrop-filter:blur(10px);border:1px solid rgba(180,126,255,.25);border-radius:20px;padding:4px 8px;}
@@ -331,405 +323,13 @@ textarea{resize:vertical;min-height:72px;}
 .fnav-jump input:focus{border-color:rgba(180,126,255,.5);}
 .fnav-jump button{width:26px;height:26px;border-radius:50%;border:none;background:rgba(180,126,255,.2);color:#d0b0ff;font-size:12px;cursor:pointer;transition:all .2s;}
 .fnav-jump button:hover{background:rgba(180,126,255,.4);color:#fff;}
-/* 销毁倒计时覆盖层 */
-#destroy-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:9999;flex-direction:column;align-items:center;justify-content:center;gap:18px;backdrop-filter:blur(8px);}
-#destroy-overlay.show{display:flex;}
-#destroy-overlay h2{font-family:'Orbitron',monospace;color:#fbbf24;font-size:1.1em;letter-spacing:.1em;}
-#destroy-overlay p{font-family:'Share Tech Mono',monospace;color:rgba(200,210,255,.5);font-size:13px;}
-#destroy-counter{font-family:'Orbitron',monospace;font-size:3em;color:#f87171;}
-
-/* ─────────────────────────────────────────────
-   Mobile Responsive Layout
-   移动端适配：不改功能，只改布局和触控体验
-───────────────────────────────────────────── */
-
-@media (max-width: 900px) {
-  html, body {
-    font-size: 14px;
-    overflow-x: hidden;
-  }
-
-  body {
-    background:
-      radial-gradient(circle at top, rgba(80, 35, 150, .28), transparent 42%),
-      #05050f;
-  }
-
-  .topbar {
-    position: sticky;
-    top: 0;
-    padding: 10px 12px;
-    gap: 8px;
-    align-items: center;
-    overflow-x: auto;
-    flex-wrap: nowrap;
-    scrollbar-width: none;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  .topbar::-webkit-scrollbar {
-    display: none;
-  }
-
-  .topbar h1 {
-    font-size: .78em;
-    white-space: nowrap;
-    margin-right: 2px;
-  }
-
-  .topbar > span {
-    display: none !important;
-  }
-
-  .vps-badge {
-    white-space: nowrap;
-    font-size: 10px;
-    padding: 3px 8px;
-  }
-
-  .tab-btn,
-  .git-btn {
-    flex: 0 0 auto;
-    min-height: 34px;
-    padding: 7px 13px;
-    font-size: 12px;
-    white-space: nowrap;
-  }
-
-  .msg {
-    padding: 9px 12px;
-    font-size: 12px;
-    line-height: 1.5;
-  }
-
-  .layout {
-    display: flex;
-    flex-direction: column;
-  }
-
-  .main-col {
-    width: 100%;
-    padding: 12px;
-    order: 2;
-  }
-
-  .side-col {
-    width: 100%;
-    padding: 12px 12px 0;
-    order: 1;
-  }
-
-  .side-panel {
-    position: relative;
-    top: auto;
-    border-radius: 14px;
-    padding: 14px;
-  }
-
-  .side-panel h3 {
-    font-size: .7em;
-    margin-bottom: 10px;
-  }
-
-  .side-section {
-    margin-bottom: 12px;
-  }
-
-  .quick-btn {
-    min-height: 38px;
-    padding: 8px 10px;
-    font-size: 13px;
-  }
-
-  .search-input-side,
-  .expiry-mini input {
-    min-height: 38px;
-    font-size: 14px;
-  }
-
-  .add-form {
-    padding: 15px;
-    border-radius: 14px;
-    margin-bottom: 14px;
-  }
-
-  .add-form h2 {
-    font-size: .72em;
-    margin-bottom: 12px;
-  }
-
-  .form-grid {
-    grid-template-columns: 1fr;
-    gap: 9px;
-  }
-
-  .form-full {
-    grid-column: 1;
-  }
-
-  label {
-    font-size: 10px;
-  }
-
-  input[type=text],
-  input[type=date],
-  textarea,
-  select {
-    min-height: 40px;
-    padding: 9px 10px;
-    font-size: 14px;
-    border-radius: 9px;
-  }
-
-  textarea {
-    min-height: 86px;
-  }
-
-  .checkbox-row {
-    align-items: flex-start;
-    gap: 9px;
-  }
-
-  .checkbox-row input[type=checkbox] {
-    width: 18px;
-    height: 18px;
-    margin-top: 2px;
-    flex-shrink: 0;
-  }
-
-  .checkbox-row label {
-    line-height: 1.45;
-  }
-
-  .btn {
-    min-height: 40px;
-    padding: 9px 14px;
-    border-radius: 9px;
-    font-size: 14px;
-  }
-
-  .btn-primary {
-    width: 100%;
-  }
-
-  .item-card {
-    padding: 13px 13px;
-    border-radius: 13px;
-    margin-bottom: 10px;
-  }
-
-  .item-top {
-    gap: 7px;
-    align-items: flex-start;
-    flex-wrap: wrap;
-  }
-
-  .item-num {
-    min-width: 26px;
-    font-size: 10px;
-    padding-top: 4px;
-  }
-
-  .item-title {
-    font-size: 14px;
-    line-height: 1.55;
-  }
-
-  .item-badges {
-    width: 100%;
-    margin-top: 3px;
-  }
-
-  .item-meta {
-    font-size: 10px;
-    line-height: 1.5;
-    margin-bottom: 7px;
-  }
-
-  .item-content {
-    font-size: 13px;
-    line-height: 1.6;
-    max-height: 90px;
-    padding: 8px 10px;
-  }
-
-  .expand-btn {
-    font-size: 11px;
-    padding: 5px 2px;
-  }
-
-  .item-images {
-    gap: 7px;
-  }
-
-  .item-img {
-    width: 72px;
-    height: 72px;
-    border-radius: 8px;
-  }
-
-  .item-actions {
-    gap: 7px;
-  }
-
-  .btn-sm {
-    min-height: 34px;
-    padding: 6px 10px;
-    font-size: 12px;
-  }
-
-  .page-label {
-    font-size: 10px;
-    padding: 9px 0;
-  }
-
-  .modal-overlay.show {
-    padding: 18px 10px;
-    align-items: flex-start;
-  }
-
-  .modal {
-    max-width: 100%;
-    padding: 18px 14px;
-    border-radius: 14px;
-  }
-
-  .modal h2 {
-    font-size: .78em;
-    margin-bottom: 14px;
-  }
-
-  .modal-actions {
-    flex-direction: column;
-    gap: 8px;
-  }
-
-  .modal-actions .btn {
-    width: 100%;
-  }
-
-  #float-nav {
-    left: 12px;
-    right: auto;
-    bottom: 14px;
-    gap: 6px;
-  }
-
-  .fnav-btn {
-    width: 38px;
-    height: 38px;
-    font-size: 15px;
-  }
-
-  .fnav-jump {
-    padding: 4px 6px;
-  }
-
-  .fnav-jump input {
-    width: 50px;
-    height: 30px;
-    font-size: 13px;
-  }
-
-  .fnav-jump button {
-    width: 25px;
-    height: 25px;
-  }
-
-  #destroy-overlay h2 {
-    font-size: .95em;
-  }
-
-  #destroy-counter {
-    font-size: 2.5em;
-  }
-
-  #destroy-overlay p {
-    font-size: 12px;
-    padding: 0 18px;
-    text-align: center;
-  }
-}
-
-@media (max-width: 520px) {
-  .topbar {
-    padding: 9px 10px;
-    gap: 6px;
-  }
-
-  .topbar h1 {
-    font-size: .72em;
-  }
-
-  .tab-btn,
-  .git-btn {
-    min-height: 32px;
-    padding: 6px 11px;
-    font-size: 11px;
-  }
-
-  .main-col {
-    padding: 10px;
-  }
-
-  .side-col {
-    padding: 10px 10px 0;
-  }
-
-  .side-panel {
-    padding: 12px;
-    background: rgba(8,5,28,.72);
-  }
-
-  .add-form {
-    padding: 13px;
-    background: rgba(8,5,28,.68);
-  }
-
-  .item-card {
-    padding: 12px;
-    background: rgba(8,5,28,.62);
-  }
-
-  .item-title {
-    font-size: 13.5px;
-  }
-
-  .item-content {
-    font-size: 12.8px;
-  }
-
-  .item-img {
-    width: 66px;
-    height: 66px;
-  }
-
-  .badge {
-    font-size: 9px;
-    padding: 2px 7px;
-  }
-
-  .quick-btn {
-    font-size: 12.5px;
-  }
-
-  canvas#particles {
-    opacity: .45;
-  }
-}
-
 </style>
 </head>
 <body>
 <canvas id="particles"></canvas>
-<div id="destroy-overlay">
-  <h2>⚠ 仓库销毁中</h2>
-  <div id="destroy-counter">3</div>
-  <p>Push 成功，服务即将关闭，请关闭此页面</p>
-</div>
 """
 
-HTML_JS_TEMPLATE = """
+HTML_JS = """
 <div class="modal-overlay" id="modalOverlay">
   <div class="modal">
     <h2>✏️ 编辑条目</h2>
@@ -746,21 +346,10 @@ HTML_JS_TEMPLATE = """
   </div>
 </div>
 
-<div id="float-nav">
-  <div style="display:flex;gap:6px;justify-content:center;">
-    <button class="fnav-btn" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="回到顶部">↑</button>
-    <button class="fnav-btn" onclick="loadData();window.scrollTo({top:0,behavior:'smooth'})" title="刷新缓存" style="font-size:13px;">↺</button>
-    <button class="fnav-btn" onclick="window.scrollTo({top:document.body.scrollHeight,behavior:'smooth'})" title="到底部">↓</button>
-  </div>
-  <div class="fnav-jump">
-    <input type="number" id="jumpNum" min="1" placeholder="N" title="跳到第N条">
-    <button onclick="jumpToCard()" title="跳转">→</button>
-  </div>
-</div>
+
 
 <script>
 var currentTab   = '__TAB__';
-var vpsMode      = __VPS_MODE__;
 var allItems     = [];
 var rendered     = 0;
 var isLoading    = false;
@@ -768,10 +357,10 @@ var selectedIdx  = -1;
 var searchTerm   = '';
 var filteredItems = [];
 var BATCH = 30;
-var topRemoved   = 0;   // 已从顶部回收的卡片数
-var RECYCLE_KEEP = 60;  // 顶部保留卡片数，超出则回收
+var topRemoved   = 0;
+var RECYCLE_KEEP = 60;
 
-function switchTab(tab) { window.location.href = '/manage/?tab=' + tab; }
+function switchTab(tab) { window.location.href = '/?tab=' + tab; }
 
 function jumpToCard() {
   var input = document.getElementById('jumpNum');
@@ -851,7 +440,6 @@ function renderBatch() {
   }
   list.insertAdjacentHTML('beforeend', html);
   rendered += batch.length;
-  // 自动回收：顶部卡片超出 RECYCLE_KEEP 时删除最早的一批
   recycleTop();
 }
 
@@ -863,9 +451,11 @@ function recycleTop() {
   for (var i = 0; i < removeCount; i++) {
     var card = list.querySelector('.item-card');
     if (!card) break;
+    // 只回收已滚出视口上方的
     if (card.getBoundingClientRect().bottom > 0) break;
     var cardIdx = parseInt(card.id.replace('card-', ''));
     if (cardIdx === selectedIdx) selectedIdx = -1;
+    // 移除前面可能的 page-label
     var first = list.firstChild;
     if (first && first !== card && first.classList && first.classList.contains('page-label')) {
       list.removeChild(first);
@@ -883,11 +473,15 @@ function renderCard(item, idx) {
   var content = esc(item.content || item.text || '');
   var pinned  = item.important === true || item.important === 'true' || item.important === 1;
   var imgs    = Array.isArray(item.images) ? item.images.filter(Boolean) : (item.image ? [item.image] : []);
+  var vids    = Array.isArray(item.videos) ? item.videos.filter(Boolean) : [];
   var badges  = (pinned ? '<span class="badge badge-pin">📌</span>' : '') +
                 (cat ? '<span class="badge badge-cat">' + cat + '</span>' : '') +
                 (ch  ? '<span class="badge badge-ch">'  + ch  + '</span>' : '');
   var imgHtml = imgs.slice(0,3).map(function(u) {
     return '<img class="item-img" src="' + esc(u) + '">';
+  }).join('');
+  var vidHtml = vids.slice(0,2).map(function(u) {
+    return '<video src="' + esc(u) + '" controls preload="metadata" style="max-width:100%;max-height:120px;border-radius:7px;border:1px solid rgba(180,126,255,.15);margin-top:4px;display:block;"></video>';
   }).join('');
   var contentHtml = content
     ? '<div class="item-content" id="ct-' + idx + '">' + content + '</div>' +
@@ -902,6 +496,7 @@ function renderCard(item, idx) {
     '<div class="item-meta">' + date + (item.id ? ' &nbsp;·&nbsp; id:' + esc(String(item.id)) : '') + '</div>' +
     contentHtml +
     (imgHtml ? '<div class="item-images">' + imgHtml + '</div>' : '') +
+    (vidHtml ? '<div style="margin-top:6px">' + vidHtml + '</div>' : '') +
     '</div>';
 }
 
@@ -1058,6 +653,7 @@ function openEdit(idx) {
   var fields = '';
   if (currentTab === 'arktips') {
     var imgs = Array.isArray(item.images) ? item.images.join('\\n') : (item.image||'');
+    var vids = Array.isArray(item.videos) ? item.videos.join('\\n') : '';
     var cats = ['活动','资源更新','预告资讯','社区周边','其他'].map(function(c) {
       return '<option value="' + c + '"' + (item.category===c?' selected':'') + '>' + c + '</option>';
     }).join('');
@@ -1066,6 +662,7 @@ function openEdit(idx) {
       '<div class="form-row form-full"><label>标题</label><input type="text" name="title" value="' + esc(item.title||'') + '"></div>' +
       '<div class="form-row form-full"><label>文本内容</label><textarea name="text" rows="4">' + esc(item.text||item.content||'') + '</textarea></div>' +
       '<div class="form-row form-full"><label>图片链接（每行一个）</label><textarea name="images" rows="3">' + esc(imgs) + '</textarea></div>' +
+      '<div class="form-row form-full"><label>视频链接（每行一个）</label><textarea name="videos" rows="3" placeholder="https://...">' + esc(vids) + '</textarea></div>' +
       '<div class="form-row"><label>分类</label><select name="category">' + cats + '</select></div>' +
       '<div class="form-row"><label>置顶顺序</label><input type="text" name="pinOrder" value="' + esc(item.pinOrder===999999?'':item.pinOrder) + '"></div>' +
       '<div class="form-row"><label>截止日期</label><input type="date" name="pinExpiry" value="' + esc(item.pinExpiry||'') + '"></div>' +
@@ -1091,24 +688,6 @@ function openEdit(idx) {
 
 function closeModal() { document.getElementById('modalOverlay').classList.remove('show'); }
 
-// ── 销毁倒计时 ──
-function startDestroyCountdown() {
-  var overlay = document.getElementById('destroy-overlay');
-  var counter = document.getElementById('destroy-counter');
-  overlay.classList.add('show');
-  var n = 5;
-  counter.textContent = n;
-  var iv = setInterval(function() {
-    n--;
-    counter.textContent = n;
-    if (n <= 0) {
-      clearInterval(iv);
-      counter.textContent = '💥';
-      setTimeout(function(){ window.location.href = '/launcher/'; }, 800);
-    }
-  }, 1000);
-}
-
 var observer = new IntersectionObserver(function(entries) {
   if (entries[0].isIntersecting && !isLoading) {
     isLoading = true;
@@ -1118,6 +697,7 @@ var observer = new IntersectionObserver(function(entries) {
 }, {rootMargin:'200px'});
 observer.observe(document.getElementById('sentinel'));
 
+// 滚动时自动回收顶部卡片
 window.addEventListener('scroll', function() {
   if (rendered >= filteredItems.length) recycleTop();
 }, {passive: true});
@@ -1173,14 +753,8 @@ document.addEventListener('keydown', function(event) {
   }
   if (event.ctrlKey && key === 'i') {
     event.preventDefault();
-    var confirmMsg = vpsMode
-      ? '⚠️ VPS 模式：Push 后服务器将自动销毁仓库并关闭！确认继续？'
-      : '推送到 GitHub？';
-    if (confirm(confirmMsg)) {
-      if (vpsMode) startDestroyCountdown();
-      fetch('/push?tab=' + currentTab, {method:'POST'}).then(function() {
-        if (!vpsMode) location.reload();
-      });
+    if (confirm('推送到 GitHub？')) {
+      fetch('/push?tab=' + currentTab, {method:'POST'}).then(function() { location.reload(); });
     }
   }
 });
@@ -1286,25 +860,9 @@ def render_page(tab="arktips", message="", message_type="success"):
     msg_html = f'<div class="msg {h(message_type)}">{h(message)}</div>' if message else ""
     form_html = build_form_html(tab, today)
 
-    # VPS 模式：Push 按钮换色换文字，弹出更醒目的警告
-    if VPS_MODE:
-        push_btn = f"""
-  <form method="post" action="/push?tab={tab}" style="display:inline"
-        onsubmit="event.preventDefault();if(confirm('⚠️ VPS 模式\\nPush 成功后服务器将自动销毁仓库并关闭！\\n\\n确认推送？')){{startDestroyCountdown();fetch(this.action,{{method:'POST'}});}}">
-    <button class="git-btn push-destroy" type="submit">⬆ Push &amp; 销毁</button>
-  </form>"""
-        vps_badge = '<span class="vps-badge">⚡ VPS MODE</span>'
-    else:
-        push_btn = f"""
-  <form method="post" action="/push?tab={tab}" style="display:inline" onsubmit="return confirm('推送到 GitHub？')">
-    <button class="git-btn push" type="submit">⬆ Push</button>
-  </form>"""
-        vps_badge = ""
-
     body = f"""
 <div class="topbar">
   <h1>📋 Local Manager</h1>
-  {vps_badge}
   <span style="font-family:'Share Tech Mono',monospace;font-size:11px;color:rgba(180,200,255,.65);letter-spacing:.04em;">
     P=保存 &nbsp;E=编辑 &nbsp;C=切换分类 &nbsp;A=顶部 &nbsp;D=底部 &nbsp;G=跳转 &nbsp;M=Pull &nbsp;I=Push &nbsp;Esc=关闭
   </span>
@@ -1313,7 +871,9 @@ def render_page(tab="arktips", message="", message_type="success"):
   <form method="post" action="/pull?tab={tab}" style="display:inline" onsubmit="return confirm('拉取远程？')">
     <button class="git-btn" type="submit">⬇ Pull</button>
   </form>
-  {push_btn}
+  <form method="post" action="/push?tab={tab}" style="display:inline" onsubmit="return confirm('推送到 GitHub？')">
+    <button class="git-btn push" type="submit">⬆ Push</button>
+  </form>
 </div>
 
 {msg_html}
@@ -1331,6 +891,30 @@ def render_page(tab="arktips", message="", message_type="success"):
   <div class="side-col">
     <div class="side-panel">
       <h3>⚡ 快捷操作</h3>
+      <div class="side-section">
+        <div class="side-section-title">导航 &nbsp;<span style="font-size:9px;opacity:.3">Ctrl+A/D</span></div>
+        <div style="display:flex;gap:5px;align-items:center;margin-bottom:6px;">
+          <button class="fnav-btn" style="width:34px;height:34px;flex-shrink:0;" onclick="window.scrollTo({{top:0,behavior:'smooth'}})" title="顶部">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
+          </button>
+          <button class="fnav-btn" style="width:34px;height:34px;flex-shrink:0;" onclick="window.scrollTo({{top:document.body.scrollHeight,behavior:'smooth'}})" title="底部">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          <button class="fnav-btn" style="width:34px;height:34px;flex-shrink:0;" onclick="scrollToSelected()" title="定位选中">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3"/></svg>
+          </button>
+          <button class="fnav-btn" style="width:34px;height:34px;flex-shrink:0;" onclick="loadData();window.scrollTo({{top:0,behavior:'smooth'}})" title="刷新">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+          </button>
+          <div class="fnav-jump" style="flex:1;padding:4px 8px;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(180,126,255,.5)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="number" id="jumpNum" min="1" placeholder="N" title="跳到第N条" style="width:100%;">
+            <button onclick="jumpToCard()" title="跳转" style="width:24px;height:24px;">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
       <div class="side-section">
         <div class="side-section-title">搜索</div>
         <div style="display:flex;gap:5px;align-items:center;">
@@ -1371,18 +955,12 @@ def render_page(tab="arktips", message="", message_type="success"):
           <button class="btn btn-sm btn-unpin" onclick="quickClearExpiry()">清除截止时间</button>
         </div>
       </div>
-      <div class="side-section">
-        <div class="side-section-title">导航 &nbsp;<span style="font-size:9px;opacity:.3">Ctrl+A/D</span></div>
-        <button class="quick-btn" onclick="window.scrollTo({{top:0,behavior:'smooth'}})"><span class="qicon">⬆</span> 顶部</button>
-        <button class="quick-btn" onclick="window.scrollTo({{top:document.body.scrollHeight,behavior:'smooth'}})"><span class="qicon">⬇</span> 底部</button>
-        <button class="quick-btn" onclick="scrollToSelected()"><span class="qicon">🎯</span> 定位选中</button>
-      </div>
+
     </div>
   </div>
 </div>
 """
-    vps_js_flag = "true" if VPS_MODE else "false"
-    js = HTML_JS_TEMPLATE.replace("__TAB__", tab).replace("__VPS_MODE__", vps_js_flag)
+    js = HTML_JS.replace("__TAB__", tab)
     return HTML_HEAD + body + js
 
 
@@ -1471,8 +1049,9 @@ def add():
         important = parse_bool(request.form.get("important"))
         data = load_json(ANN_FILE)
         if not isinstance(data, list): data = []
+        new_id = len(data) + 1
         item = {
-            "id":        len(data) + 1,
+            "id":        new_id,
             "title":     request.form.get("title", "").strip(),
             "date":      request.form.get("date", "").strip(),
             "category":  request.form.get("category", "").strip(),
@@ -1483,15 +1062,17 @@ def add():
             "pinExpiry": request.form.get("pinExpiry", "").strip(),
         }
         data.insert(0, item)
+        # 插入后重新编号保持连续
         for i, e in enumerate(data):
             e["id"] = i + 1
         save_json(ANN_FILE, data)
     msg = urllib.parse.quote("已保存。")
-    return redirect(f"/manage/?message={msg}&type=success&tab={tab}")
+    return redirect(f"/?message={msg}&type=success&tab={tab}")
 
 
 @app.route("/update", methods=["POST"])
 def update():
+    from flask import jsonify
     tab       = request.form.get("tab", "arktips")
     item_id   = request.form.get("item_id", "")
     page_file = request.form.get("page_file", "")
@@ -1504,6 +1085,8 @@ def update():
             if idx >= 0:
                 imgs_raw  = request.form.get("images", "").strip()
                 imgs      = [x.strip() for x in imgs_raw.splitlines() if x.strip()]
+                vids_raw  = request.form.get("videos", "").strip()
+                vids      = [x.strip() for x in vids_raw.splitlines() if x.strip()]
                 raw_text  = request.form.get("text", "").strip()
                 raw_title = request.form.get("title", "").strip()
                 old = data[idx]
@@ -1515,6 +1098,7 @@ def update():
                     "text":      raw_text, "content": raw_text,
                     "image":     imgs[0] if imgs else "",
                     "images":    imgs,
+                    "videos":    vids,
                     "category":  request.form.get("category", "活动").strip(),
                     "important": important,
                     "pinOrder":  parse_pin_order(request.form.get("pinOrder")),
@@ -1542,7 +1126,7 @@ def update():
                 }
                 save_json(ANN_FILE, data)
     msg = urllib.parse.quote("已修改并保存。")
-    return redirect(f"/manage/?message={msg}&type=success&tab={tab}")
+    return redirect(f"/?message={msg}&type=success&tab={tab}")
 
 
 @app.route("/api/toggle-pin", methods=["POST"])
@@ -1625,6 +1209,7 @@ def api_delete():
         data = load_json(ANN_FILE)
         if isinstance(data, list):
             data = [e for e in data if str(e.get("id","")) != item_id]
+            # 删除后重新连续编号，保证 id 始终从 1 连续排列
             for i, e in enumerate(data):
                 e["id"] = i + 1
             save_json(ANN_FILE, data)
@@ -1637,7 +1222,7 @@ def pull():
     ok, msg = git_pull()
     safe   = urllib.parse.quote(msg)
     t      = "success" if ok else "warning"
-    return redirect(f"/manage/?message={safe}&type={t}&tab={tab}")
+    return redirect(f"/?message={safe}&type={t}&tab={tab}")
 
 
 @app.route("/push", methods=["POST"])
@@ -1649,10 +1234,9 @@ def push():
         ok, msg = git_push()
     safe = urllib.parse.quote(msg)
     t    = "success" if ok else "warning"
-    # VPS 模式 push 成功后不 redirect（进程即将退出），直接返回纯文本
     if VPS_MODE and ok:
         return Response(msg, mimetype="text/plain")
-    return redirect(f"/manage/?message={safe}&type={t}&tab={tab}")
+    return redirect(f"/?message={safe}&type={t}&tab={tab}")
 
 
 if __name__ == "__main__":
@@ -1660,7 +1244,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--port", type=int, default=5000)
     args, _ = parser.parse_known_args()
-
     print("[STARTUP] 检查过期置顶...")
     cleanup_expired_pins()
     if _auth_available:

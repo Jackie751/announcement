@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>终端 | Terminal</title>
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <link rel="icon" href="/assets/icon16.png" sizes="16x16" type="image/png">
+  <link rel="icon" href="/assets/icon32.png" sizes="32x32" type="image/png">
+  <link rel="icon" href="/assets/icon180.png" sizes="180x180" type="image/png">
+  <link rel="stylesheet" href="/style.css?v=20260531">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=ZCOOL+QingKe+HuangYou&display=swap" rel="stylesheet">
+  <style>
+    @font-face {
+      font-family: 'SlideYouran';
+      src: url('https://blog.jackie3137.xyz/fonts/slideyouran-Regular.ttf') format('truetype');
+      font-weight: normal;
+      font-style: normal;
+    }
+    :root { --font-main: 'Ma Shan Zheng', 'Noto Sans SC', sans-serif; }
+    html,body{min-height:100%;margin:0;padding:0;background:#05050f;font-family:var(--font-main);}
+    @media(orientation:portrait){html,body{}}
+    .wrapper{padding-bottom:80px;padding-top:60px;position:relative;}
+    .float-menu{position:fixed;top:24px;right:24px;z-index:100;font-family:var(--font-main);transition:top .3s ease;}
+    .float-menu-trigger{width:48px;height:48px;border-radius:50%;background:rgba(8,5,28,.65);border:1px solid rgba(200,170,255,.3);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .35s cubic-bezier(.4,0,.2,1);box-shadow:0 8px 24px rgba(0,0,0,.3);position:relative;overflow:hidden;}
+    .float-menu-trigger::before{content:'';position:absolute;inset:-2px;border-radius:50%;background:linear-gradient(135deg,rgba(255,110,180,.5),rgba(0,229,255,.5),rgba(180,126,255,.5));opacity:0;transition:opacity .35s ease;z-index:-1;filter:blur(8px);}
+    .float-menu-trigger:hover::before,.float-menu.active .float-menu-trigger::before{opacity:.8;}
+    .float-menu-trigger:hover{transform:scale(1.08);border-color:rgba(255,110,180,.6);}
+    .float-menu-arrow{width:18px;height:18px;color:#ede0ff;transition:transform .4s cubic-bezier(.4,0,.2,1);}
+    .float-menu.active .float-menu-arrow{transform:rotate(135deg);}
+    .float-menu-panel{position:absolute;top:60px;right:0;min-width:220px;background:rgba(8,5,28,.75);border:1px solid rgba(200,170,255,.25);border-radius:14px;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);padding:12px;opacity:0;visibility:hidden;transform:translateY(-10px) scale(.95);transform-origin:top right;transition:all .3s cubic-bezier(.4,0,.2,1);box-shadow:0 16px 40px rgba(0,0,0,.4);}
+    .float-menu.active .float-menu-panel{opacity:1;visibility:visible;transform:translateY(0) scale(1);}
+    .float-menu-panel::before{content:'';position:absolute;top:0;left:12px;right:12px;height:1px;background:linear-gradient(90deg,transparent,rgba(255,110,180,.6),rgba(0,229,255,.6),transparent);}
+    .float-menu-item{display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:10px;color:#ede0ff;text-decoration:none;font-size:13px;letter-spacing:.08em;transition:all .25s ease;position:relative;overflow:hidden;}
+    .float-menu-item::before{content:'';position:absolute;left:0;top:20%;bottom:20%;width:2px;border-radius:2px;background:currentColor;opacity:0;transition:opacity .25s ease;}
+    .float-menu-item:hover{background:rgba(255,255,255,.06);transform:translateX(4px);}
+    .float-menu-item:hover::before{opacity:1;}
+    .float-menu-item.pink{color:#ff6eb4;}.float-menu-item.cyan{color:#00e5ff;}.float-menu-item.gold{color:#ffd166;}.float-menu-item.purple{color:#b47eff;}.float-menu-item.red{color:#ff4444;}.float-menu-item.green{color:#4ade80;}
+    .float-menu-item .item-icon{font-size:16px;flex-shrink:0;}.float-menu-item .item-text{flex:1;font-weight:600;}
+    .float-menu-item .item-sub{font-family:var(--font-main);font-size:9px;color:rgba(255,255,255,.4);letter-spacing:.05em;}
+    .float-menu-divider{height:1px;background:linear-gradient(90deg,transparent,rgba(200,170,255,.2),transparent);margin:8px 4px;}
+    @media(max-width:600px){.float-menu{top:16px;right:16px;}.float-menu-trigger{width:42px;height:42px;}.float-menu-panel{min-width:200px;}}
+    body.has-expiry-banner .float-menu{top:54px;}
+    @media(max-width:600px){body.has-expiry-banner .float-menu{top:42px;}}
+    #expiry-banner{position:fixed;top:0;left:0;right:0;z-index:500;height:30px;overflow:hidden;background:linear-gradient(90deg,rgba(8,4,22,.97) 0%,rgba(60,10,60,.95) 25%,rgba(20,5,35,.97) 50%,rgba(60,10,60,.95) 75%,rgba(8,4,22,.97) 100%);border-bottom:1px solid rgba(180,126,255,.35);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);display:none;align-items:center;}
+    #expiry-banner::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,#ff6eb4,#b47eff,#00e5ff,#b47eff,#ff6eb4,transparent);background-size:200% 100%;animation:expLine 3s linear infinite;}
+    @keyframes expLine{0%{background-position:200% 0}100%{background-position:-200% 0}}
+    #expiry-banner.show{display:flex;}
+    .exp-track-outer{overflow:hidden;width:100%;display:flex;}
+    .exp-track{display:flex;align-items:center;white-space:nowrap;animation:expScroll linear infinite;will-change:transform;}
+    @keyframes expScroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+    .exp-item{display:inline-flex;align-items:center;gap:10px;padding:0 48px;font-family:var(--font-main);font-size:11.5px;}
+    .exp-icon{font-size:13px;flex-shrink:0;}
+    .exp-title{font-family:var(--font-main);font-weight:400;font-size:12px;color:#e8d0ff;letter-spacing:.06em;white-space:nowrap;}
+    .exp-days-today{color:#ff6eb4;font-weight:700;letter-spacing:.06em;}
+    .exp-days-soon{color:#b47eff;font-weight:600;letter-spacing:.06em;}
+    .exp-sep{color:rgba(180,126,255,.3);margin:0 4px;}
+    body.has-expiry-banner .wrapper{padding-top:90px;}
+    body.has-expiry-banner #notif{top:50px;}
+    @media(max-width:600px){#expiry-banner{height:26px;}body.has-expiry-banner .wrapper{padding-top:80px;}.exp-item{font-size:10px;padding:0 32px;gap:8px;}.exp-icon{font-size:11px;}.exp-days-today,.exp-days-soon{font-size:10px;}}
+    #notif{position:absolute;top:36px;left:16px;z-index:200;width:260px;opacity:.95;transition:opacity .3s ease;}
+    #notif:hover{opacity:1;}
+    #notif.gone{display:none;}
+    #notif-inner{display:flex;flex-direction:column;gap:7px;position:relative;}
+    #notif-inner::before{content:'🌸';position:absolute;top:-18px;right:8px;font-size:13px;opacity:.55;animation:sakura1 4s ease-in-out infinite;pointer-events:none;}
+    #notif-inner::after{content:'🌸';position:absolute;top:-10px;right:30px;font-size:9px;opacity:.35;animation:sakura1 4s ease-in-out infinite .8s;pointer-events:none;}
+    @keyframes sakura1{0%,100%{transform:translateY(0) rotate(-8deg);}50%{transform:translateY(4px) rotate(8deg);}}
+    .ann-card{display:flex;align-items:center;gap:10px;padding:9px 13px;border-radius:14px;background:rgba(8,4,22,.52);border:1px solid rgba(200,160,255,.18);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);box-shadow:0 4px 20px rgba(0,0,0,.3),inset 0 0 0 1px rgba(255,255,255,.04);position:relative;overflow:hidden;transition:transform .22s ease,box-shadow .22s ease,border-color .22s ease;cursor:default;text-decoration:none;}
+    .ann-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,180,220,.4),rgba(180,126,255,.4),transparent);opacity:.7;}
+    .ann-card:hover{transform:translateX(3px);border-color:rgba(200,160,255,.38);}
+    .ann-card-bar{width:3px;height:36px;border-radius:3px;flex-shrink:0;box-shadow:0 0 8px currentColor;}
+    .ann-card-body{flex:1;min-width:0;}
+    .ann-card-top{display:flex;align-items:center;gap:6px;margin-bottom:3px;}
+    .ann-card-cat{font-family:var(--font-main);font-size:9px;letter-spacing:.12em;padding:1px 7px;border-radius:999px;border:1px solid currentColor;opacity:.9;flex-shrink:0;}
+    .ann-card-count{font-family:var(--font-main);font-size:9px;color:rgba(200,210,255,.38);}
+    .ann-card-date{font-family:var(--font-main);font-size:9px;color:rgba(200,210,255,.32);margin-left:auto;flex-shrink:0;}
+    .ann-card-title{font-family:var(--font-main);font-weight:300;font-size:12px;color:#eef0ff;line-height:1.5;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden;letter-spacing:.03em;}
+    .ann-card-arrow{font-size:10px;color:rgba(200,160,255,.4);flex-shrink:0;transition:transform .2s ease,color .2s ease;}
+    .ann-card:hover .ann-card-arrow{transform:translateX(3px);color:rgba(200,160,255,.8);}
+    #notif.loading .ann-skel-wrap{display:flex;flex-direction:column;gap:7px;}
+    .ann-skel{height:52px;border-radius:14px;background:linear-gradient(90deg,rgba(255,255,255,.04) 25%,rgba(255,255,255,.09) 50%,rgba(255,255,255,.04) 75%);background-size:200% 100%;animation:shimmer 1.4s infinite;}
+    .ann-skel:nth-child(2){animation-delay:.15s;}.ann-skel:nth-child(3){animation-delay:.3s;}
+    @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+    @keyframes ndot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.3;transform:scale(.6)}}
+    @media(max-width:600px){#notif{display:none !important;}}
+    body.has-expiry-banner #notif{top:62px;}
+    #tab-notif{display:none;}
+    @media(max-width:600px){
+      #tab-notif{display:block;position:relative;z-index:20;margin:14px auto 18px;padding:0 12px;}
+      .tab-buttons{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;align-items:center;}
+      .tab-pill{border:none;min-height:40px;border-radius:999px;cursor:pointer;color:rgba(255,245,252,.94);font-family:var(--font-main);font-size:13px;letter-spacing:.08em;background:rgba(8,4,22,.78);border:1px solid rgba(200,170,255,.22);box-shadow:0 5px 16px rgba(0,0,0,.32);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);-webkit-tap-highlight-color:transparent;transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease,filter .2s ease;}
+      .tab-pill:active{transform:scale(.97);}
+      .tab-pill.active{transform:translateY(-1px);border-color:rgba(255,230,255,.42);box-shadow:0 8px 24px rgba(0,0,0,.42);filter:saturate(1.12);}
+      .tab-important{background:linear-gradient(135deg,rgba(192,67,90,.92),rgba(232,112,138,.72));}
+      .tab-update{background:linear-gradient(135deg,rgba(0,110,138,.92),rgba(0,184,212,.72));}
+      .tab-maintain{background:linear-gradient(135deg,rgba(138,106,0,.92),rgba(212,168,0,.72));}
+      .tab-activity{background:linear-gradient(135deg,rgba(26,107,58,.94),rgba(46,168,85,.76));}
+      .tab-card{display:none;margin-top:10px;padding:12px 14px;border-radius:16px;background:rgba(8,4,22,.86);border:1px solid rgba(200,160,220,.22);box-shadow:0 10px 28px rgba(0,0,0,.42);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);position:relative;overflow:hidden;}
+      .tab-card.show{display:block;}
+      .tab-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,180,220,.5),rgba(200,150,255,.5),transparent);}
+      .tab-card-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:7px;}
+      .tab-cat-badge{display:inline-block;font-family:var(--font-main);font-size:10px;letter-spacing:.1em;padding:2px 8px;border-radius:999px;border:1px solid currentColor;opacity:.9;}
+      .tab-card-date{font-family:var(--font-main);font-size:10px;color:rgba(200,200,255,.42);white-space:nowrap;}
+      .tab-title{font-family:var(--font-main);font-weight:300;font-size:13px;color:#f0eaff;line-height:1.58;margin-bottom:5px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;}
+      .tab-meta{font-family:var(--font-main);font-size:10px;color:rgba(200,200,255,.42);}
+      .tab-preview{font-family:var(--font-main);font-weight:300;font-size:11px;color:rgba(220,220,255,.6);line-height:1.7;white-space:pre-wrap;word-break:break-word;max-height:82px;overflow-y:auto;padding:7px 9px;background:rgba(255,255,255,.035);border-left:2px solid rgba(180,126,255,.28);border-radius:0 6px 6px 0;margin-top:8px;scrollbar-width:thin;scrollbar-color:rgba(180,126,255,.25) transparent;}
+      .tab-preview::-webkit-scrollbar{width:2px;}
+      .tab-preview::-webkit-scrollbar-thumb{background:rgba(180,126,255,.3);border-radius:2px;}
+    }
+    #statusbar{position:fixed;bottom:0;left:0;right:0;z-index:150;background:rgba(6,4,20,.72);border-top:1px solid rgba(200,170,255,.12);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);display:flex;align-items:center;padding:0 24px;height:40px;}
+    .sb-uptime{display:flex;align-items:center;gap:7px;flex:1;}
+    .sb-uptime-dot{width:6px;height:6px;border-radius:50%;background:#4ade80;box-shadow:0 0 6px #4ade80;animation:ndot 2s ease-in-out infinite;flex-shrink:0;}
+    .sb-uptime-text{font-family:var(--font-main);font-size:11px;color:rgba(200,220,255,.55);white-space:nowrap;}
+    .sb-uptime-text span{color:#4ade80;font-size:12px;}
+    .sb-clock{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-family:var(--font-main);font-size:18px;font-weight:700;color:#eef0ff;letter-spacing:.08em;white-space:nowrap;text-shadow:0 0 18px rgba(180,126,255,.4);pointer-events:none;}
+    @media(max-width:600px){#statusbar{padding:0 14px;height:46px;}.sb-clock{position:static;transform:none;font-size:14px;letter-spacing:.04em;margin-left:auto;flex-shrink:0;}.sb-uptime-text{font-size:9px;}.sb-uptime-text span{font-size:10px;}.wrapper{padding-top:56px;}}
+    .footer-socials{display:inline-flex;align-items:center;justify-content:center;gap:10px;margin-right:10px;vertical-align:middle;}
+    .footer-icon{width:30px;height:30px;border-radius:999px;background:rgba(255,255,255,.055);border:1px solid rgba(200,170,255,.22);display:inline-flex;align-items:center;justify-content:center;color:rgba(235,225,255,.72);text-decoration:none;transition:all .25s ease;}
+    .footer-icon:hover{background:rgba(180,126,255,.18);border-color:rgba(180,126,255,.55);color:#d9b8ff;transform:translateY(-2px);}
+    .footer-icon svg{width:15px;height:15px;fill:currentColor;}
+    @media(max-width:600px){.footer-icon{width:28px;height:28px;}.footer-icon svg{width:14px;height:14px;}}
+    #backTop{position:fixed;right:20px;bottom:56px;z-index:151;width:40px;height:40px;border:1px solid rgba(200,170,255,.18);border-radius:50%;background:rgba(6,4,20,.72);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);color:rgba(235,225,255,.72);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .25s ease;}
+    #backTop:hover{color:#d9b8ff;background:rgba(180,126,255,.18);border-color:rgba(180,126,255,.45);transform:translateY(-2px);}
+    #backTop svg{width:20px;height:20px;stroke:currentColor;fill:none;}
+    @media(max-width:600px){#backTop{right:12px;bottom:58px;width:36px;height:36px;}#backTop svg{width:16px;height:16px;}}
+    .site-header{text-align:center;display:flex;flex-direction:column;align-items:center;}
+    .header-jp{position:relative;display:inline-block;cursor:pointer;margin-bottom:20px;margin-left:auto;margin-right:auto;width:100px;height:100px;}
+    .player-ring{position:absolute;top:-8px;left:-8px;pointer-events:none;opacity:0;transition:opacity .4s ease;}
+    .player-ring circle{fill:none;stroke-width:3;stroke-linecap:round;transform-origin:center;transform:rotate(-90deg);}
+    .ring-bg{stroke:rgba(255,255,255,.12);}
+    .ring-fill{stroke:url(#ringGrad);stroke-dasharray:0 314;transition:stroke-dasharray .4s linear;}
+    .profile-img{display:block;transition:transform .4s ease,filter .4s ease,border-color .4s ease;}
+    .header-jp:hover .profile-img{filter:brightness(1.1);}
+    .header-jp.playing .profile-img{animation:profileSpin 12s linear infinite;}
+    .header-jp.playing .player-ring{opacity:1;}
+    @keyframes profileSpin{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
+    .header-jp.paused .profile-img{animation:profileSpin 12s linear infinite;animation-play-state:paused;}
+    .header-jp.paused .player-ring{opacity:.7;}
+
+    /* ══ tooltip 带进度条 ══ */
+    .track-tooltip{display:block;margin:8px auto 0;font-family:var(--font-main);font-size:11px;color:rgba(232,208,255,.9);background:rgba(8,4,22,.85);border:1px solid rgba(200,160,255,.3);border-radius:999px;padding:5px 14px;pointer-events:none;opacity:1;letter-spacing:.04em;max-width:240px;text-align:center;position:relative;overflow:hidden;transition:border-color .3s,color .3s;}
+    .track-tooltip .tt-bar{position:absolute;left:0;top:0;bottom:0;background:rgba(180,126,255,.15);border-radius:999px;width:0%;transition:width .3s ease;pointer-events:none;}
+    .track-tooltip .tt-text{position:relative;z-index:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;}
+    .track-tooltip.buffering{border-color:rgba(255,200,100,.45);color:rgba(255,225,150,.95);}
+    .track-tooltip.stalled{border-color:rgba(255,120,120,.4);color:rgba(255,160,160,.9);}
+    .track-tooltip.error{border-color:rgba(255,80,80,.5);color:rgba(255,120,120,.95);}
+
+    /* ══ 歌单面板 ══ */
+    #playlist-btn{display:inline-flex;align-items:center;gap:6px;margin-top:25px;padding:6px 18px;background:rgba(180,126,255,.35);border:2px solid rgba(180,126,255,.8);border-radius:999px;cursor:pointer;font-family:var(--font-main);font-size:13px;color:#fff;letter-spacing:.08em;transition:all .25s ease;}
+    #playlist-btn:hover{background:rgba(180,126,255,.28);border-color:rgba(180,126,255,.7);color:#ede0ff;}
+    #playlist-panel{display:none;margin-top:15px;width:280px;max-width:calc(100vw - 32px);max-height:320px;overflow-y:auto;background:rgba(6,3,18,.96);border:1px solid rgba(180,126,255,.4);border-radius:16px;backdrop-filter:blur(24px);padding:8px 0;scrollbar-width:thin;scrollbar-color:rgba(180,126,255,.4) transparent;box-shadow:0 16px 48px rgba(0,0,0,.6);}
+    #playlist-panel.open{display:block;}
+    #playlist-panel::-webkit-scrollbar{width:3px;}
+    #playlist-panel::-webkit-scrollbar-thumb{background:rgba(180,126,255,.4);border-radius:3px;}
+    .pl-item{display:flex;align-items:center;gap:10px;padding:9px 16px;cursor:pointer;transition:background .2s;font-family:var(--font-main);font-size:13px;color:#cfc4e8;}
+    .pl-item:hover{background:rgba(180,126,255,.15);color:#ede0ff;}
+    .pl-item.active{color:#b47eff;background:rgba(180,126,255,.1);}
+    .pl-item-num{font-family:var(--font-main);font-size:10px;color:rgba(180,126,255,.6);width:22px;flex-shrink:0;text-align:right;}
+    .pl-item-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    .pl-wave{display:flex;align-items:flex-end;gap:2px;height:14px;flex-shrink:0;opacity:0;}
+    .pl-item.active .pl-wave{opacity:1;}
+    .pl-wave span{display:block;width:2.5px;border-radius:2px;background:#b47eff;animation:plWave 1s ease-in-out infinite;}
+    .pl-wave span:nth-child(1){animation-duration:.9s;}
+    .pl-wave span:nth-child(2){animation-delay:.2s;animation-duration:1.1s;}
+    .pl-wave span:nth-child(3){animation-delay:.1s;animation-duration:.8s;}
+    @keyframes plWave{0%,100%{height:3px;opacity:.5;}50%{height:13px;opacity:1;}}
+    .pl-loading{padding:20px;text-align:center;font-family:var(--font-main);font-size:10px;color:rgba(180,126,255,.5);letter-spacing:.1em;}
+  </style>
+  <style id="anti-select-and-image-save">
+    html,body,body *{-webkit-user-select:none !important;-moz-user-select:none !important;-ms-user-select:none !important;user-select:none !important;caret-color:transparent !important;}
+    img,#dynamicBgImg,#profileImg{-webkit-user-drag:none !important;user-drag:none !important;-webkit-touch-callout:none !important;}
+    input,textarea,[contenteditable="true"]{-webkit-user-select:text !important;user-select:text !important;caret-color:auto !important;}
+    *:focus{outline:none !important;}
+  </style>
+</head>
+<body>
+  <img id="dynamicBgImg" alt="" aria-hidden="true">
+  <div id="expiry-banner">
+    <div class="exp-track-outer"><div class="exp-track" id="exp-track"></div></div>
+  </div>
+  <div class="bg-layer"></div>
+  <canvas id="particles"></canvas>
+  <div class="bg-kanji" aria-hidden="true">
+    <span>Believe</span><span>In</span><span>Yourself</span><span>And</span>
+    <span>All</span><span>That</span><span>You</span><span>Are</span>
+  </div>
+  <div id="notif" class="loading">
+    <div id="notif-inner">
+      <div class="ann-skel-wrap">
+        <div class="ann-skel"></div>
+        <div class="ann-skel"></div>
+        <div class="ann-skel"></div>
+      </div>
+    </div>
+  </div>
+  <div id="statusbar">
+    <div class="sb-uptime">
+      <div class="sb-uptime-dot"></div>
+      <div class="sb-uptime-text">系统已稳定运行 <span id="sb-uptime-val">-</span></div>
+    </div>
+    <div class="sb-clock" id="sb-clock">00:00:00</div>
+  </div>
+  <button id="backTop" type="button" aria-label="回到顶部">
+    <svg viewBox="0 0 24 24" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="18 15 12 9 6 15"></polyline>
+    </svg>
+  </button>
+  <div class="float-menu" id="floatMenu">
+    <div class="float-menu-trigger" id="floatMenuTrigger">
+      <svg class="float-menu-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="7" y1="17" x2="17" y2="7"></line>
+        <polyline points="7 7 17 7 17 17"></polyline>
+      </svg>
+    </div>
+    <div class="float-menu-panel">
+      <a class="float-menu-item pink" href="https://blog.jackie3137.xyz">
+        <span class="item-icon">📖</span><span class="item-text"><span style="display:block">Blogs</span><span style="display:block;font-size:.85em;opacity:.7">柒安的小窝</span></span>
+      </a>
+      <div class="float-menu-divider"></div>
+      <a class="float-menu-item cyan" href="/info/" target="_self">
+        <span class="item-icon">📢</span><span class="item-text"><span style="display:block">Announcements</span><span style="display:block;font-size:.85em;opacity:.7">动态观测站</span></span>
+      </a>
+      <div class="float-menu-divider"></div>
+      <a class="float-menu-item gold" href="/feedback">
+        <span class="item-icon">📭</span><span class="item-text"><span style="display:block">Feedback</span><span style="display:block;font-size:.85em;opacity:.7">小站留言板</span></span>
+      </a>
+      <div class="float-menu-divider"></div>
+      <a class="float-menu-item purple" href="https://arknews.jackie3137.xyz">
+        <span class="item-icon">🐱</span><span class="item-text"><span style="display:block">粥吧</span><span style="display:block;font-size:.85em;opacity:.7">敬请期待</span></span>
+      </a>
+    </div>
+  </div>
+  <audio id="bgAudio" preload="auto"></audio>
+  <svg width="0" height="0" style="position:absolute">
+    <defs>
+      <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#ff6eb4"/>
+        <stop offset="100%" stop-color="#b47eff"/>
+      </linearGradient>
+    </defs>
+  </svg>
+  <div class="wrapper">
+    <header class="site-header">
+      <div class="header-jp" id="playerAvatar" title="点击播放/暂停">
+        <svg class="player-ring" id="playerRing" width="116" height="116" viewBox="0 0 116 116">
+          <circle class="ring-bg" cx="58" cy="58" r="50"/>
+          <circle class="ring-fill" id="ringFill" cx="58" cy="58" r="50"/>
+        </svg>
+        <img src="./assets/profile.jpg?v=1779884608" class="profile-img" alt="Profile" id="profileImg"
+             style="border-radius:50%;width:100px;height:100px;display:block;margin:0 auto;">
+        <div class="track-tooltip" id="trackTooltip">
+          <div class="tt-bar" id="ttBar"></div>
+          <span class="tt-text" id="ttText">♪ 铁花飞</span>
+        </div>
+      </div>
+      <button id="playlist-btn" type="button">♫ Playlist</button>
+      <div id="playlist-panel"><div class="pl-loading">LOADING...</div></div>
+      <h1 class="header-sub">Update:2026-6-6 还活着呢 请多多支持喵🐱</h1>
+    </header>
+    <section>
+      <div class="section-header"><span class="section-line"></span><span class="section-title">✦ Jackie's Services ✦</span><span class="section-jp">O(∩_∩)O</span><span class="section-line"></span></div>
+      <div id="tab-notif">
+        <div class="tab-buttons">
+          <button class="tab-pill tab-important" type="button" data-idx="0">重要</button>
+          <button class="tab-pill tab-update" type="button" data-idx="1">更新</button>
+          <button class="tab-pill tab-maintain" type="button" data-idx="2">维护</button>
+          <button class="tab-pill tab-activity" type="button" data-idx="3">活动</button>
+        </div>
+        <div class="tab-card" id="tab-card">
+          <div class="tab-card-head">
+            <span class="tab-cat-badge" id="tab-card-cat">公告</span>
+            <span class="tab-card-date" id="tab-card-date"></span>
+          </div>
+          <div class="tab-title" id="tab-card-title">加载中…</div>
+          <div class="tab-meta"><span id="tab-card-count"></span></div>
+          <div class="tab-preview" id="tab-card-preview" style="display:none"></div>
+        </div>
+      </div>
+      <div class="grid">
+        <a class="card cyan" href="https://create.jackie3137.xyz" target="_self" rel="noopener"><div class="card-glow"></div><div class="card-tag">01</div><div class="card-short">Drive</div><div class="card-name">收集资源检索</div><div class="card-url">create.jackie3137.xyz</div></a>
+        <a class="card cyan" href="https://tglog.jackie3137.xyz" target="_self" rel="noopener"><div class="card-glow"></div><div class="card-tag">02</div><div class="card-short">TG Log</div><div class="card-name">TG收集频道消息检索</div><div class="card-url">tglog.jackie3137.xyz</div></a>
+        <a class="card green" href="https://seed.jackie3137.xyz"  target="_blank" rel="noopener"><div class="card-glow"></div><div class="card-tag">03</div><div class="card-short">QBTorrent</div><div class="card-name">P2P下载引擎(自用)</div><div class="card-url">seed.jackie3137.xyz</div></a>
+        <a class="card red" href="https://metube.jackie3137.xyz" target="_blank" rel="noopener"><div class="card-glow"></div><div class="card-tag">04</div><div class="card-short">Metube</div><div class="card-name">You同步下载引擎(自用插拔)</div><div class="card-url">metube.jackie3137.xyz</div></a>
+        <a class="card pink" href="https://kazumi.jackie3137.xyz" target="_blank" rel="noopener"><div class="card-glow"></div><div class="card-tag">05</div><div class="card-short">Bili-Sync</div><div class="card-name">B站同步下载引擎(自用)</div><div class="card-url">kazumi.jackie3137.xyz</div></a>
+      </div>
+    </section>
+    <section>
+      <div class="section-header"><span class="section-line"></span><span class="section-title">✦ Comics &amp; Books ✦</span><span class="section-jp">漫画と読書</span><span class="section-line"></span></div>
+      <div class="grid">
+        <a class="card pink" href="https://koz.moe" target="_blank" rel="noopener"><div class="card-glow"></div><div class="card-tag">06</div><div class="card-short">Kmoe</div><div class="card-name">一个可以用来免费下载日漫画的网站</div><div class="card-url">koz.moe</div></a>
+        <a class="card gold" href="https://dl-raw.ac" target="_blank" rel="noopener"><div class="card-glow"></div><div class="card-tag">07</div><div class="card-short">RAW</div><div class="card-name">日漫公开网站多为生肉</div><div class="card-url">dl-raw.ac</div></a>
+        <a class="card cyan" href="https://zlib.li" target="_blank" rel="noopener"><div class="card-glow"></div><div class="card-tag">08</div><div class="card-short">ZLibrary</div><div class="card-name">一个能用来免费下载学术书籍的网站</div><div class="card-url">zlib.li</div></a>
+     </div>
+    </section>
+    <section>
+      <div class="section-header"><span class="section-line"></span><span class="section-title">✦ Resources ✦</span><span class="section-jp">リソース</span><span class="section-line"></span></div>
+      <div class="grid">
+        <a class="card cyan" href="https://www.seedhub.cc/" target="_blank" rel="noopener"><div class="card-glow"></div><div class="card-tag">10</div><div class="card-short">Seedhub</div><div class="card-name">各种网盘资源站</div><div class="card-url">seedhub.cc</div></a>
+        <a class="card gold" href="https://kp.m-team.cc/" target="_blank" rel="noopener"><div class="card-glow"></div><div class="card-tag">11</div><div class="card-short">M-Team</div><div class="card-name">馒头(private不多说)</div><div class="card-url">kp.m-team.cc</div></a>
+        <a class="card pink" href="https://chdbits.co/bakatest.php" target="_blank" rel="noopener"><div class="card-glow"></div><div class="card-tag">12</div><div class="card-short">CHDBits</div><div class="card-name">彩虹岛(private不多说)</div><div class="card-url">chdbits.co</div></a>
+      </div>
+    </section>
+    <section>
+      <div class="section-header"><span class="section-line"></span><span class="section-title">✦ Subtitles ✦</span><span class="section-jp">字幕</span><span class="section-line"></span></div>
+      <div class="grid">
+        <a class="card purple" href="https://assrt.net/sub/?searchword=" target="_blank" rel="noopener"><div class="card-glow"></div><div class="card-tag">13</div><div class="card-short">Shooter</div><div class="card-name">公开字幕库稳定情况一般</div><div class="card-url">assrt.net</div></a>
+        <a class="card pink" href="https://www.opensubtitles.org" target="_blank" rel="noopener"><div class="card-glow"></div><div class="card-tag">14</div><div class="card-short">OpenSubtitles</div><div class="card-name">公开字幕库还行</div><div class="card-url">opensubtitles.org</div></a>
+        <a class="card green" href="https://subhd.tv/" target="_blank" rel="noopener"><div class="card-glow"></div><div class="card-tag">15</div><div class="card-short">Subhd</div><div class="card-name">公开字幕库多为外语需tz</div><div class="card-url">subhd.tv</div></a>
+        <a class="card gold" href="https://zimuku.org/" target="_blank" rel="noopener"><div class="card-glow"></div><div class="card-tag">16</div><div class="card-short">Zimuku</div><div class="card-name">公开字幕库目前在用</div><div class="card-url">zimuku.org</div></a>
+      </div>
+    </section>
+    <section>
+      <div class="section-header"><span class="section-line"></span><span class="section-title">✦ Hosting ✦</span><span class="section-jp">サーバー管理</span><span class="section-line"></span></div>
+      <div class="grid">
+        <a class="card gold" href="https://bandwagonhost.com" target="_blank" rel="noopener"><div class="card-glow"></div><div class="card-tag">17</div><div class="card-short">Bandwagon</div><div class="card-name">VPS云主机专注CN2</div><div class="card-url">bandwagonhost.com</div></a>
+        <a class="card green" href="https://my.contabo.com/account/login" target="_blank" rel="noopener"><div class="card-glow"></div><div class="card-tag">18</div><div class="card-short">Contabo</div><div class="card-name">VPS云主机专注后端</div><div class="card-url">my.contabo.com</div></a>
+      </div>
+    </section>
+    <section>
+      <div class="section-header"><span class="section-line"></span><span class="section-title">✦ Others ✦</span><span class="section-jp">漫画と読書</span><span class="section-line"></span></div>
+      <div class="grid">
+        <a class="card cyan" href="https://gdrive.jackie3137.xyz" target="_blank" rel="noopener"><div class="card-glow"></div><div class="card-tag">储存</div><div class="card-short">归档区</div><div class="card-name">gdrive</div><div class="card-url">~~</div></a>
+        <a class="card cyan" href="https://gpanel2.jackie3137.xyz/yecMBHgO5HJsYnE9Qg/panel/" target="_blank" rel="noopener"><div class="card-glow"></div><div class="card-tag">网络</div><div class="card-short">Panel1管理</div><div class="card-name"></div><div class="card-url">~~</div></a>
+        <a class="card cyan" href="https://upanel1.jackie3137.xyz/7ydPAPKOGpLoTS18R4/panel/" target="_blank" rel="noopener"><div class="card-glow"></div><div class="card-tag">网络</div><div class="card-short">Panel2</div><div class="card-name"></div><div class="card-url">~~</div></a>
+        <a class="card red" href="https://vercel.com/jackie751s-projects" target="_blank" rel="noopener"><div class="card-glow"></div><div class="card-tag">管理</div><div class="card-short">前端</div><div class="card-name"></div><div class="card-url">Vercel</div></a>
+        <a class="card purple" href="https://test.jackie3137.xyz/launcher" target="_blank" rel="noopener"><div class="card-glow"></div><div class="card-tag">管理</div><div class="card-short">公告编辑</div><div class="card-name"></div><div class="card-url">test</div></a>
+        <a class="card gold" href="https://www.amazon.co.jp/-/en/sendtokindle" target="_blank" rel="noopener"><div class="card-glow"></div><div class="card-tag">09</div><div class="card-short">备份</div><div class="card-name">Kindle</div><div class="card-url">amazon.co.jp</div></a>
+      </div>
+    </section>
+    <footer>
+      <span class="footer-socials">
+        <a class="footer-icon" href="mailto:Jackiezhao3137@gmail.com" title="Email">
+          <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4-8 5-8-5V6l8 5 8-5v2z"/></svg>
+        </a>
+        <a class="footer-icon" href="https://instagram.com/1_4_9_6_5_4" target="_blank" rel="noopener" title="Instagram">
+          <svg viewBox="0 0 24 24"><path d="M7.75 2h8.5A5.76 5.76 0 0 1 22 7.75v8.5A5.76 5.76 0 0 1 16.25 22h-8.5A5.76 5.76 0 0 1 2 16.25v-8.5A5.76 5.76 0 0 1 7.75 2zm0 2A3.75 3.75 0 0 0 4 7.75v8.5A3.75 3.75 0 0 0 7.75 20h8.5A3.75 3.75 0 0 0 20 16.25v-8.5A3.75 3.75 0 0 0 16.25 4h-8.5zM12 7a5 5 0 1 1 0 10 5 5 0 0 1 0-10zm0 2a3 3 0 1 0 0 6 3 3 0 0 0 0-6zm5.25-2.25a1.25 1.25 0 1 0 0 2.5 1.25 1.25 0 0 0 0-2.5z"/></svg>
+        </a>
+        <a class="footer-icon" href="https://github.com/Jackie751" target="_blank" rel="noopener" title="GitHub">
+          <svg viewBox="0 0 24 24"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61-.546-1.385-1.335-1.755-1.335-1.755-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
+        </a>
+      </span>
+      <span class="footer-en">实诚龙泡泡批发商 仅需九磅十五便士....</span>
+      <span class="footer-en">The gates of the kingdom are always open</span>
+    </footer>
+  </div>
+  <script>
+    const canvas=document.getElementById('particles'),ctx=canvas.getContext('2d');
+    function resize(){canvas.width=window.innerWidth;canvas.height=window.innerHeight;}
+    resize();window.addEventListener('resize',resize);
+    const dots=Array.from({length:80},()=>({
+      x:Math.random()*window.innerWidth,y:Math.random()*window.innerHeight,
+      r:Math.random()*1.4+.3,vx:(Math.random()-.5)*.25,vy:(Math.random()-.5)*.25,
+      alpha:Math.random()*.5+.15,
+      hue:Math.random()<.5?'255,110,180':Math.random()<.5?'0,229,255':'180,120,255'
+    }));
+    (function draw(){
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      dots.forEach(d=>{
+        d.x+=d.vx;d.y+=d.vy;
+        if(d.x<0)d.x=canvas.width;if(d.x>canvas.width)d.x=0;
+        if(d.y<0)d.y=canvas.height;if(d.y>canvas.height)d.y=0;
+        ctx.beginPath();ctx.arc(d.x,d.y,d.r,0,Math.PI*2);
+        ctx.fillStyle='rgba('+d.hue+','+d.alpha+')';ctx.fill();
+      });
+      requestAnimationFrame(draw);
+    })();
+    document.querySelectorAll('.card').forEach((c,i)=>c.style.animationDelay=i*60+'ms');
+    document.addEventListener('contextmenu',e=>e.preventDefault());
+    document.addEventListener('dragstart',e=>e.preventDefault());
+    document.addEventListener('selectstart',e=>e.preventDefault());
+    document.querySelectorAll('img').forEach(img=>{
+      img.setAttribute('draggable','false');
+      img.addEventListener('contextmenu',e=>e.preventDefault());
+    });
+    document.addEventListener('click',function(){
+      try{if(typeof doPlay==='function')doPlay();}catch(e){}
+    },{once:true});
+    document.addEventListener('touchstart',function(){
+      try{if(typeof doPlay==='function')doPlay();}catch(e){}
+    },{once:true,passive:true});
+    const floatMenu=document.getElementById('floatMenu');
+    let hideTimer=null;
+    document.getElementById('floatMenuTrigger').addEventListener('click',e=>{
+      e.stopPropagation();floatMenu.classList.toggle('active');clearTimeout(hideTimer);
+    });
+    floatMenu.addEventListener('mouseenter',()=>clearTimeout(hideTimer));
+    floatMenu.addEventListener('mouseleave',()=>{hideTimer=setTimeout(()=>floatMenu.classList.remove('active'),800);});
+    document.addEventListener('click',e=>{if(!floatMenu.contains(e.target))floatMenu.classList.remove('active');});
+    document.getElementById('backTop').addEventListener('click',()=>window.scrollTo({top:0,behavior:'smooth'}));
+    const START_TIME=new Date('2026-05-13T00:00:00+08:00');
+    function updateStatusBar(){
+      const now=new Date();
+      document.getElementById('sb-clock').textContent=now.toLocaleTimeString('zh-CN',{hour12:false,timeZone:'Asia/Shanghai'});
+      const diff=Math.floor((now-START_TIME)/1000);
+      const days=Math.floor(diff/86400),hours=Math.floor((diff%86400)/3600),mins=Math.floor((diff%3600)/60);
+      document.getElementById('sb-uptime-val').textContent=days+'天'+hours+'小时'+mins+'分';
+    }
+    updateStatusBar();setInterval(updateStatusBar,1000);
+    (function(){
+      let currentOpen=-1;
+      function setActive(idx){document.querySelectorAll('.tab-pill').forEach(btn=>{btn.classList.toggle('active',parseInt(btn.dataset.idx)===idx);});}
+      function openTab(idx){
+        const card=document.getElementById('tab-card');if(!card)return;
+        if(currentOpen===idx&&card.classList.contains('show')){card.classList.remove('show');setActive(-1);currentOpen=-1;return;}
+        card.classList.add('show');setActive(idx);currentOpen=idx;
+        if(window.__mobileTabData)window.__renderMobileCard(idx);
+      }
+      document.querySelectorAll('.tab-pill').forEach(btn=>{btn.addEventListener('click',e=>{e.stopPropagation();openTab(parseInt(btn.dataset.idx));});});
+      document.addEventListener('click',e=>{
+        const tn=document.getElementById('tab-notif'),card=document.getElementById('tab-card');
+        if(tn&&card&&!tn.contains(e.target)){card.classList.remove('show');setActive(-1);currentOpen=-1;}
+      });
+      window.__openMobileTab=openTab;
+    })();
+    const CHANNEL_CONFIG={'@YUANSHEN':{name:'原神'},'@ENDFIELDBULLETINGPT':{name:'明日方舟:终末地'},'@REVERSE1999CN':{name:'重返未来1999'},'@ARKBULLETIN_CN':{name:'明日方舟'},'@ARKTIPS':{name:'明日方舟'},'@MCKURO':{name:'鸣潮'},'@TESTJACKIE3137':{name:'搬运工'}};
+    const ANN_URL='https://raw.githubusercontent.com/Jackie751/announcement/main/announcements.json';
+    const ARKTIPS_URL='https://raw.githubusercontent.com/Jackie751/announcement/main/arktips.json';
+    const INFO_PAGE='/info/';
+    const CAT_COLOR={'重要':'#ff6eb4','更新':'#00e5ff','维护':'#ffd166','活动':'#4ade80','资源更新':'#b47eff'};
+    const NORMAL_CATS=['重要','更新','维护'];
+    function esc(s){const d=document.createElement('div');d.textContent=String(s??'');return d.innerHTML;}
+    function fmtDate(str){if(!str)return '';const d=new Date(str);if(isNaN(d))return str;return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+    function renderDesktop(byCategory,countMap){
+      const notif=document.getElementById('notif');notif.classList.remove('loading');
+      let html='';
+      NORMAL_CATS.forEach(cat=>{
+        const item=byCategory[cat];if(!item)return;
+        const color=CAT_COLOR[cat]||'#8899aa';const count=countMap[cat]||0;
+        const title=esc(item.title||'无标题');const date=fmtDate(item.date);
+        const anchorKey=((item.date||'')+(item.time||'')+(item.title||'').slice(0,8)).replace(/[^0-9a-zA-Z一-鿿]/g,'');
+        html+='<a class="ann-card" href="'+INFO_PAGE+'?anchor='+anchorKey+'" target="_blank">'
+          +'<div class="ann-card-bar" style="background:'+color+';color:'+color+'"></div>'
+          +'<div class="ann-card-body"><div class="ann-card-top">'
+          +'<span class="ann-card-cat" style="color:'+color+';border-color:'+color+'">'+esc(cat)+'</span>'
+          +'<span class="ann-card-count">共 '+count+' 条</span>'
+          +'<span class="ann-card-date">'+date+'</span></div>'
+          +'<div class="ann-card-title">'+title+'</div></div>'
+          +'<span class="ann-card-arrow">›</span></a>';
+      });
+      document.getElementById('notif-inner').innerHTML=html||'<div style="color:rgba(200,200,255,.3);font-size:11px;padding:8px">暂无公告</div>';
+    }
+    function renderMobile(byCategory,countMap){
+      window.__mobileTabData={byCategory,countMap};
+      window.__renderMobileCard=function(idx){
+        const cats=['重要','更新','维护'];
+        let cat,item,color,countText,preview;
+        if(idx===3){cat=byCategory['资源更新']?'资源更新':'活动';item=byCategory['资源更新']||byCategory['活动'];color=CAT_COLOR[cat]||CAT_COLOR['活动']||'#4ade80';countText=item?'活动 / 资源':'';}
+        else{cat=cats[idx]||'重要';item=byCategory[cat];color=CAT_COLOR[cat]||'#8899aa';countText=item?'共 '+(countMap[cat]||0)+' 条':'';}
+        const titleEl=document.getElementById('tab-card-title');
+        const countEl=document.getElementById('tab-card-count');
+        const dateEl=document.getElementById('tab-card-date');
+        const catEl=document.getElementById('tab-card-cat');
+        const prevEl=document.getElementById('tab-card-preview');
+        if(catEl){catEl.textContent=cat;catEl.style.color=color;}
+        if(titleEl)titleEl.textContent=item?(item.title||'无标题'):'暂无数据';
+        if(countEl)countEl.textContent=countText;
+        if(dateEl)dateEl.textContent=item?fmtDate(item.date||item.time):'';
+        preview=(item&&(item.content||item.text)||'').trim();
+        if(prevEl){if(preview){prevEl.textContent=preview;prevEl.style.display='block';}else{prevEl.style.display='none';}}
+      };
+    }
+    async function loadNotif(){
+      try{
+        const [r1,r2]=await Promise.all([fetch(ANN_URL+'?_='+Date.now()),fetch(ARKTIPS_URL+'?_='+Date.now()).catch(()=>null)]);
+        if(!r1.ok)throw 0;
+        const base=await r1.json();if(!Array.isArray(base))throw 0;
+        const byCategory={},countMap={};
+        NORMAL_CATS.concat(['活动']).forEach(cat=>{
+          const items=base.filter(i=>i.category===cat).sort((a,b)=>new Date(b.date||0)-new Date(a.date||0));
+          countMap[cat]=items.length;if(items.length)byCategory[cat]=items[0];
+        });
+        if(r2&&r2.ok){
+          const tips=await r2.json();
+          if(Array.isArray(tips)&&tips.length){
+            const sorted=[...tips].sort((a,b)=>new Date(b.time||b.date||0)-new Date(a.time||a.date||0));
+            const t=sorted[0];
+            byCategory['资源更新']={title:t.title||t.channel||'@ARKTIPS',content:t.content||t.text||'',date:t.time||t.date||''};
+          }
+        }
+        if(!Object.keys(byCategory).length){document.getElementById('notif').classList.add('gone');return;}
+        renderDesktop(byCategory,countMap);renderMobile(byCategory,countMap);
+      }catch(e){console.warn('[notif]',e);document.getElementById('notif').classList.add('gone');}
+    }
+    loadNotif();
+    async function loadExpiryBanner(){
+      try{
+        const r=await fetch(ARKTIPS_URL+'?_='+Date.now());if(!r.ok)return;
+        const tips=await r.json();if(!Array.isArray(tips))return;
+        const now=new Date();const today=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+        const expiring=tips.filter(t=>{
+          if(!t.pinExpiry)return false;const exp=new Date(t.pinExpiry);if(isNaN(exp))return false;
+          const expDay=new Date(exp.getFullYear(),exp.getMonth(),exp.getDate());
+          const diff=Math.round((expDay-today)/86400000);t._daysLeft=diff;return diff>=0&&diff<=3;
+        }).sort((a,b)=>a._daysLeft-b._daysLeft);
+        if(!expiring.length)return;
+        function makeItems(){return expiring.map(t=>{
+          const d=t._daysLeft;
+          const daysHtml=d===0?'<span class="exp-days-today">今天留意一下呢</span>':d===1?'<span class="exp-days-soon" style="color:#ff9eb5">记住是明天哦</span>':d===2?'<span class="exp-days-soon">还有 2 天</span>':'<span class="exp-days-soon" style="color:#7ec8ff">还剩 3 天</span>';
+          return '<span class="exp-item"><span class="exp-icon">😎</span><span class="exp-title">'+esc(((CHANNEL_CONFIG[(t.channel||'').toUpperCase().trim()]||{}).name||t.channel||'')+String.fromCharCode(65306)+(t.title||''))+'</span>'+daysHtml+'<span class="exp-sep">‖</span></span>';
+        }).join('');}
+        const track=document.getElementById('exp-track');const items=makeItems();track.innerHTML=items+items;
+        const isMob=window.innerWidth<=600;const dur=isMob?Math.max(12,track.scrollWidth/2/20):60;track.style.animationDuration=dur+'s';
+        document.getElementById('expiry-banner').classList.add('show');document.body.classList.add('has-expiry-banner');
+      }catch(e){console.warn('[expiry]',e);}
+    }
+    loadExpiryBanner();
+    var CURRENT_BG_URL = 'https://telegram.jackie3137.xyz/f/bcbef53b690672ea9cc4/Thunder%20File%20To%20Link_20260601041553.jpg?v=1780287462';
+    var CURRENT_MOBILE_BG_URL = 'https://telegram.jackie3137.xyz/f/d625d1dff8bc7257362c/Thunder%20File%20To%20Link_20260601211848.jpg?v=1780349292';
+    var CURRENT_BG_FIT = 'cover';
+    var CURRENT_MOBILE_BG_FIT = 'cover';
+    var CURRENT_AVATAR_URL = './assets/profile.jpg?v=1779884608';
+    var CURRENT_MUSIC_URL = 'https://music.jackie3137.xyz/f/0685c6f2bf268c3967de/BV1uRVQ6eEq3%20-%20S01E01.m4a?v=1780349769';
+    (function(){
+      const audio=document.getElementById('bgAudio');
+      const avatar=document.getElementById('playerAvatar');
+      const ringFill=document.getElementById('ringFill');
+      const tooltip=document.getElementById('trackTooltip');
+      const ttBar=document.getElementById('ttBar');
+      const ttText=document.getElementById('ttText');
+      const CIRC=2*Math.PI*50;
+      let isPlaying=false,unlocked=false,currentName='';
+
+      audio.volume=0.25;
+
+      function getSongName(url){
+        var fname=decodeURIComponent((url||'').split('?')[0].split('/').pop()||'');
+        return fname.replace(/\.(flac|mp3|ogg|wav|m4a|aac)$/i,'').replace(/[-_]/g,' ').trim()||'未知歌曲';
+      }
+
+      function setTooltipNormal(){
+        tooltip.classList.remove('buffering','stalled','error');
+        ttBar.style.width='0%';
+        ttText.textContent='♪ '+currentName;
+      }
+
+      function setTooltipBuffering(pct){
+        tooltip.classList.add('buffering');
+        tooltip.classList.remove('stalled','error');
+        ttBar.style.width=pct+'%';
+        ttText.textContent='⏳ 缓冲中... '+Math.floor(pct)+'%';
+      }
+
+      function updateRing(){
+        const pct=audio.duration?audio.currentTime/audio.duration:0;
+        ringFill.style.strokeDasharray=(pct*CIRC)+' '+CIRC;
+      }
+
+      audio.addEventListener('timeupdate',updateRing);
+
+      /* ── 缓冲进度监听（轮询版，数字连续） ── */
+      var bufTimer=null;
+      function startBufPolling(){
+        clearInterval(bufTimer);
+        setTooltipBuffering(0);
+        ttText.textContent='⏳ 连接中...';
+        bufTimer=setInterval(function(){
+          var pct=0;
+          if(audio.duration&&audio.buffered.length)pct=Math.round(audio.buffered.end(0)/audio.duration*100);
+          if(pct>=100){clearInterval(bufTimer);setTooltipNormal();}
+          else if(pct>0){setTooltipBuffering(pct);}
+          // pct===0 时保持显示"连接中..."
+        },200);
+      }
+      audio.addEventListener('waiting',function(){startBufPolling();});
+      audio.addEventListener('loadstart',function(){startBufPolling();});
+      audio.addEventListener('canplay',function(){clearInterval(bufTimer);setTooltipNormal();});
+
+      audio.addEventListener('error',function(){
+        clearInterval(bufTimer);
+        tooltip.classList.add('error');tooltip.classList.remove('buffering','stalled');
+        ttBar.style.width='0%';ttText.textContent='❌ 加载失败，请刷新试试';
+      });
+
+      audio.addEventListener('ended',function(){
+        isPlaying=false;avatar.classList.remove('playing');avatar.classList.add('paused');
+        ringFill.style.strokeDasharray='0 '+CIRC;
+      });
+      function doPlay(){
+        var p=audio.play();
+        if(p!==undefined){
+          p.then(function(){isPlaying=true;unlocked=true;avatar.classList.remove('paused');avatar.classList.add('playing');}).catch(function(){});
+        }
+      }
+      function doPause(){
+        audio.pause();isPlaying=false;avatar.classList.remove('playing');avatar.classList.add('paused');
+      }
+      avatar.addEventListener('click',function(){
+        if(!audio.src)return;
+        if(!unlocked){doPlay();return;}
+        isPlaying?doPause():doPlay();
+      });
+      avatar.addEventListener('wheel',function(e){
+        e.preventDefault();
+        audio.volume=Math.min(1,Math.max(0,audio.volume-(e.deltaY>0?0.05:-0.05)));
+      },{passive:false});
+      function loadMusic(url){
+        audio.src=url;audio.load();
+        currentName=getSongName(url);
+        ttText.textContent='♪ '+currentName;
+        tooltip.classList.remove('buffering','stalled','error');
+        ttBar.style.width='0%';
+        ringFill.style.strokeDasharray='0 '+CIRC;
+        isPlaying=false;unlocked=false;avatar.classList.remove('playing','paused');
+        startBufPolling();
+        doPlay();
+      }
+      window.__loadMusic=loadMusic;
+      var currentTrackId=null;
+      function htmlEsc(s){var d=document.createElement('div');d.textContent=String(s==null?'':s);return d.innerHTML;}
+      function attrEsc(s){return htmlEsc(s).replace(/"/g,'&quot;');}
+      function renderPlaylist(db){
+        var panel=document.getElementById('playlist-panel');
+        db=db||{};
+        var keys=Object.keys(db).sort(function(a,b){return parseInt(a)-parseInt(b);});
+        if(!keys.length){panel.innerHTML='<div class="pl-loading">暂无歌曲</div>';return;}
+        var html='';
+        keys.forEach(function(k){
+          var name=db[k].name||'未命名';
+          var url=db[k].url||'';
+          var active=currentTrackId===k?' active':'';
+          html+='<div class="pl-item'+active+'" data-id="'+attrEsc(k)+'" data-url="'+attrEsc(url)+'">'
+            +'<span class="pl-item-num">'+htmlEsc(String(k).padStart(2,'0'))+'</span>'
+            +'<span class="pl-item-name">'+htmlEsc(name)+'</span>'
+            +'<span class="pl-wave"><span></span><span></span><span></span></span></div>';
+        });
+        panel.innerHTML=html;
+        panel.querySelectorAll('.pl-item').forEach(function(el){
+          el.addEventListener('click',function(){
+            var url=el.dataset.url;var id=el.dataset.id;
+            if(!url)return;
+            currentTrackId=id;
+            panel.querySelectorAll('.pl-item').forEach(function(x){x.classList.remove('active');});
+            el.classList.add('active');
+            loadMusic(url);
+          });
+        });
+      }
+      function loadPlaylist(){
+        fetch('/music-db.json?_='+Date.now())
+          .then(function(r){return r.json();})
+          .then(renderPlaylist)
+          .catch(function(){document.getElementById('playlist-panel').innerHTML='<div class="pl-loading">加载失败</div>';});
+      }
+      document.getElementById('playlist-btn').addEventListener('click',function(){
+        var panel=document.getElementById('playlist-panel');
+        if(panel.classList.contains('open')){panel.classList.remove('open');}
+        else{panel.classList.add('open');loadPlaylist();}
+      });
+      function applyVisuals(){
+        if(window.CURRENT_AVATAR_URL){
+          var img=document.getElementById('profileImg');
+          if(img)img.src=window.CURRENT_AVATAR_URL;
+        }
+        var desktopBg=window.CURRENT_BG_URL||'';
+        var mobileBg=window.CURRENT_MOBILE_BG_URL||desktopBg;
+        var isMobile=window.matchMedia&&window.matchMedia('(max-width:768px)').matches;
+        var bgSrc=isMobile?mobileBg:desktopBg;
+        var isVideo=/\.(webm|mp4|ogg)$/i.test(bgSrc.split('?')[0]);
+        var bgImg=document.getElementById('dynamicBgImg');
+        var bgVideo=document.getElementById('dynamicBgVideo');
+        if(isVideo){
+          if(bgImg)bgImg.style.display='none';
+          if(!bgVideo){
+            bgVideo=document.createElement('video');
+            bgVideo.id='dynamicBgVideo';
+            bgVideo.autoplay=true;bgVideo.loop=true;bgVideo.muted=true;bgVideo.playsInline=true;
+            bgVideo.style.cssText='position:fixed;inset:0;width:100vw;height:100vh;object-fit:cover;z-index:-9999;pointer-events:none;';
+            document.body.insertBefore(bgVideo,document.body.firstChild);
+          }
+          bgVideo.src=bgSrc;bgVideo.style.display='block';
+        } else {
+          if(bgVideo)bgVideo.style.display='none';
+          if(bgImg){bgImg.style.display='block';bgImg.src=bgSrc;}
+        }
+        var styleEl=document.getElementById('dynamic-bg-style');
+        if(!styleEl){styleEl=document.createElement('style');styleEl.id='dynamic-bg-style';document.head.appendChild(styleEl);}
+        styleEl.textContent=
+          'html,body{min-height:100% !important;margin:0 !important;padding:0 !important;background:#05050f !important;}'+
+          'body{background:none !important;background-image:none !important;}'+
+          '#dynamicBgImg{position:fixed !important;inset:0 !important;width:100vw !important;height:100vh !important;object-fit:cover !important;object-position:center center !important;z-index:-9999 !important;pointer-events:none !important;user-select:none !important;}'+
+          '.bg-layer{display:none !important;}'+
+          '@media(max-width:768px){#dynamicBgImg{width:100vw !important;height:100dvh !important;}body{background:none !important;background-image:none !important;}}';
+      }
+      applyVisuals();
+      window.addEventListener('resize',applyVisuals);
+      window.addEventListener('orientationchange',function(){setTimeout(applyVisuals,300);});
+      if(CURRENT_MUSIC_URL){
+        currentName=getSongName(CURRENT_MUSIC_URL);
+        loadMusic(CURRENT_MUSIC_URL);
+      } else {
+        ttText.textContent='♪ 暂无音乐';
+      }
+    })();
+  </script>
+</body>
+</html>
