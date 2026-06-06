@@ -247,7 +247,7 @@ canvas#particles{position:fixed;inset:0;pointer-events:none;z-index:0;}
 .msg.error{color:#f87171;background:rgba(248,113,113,.07);}
 .layout{display:flex;gap:0;position:relative;z-index:1;}
 .main-col{flex:1;min-width:0;padding:20px 20px 20px 24px;}
-.side-col{width:260px;flex-shrink:0;padding:20px 20px 20px 0;}
+.side-col{width:300px;flex-shrink:0;padding:20px 20px 20px 0;}
 .add-form{background:rgba(8,5,28,.55);border:1px solid rgba(180,126,255,.18);border-radius:14px;padding:20px 22px;margin-bottom:22px;backdrop-filter:blur(12px);}
 .add-form h2{font-family:'Orbitron',monospace;font-size:.78em;color:#b47eff;margin-bottom:14px;letter-spacing:.12em;}
 .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
@@ -292,7 +292,10 @@ textarea{resize:vertical;min-height:72px;}
 .item-img{width:64px;height:64px;object-fit:cover;border-radius:7px;border:1px solid rgba(180,126,255,.15);}
 .item-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;}
 .page-label{font-family:'Share Tech Mono',monospace;font-size:10px;color:rgba(180,126,255,.2);padding:8px 0 10px;letter-spacing:.1em;text-transform:uppercase;}
-.side-panel{background:rgba(8,5,28,.55);border:1px solid rgba(180,126,255,.15);border-radius:14px;padding:18px 16px;backdrop-filter:blur(12px);position:sticky;top:60px;}
+.side-panel{background:rgba(8,5,28,.55);border:1px solid rgba(180,126,255,.15);border-radius:14px;padding:18px 16px;backdrop-filter:blur(12px);position:sticky;top:60px;max-height:calc(100vh - 76px);overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:rgba(180,126,255,.35) rgba(255,255,255,.04);} 
+.side-panel::-webkit-scrollbar{width:6px;}
+.side-panel::-webkit-scrollbar-thumb{background:rgba(180,126,255,.28);border-radius:999px;}
+.side-panel::-webkit-scrollbar-track{background:rgba(255,255,255,.03);}
 .side-panel h3{font-family:'Orbitron',monospace;font-size:.72em;color:rgba(180,126,255,.6);letter-spacing:.12em;margin-bottom:14px;}
 .side-section{margin-bottom:16px;}
 .side-section-title{font-family:'Share Tech Mono',monospace;font-size:10px;color:rgba(180,200,255,.25);letter-spacing:.1em;text-transform:uppercase;margin-bottom:7px;}
@@ -305,6 +308,15 @@ textarea{resize:vertical;min-height:72px;}
 .search-input-side{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:7px;color:#eef;padding:7px 10px;font-size:13px;width:100%;outline:none;transition:border-color .2s;}
 .search-input-side:focus{border-color:rgba(180,126,255,.5);}
 .list-count-bar{font-family:'Share Tech Mono',monospace;font-size:11px;color:rgba(180,200,255,.25);}
+.quick-nav-row{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;align-items:center;margin-bottom:6px;}
+.quick-nav-btn{width:100%!important;height:34px!important;flex-shrink:0;}
+.quick-jump-box{grid-column:1 / -1;min-width:0;width:100%;}
+.quick-jump-box input{min-width:0;width:100%!important;}
+.quick-cat-buttons{display:flex;flex-wrap:wrap;gap:6px;}
+.quick-cat-btn{padding:5px 10px;border-radius:999px;border:1px solid rgba(180,126,255,.25);background:rgba(180,126,255,.08);color:rgba(200,200,255,.72);cursor:pointer;font-size:12px;font-family:'Noto Sans SC',sans-serif;transition:all .15s;}
+.quick-cat-btn:hover{background:rgba(180,126,255,.18);color:#fff;}
+.quick-cat-btn.active{background:rgba(180,126,255,.35);border-color:#b47eff;color:#fff;}
+
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:500;overflow-y:auto;backdrop-filter:blur(4px);}
 .modal-overlay.show{display:flex;align-items:flex-start;justify-content:center;padding:36px 16px;}
 .modal{background:rgba(8,5,28,.97);border:1px solid rgba(180,126,255,.3);border-radius:16px;padding:26px;width:100%;max-width:640px;box-shadow:0 20px 60px rgba(0,0,0,.5);}
@@ -313,22 +325,25 @@ textarea{resize:vertical;min-height:72px;}
 .btn-cancel{background:rgba(255,255,255,.06);color:rgba(180,200,255,.45);border:1px solid rgba(255,255,255,.1);}
 .btn-cancel:hover{background:rgba(255,255,255,.1);color:#dde;}
 .sentinel{height:48px;display:flex;align-items:center;justify-content:center;font-family:'Share Tech Mono',monospace;color:rgba(180,200,255,.18);font-size:11px;}
-@media(max-width:768px){
+@media(max-width:900px){
   .layout{flex-direction:column;}
-  .main-col{padding:12px 12px 12px 12px;order:1;}
-  .side-col{width:100%;padding:0 12px 12px 12px;order:2;flex-shrink:0;}
-  .side-panel{position:relative;top:auto;max-height:none;overflow-y:visible;}
-  .side-col-toggle{display:flex !important;}
-  .side-col-body{display:none;}
-  .side-col-body.open{display:block;}
+  .side-col{width:100%;padding:12px;order:1;}
+  .main-col{padding:12px;order:2;}
+  .side-panel{position:sticky;top:54px;max-height:46vh;overflow-y:auto;padding:14px;}
   .topbar{padding:8px 12px;gap:6px;}
   .topbar-shortcuts{display:none !important;}
-  .tab-btn{font-size:11px;padding:4px 10px;}
-  .git-btn{font-size:11px;padding:4px 10px;}
+  .tab-btn{font-size:12px;padding:5px 12px;}
+  .git-btn{font-size:12px;padding:5px 12px;}
   .item-card{padding:10px 11px;}
   .form-grid{grid-template-columns:1fr;}
   .modal-inner{width:95vw;padding:18px 14px;}
   .add-form{padding:12px;}
+}
+@media(max-width:560px){
+  .quick-nav-row{grid-template-columns:repeat(2,1fr);}
+  .quick-nav-btn{height:38px!important;}
+  .quick-jump-box{grid-column:1 / -1;}
+  .side-panel{max-height:56vh;}
 }
 .sentinel.loading::after{content:'';width:17px;height:17px;border:2px solid rgba(180,126,255,.2);border-top-color:#b47eff;border-radius:50%;animation:spin .8s linear infinite;display:inline-block;}
 @keyframes spin{to{transform:rotate(360deg)}}
@@ -417,6 +432,7 @@ function loadData() {
     document.getElementById('itemList').innerHTML = '';
     document.getElementById('listCountBar').textContent = '共 ' + allItems.length + ' 条';
     renderBatch();
+    initCatButtons('');
   });
 }
 
@@ -613,12 +629,10 @@ function initCatButtons(activeCat) {
     : ['重要','更新','维护','活动','预告资讯','社区周边','其他'];
   var container = document.getElementById('quickCatButtons');
   if (!container) return;
+  container.className = 'quick-cat-buttons';
   container.innerHTML = cats.map(function(c) {
     var isActive = c === (activeCat || '');
-    var style = isActive
-      ? 'background:rgba(180,126,255,.35);border-color:#b47eff;color:#fff;'
-      : '';
-    return '<button data-cat="' + c + '" style="padding:3px 9px;border-radius:999px;border:1px solid rgba(180,126,255,.25);background:rgba(180,126,255,.08);color:rgba(200,200,255,.7);cursor:pointer;font-size:11px;font-family:sans-serif;transition:all .15s;' + style + '">' + c + '</button>';
+    return '<button type="button" data-cat="' + esc(c) + '" class="quick-cat-btn' + (isActive ? ' active' : '') + '">' + esc(c) + '</button>';
   }).join('');
   Array.prototype.forEach.call(container.querySelectorAll('button[data-cat]'), function(btn) {
     btn.addEventListener('click', function() { quickSetCategory(this.getAttribute('data-cat')); });
@@ -906,26 +920,24 @@ def render_page(tab="arktips", message="", message_type="success"):
   </div>
 
   <div class="side-col">
-    <button class="side-col-toggle" onclick="var b=document.getElementById('sideBody');b.classList.toggle('open');this.textContent=b.classList.contains('open')?'▲ 收起快捷操作':'▼ 展开快捷操作';" style="display:none;width:100%;padding:8px;background:rgba(180,126,255,.12);border:1px solid rgba(180,126,255,.25);border-radius:10px;color:#c0a0ff;font-size:12px;cursor:pointer;margin-bottom:8px;font-family:'Share Tech Mono',monospace;letter-spacing:.05em;">▼ 展开快捷操作</button>
-    <div id="sideBody" class="side-col-body" style="">
     <div class="side-panel">
       <h3>⚡ 快捷操作</h3>
       <div class="side-section">
         <div class="side-section-title">导航 &nbsp;<span style="font-size:9px;opacity:.3">Ctrl+A/D</span></div>
-        <div style="display:flex;gap:5px;align-items:center;margin-bottom:6px;">
-          <button class="fnav-btn" style="width:34px;height:34px;flex-shrink:0;" onclick="window.scrollTo({{top:0,behavior:'smooth'}})" title="顶部">
+        <div class="quick-nav-row">
+          <button class="fnav-btn quick-nav-btn" onclick="window.scrollTo({{top:0,behavior:'smooth'}})" title="顶部">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
           </button>
-          <button class="fnav-btn" style="width:34px;height:34px;flex-shrink:0;" onclick="window.scrollTo({{top:document.body.scrollHeight,behavior:'smooth'}})" title="底部">
+          <button class="fnav-btn quick-nav-btn" onclick="window.scrollTo({{top:document.body.scrollHeight,behavior:'smooth'}})" title="底部">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
           </button>
-          <button class="fnav-btn" style="width:34px;height:34px;flex-shrink:0;" onclick="scrollToSelected()" title="定位选中">
+          <button class="fnav-btn quick-nav-btn" onclick="scrollToSelected()" title="定位选中">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3"/></svg>
           </button>
-          <button class="fnav-btn" style="width:34px;height:34px;flex-shrink:0;" onclick="loadData();window.scrollTo({{top:0,behavior:'smooth'}})" title="刷新">
+          <button class="fnav-btn quick-nav-btn" onclick="loadData();window.scrollTo({{top:0,behavior:'smooth'}})" title="刷新">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
           </button>
-          <div class="fnav-jump" style="flex:1;padding:4px 8px;">
+          <div class="fnav-jump quick-jump-box" style="padding:4px 8px;">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(180,126,255,.5)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
             <input type="number" id="jumpNum" min="1" placeholder="N" title="跳到第N条" style="width:100%;">
             <button onclick="jumpToCard()" title="跳转" style="width:24px;height:24px;">
@@ -947,6 +959,10 @@ def render_page(tab="arktips", message="", message_type="success"):
         <div class="selected-id" id="selectedId">— 点击卡片选中 —</div>
       </div>
       <div class="side-section">
+        <div class="side-section-title">快捷分类</div>
+        <div id="quickCatButtons" class="quick-cat-buttons"></div>
+      </div>
+      <div class="side-section">
         <div class="side-section-title">操作</div>
         <button class="quick-btn" onclick="quickEdit()"><span class="qicon">✏️</span> 编辑选中</button>
         <button class="quick-btn" onclick="quickExtractTitle()"><span class="qicon">📝</span> 提取标题</button>
@@ -963,10 +979,6 @@ def render_page(tab="arktips", message="", message_type="success"):
         <button class="btn btn-sm btn-unpin" style="width:100%" onclick="quickClearPinOrder()">清除编号</button>
       </div>
       <div class="side-section">
-        <div class="side-section-title">快捷分类</div>
-        <div id="quickCatButtons" style="display:flex;flex-wrap:wrap;gap:4px;"></div>
-      </div>
-      <div class="side-section">
         <div class="side-section-title">快捷截止日期</div>
         <div class="expiry-mini">
           <input type="date" id="quickExpiryDate">
@@ -975,7 +987,6 @@ def render_page(tab="arktips", message="", message_type="success"):
         </div>
       </div>
 
-    </div>
     </div>
   </div>
 </div>
