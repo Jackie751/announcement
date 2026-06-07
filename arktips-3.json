@@ -1,5 +1,23 @@
 [
   {
+    "id": 19,
+    "date": "2026-06-07",
+    "time": "2026-06-07 01:46:58",
+    "channel": "@MOVIE3137",
+    "title": "对的",
+    "text": "对的",
+    "content": "对的",
+    "image": "https://telegram.jackie3137.xyz/f/726e26157c5ae7328d6a/BGO4BTQ8qCl0SyoP.mp4",
+    "images": [],
+    "videos": [
+      "https://telegram.jackie3137.xyz/f/726e26157c5ae7328d6a/BGO4BTQ8qCl0SyoP.mp4"
+    ],
+    "category": "预告资讯",
+    "important": false,
+    "pinOrder": 999999,
+    "pinExpiry": ""
+  },
+  {
     "id": 427,
     "date": "2026-06-07",
     "time": "2026-06-07 01:44:51",
