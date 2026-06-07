@@ -235,12 +235,15 @@ html,body{min-height:100%;background:#05050f;color:#dde;font-family:'Noto Sans S
 canvas#particles{position:fixed;inset:0;pointer-events:none;z-index:0;}
 .topbar{position:sticky;top:0;z-index:100;background:rgba(6,4,20,.88);border-bottom:1px solid rgba(180,126,255,.18);padding:10px 24px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;backdrop-filter:blur(18px);}
 .topbar h1{font-family:'Orbitron',monospace;font-size:.9em;color:#b47eff;flex-shrink:0;letter-spacing:.1em;}
+.vps-badge{padding:3px 10px;border-radius:999px;border:1px solid rgba(251,191,36,.35);background:rgba(251,191,36,.08);color:#fbbf24;font-family:'Share Tech Mono',monospace;font-size:11px;letter-spacing:.05em;}
 .tab-btn{padding:5px 16px;border-radius:999px;border:1px solid rgba(180,126,255,.3);background:transparent;color:#b47eff;cursor:pointer;font-size:13px;transition:all .2s;}
 .tab-btn.active,.tab-btn:hover{background:rgba(180,126,255,.15);border-color:#b47eff;}
 .git-btn{padding:5px 16px;border-radius:999px;border:1px solid rgba(0,229,255,.3);background:transparent;color:#00e5ff;cursor:pointer;font-size:13px;transition:all .2s;}
 .git-btn:hover{background:rgba(0,229,255,.1);}
 .git-btn.push{border-color:rgba(74,222,128,.3);color:#4ade80;}
 .git-btn.push:hover{background:rgba(74,222,128,.1);}
+.git-btn.push-destroy{border-color:rgba(251,191,36,.4);color:#fbbf24;}
+.git-btn.push-destroy:hover{background:rgba(251,191,36,.1);}
 .msg{padding:9px 24px;font-size:13px;border-bottom:1px solid rgba(255,255,255,.06);position:relative;z-index:1;}
 .msg.success{color:#4ade80;background:rgba(74,222,128,.07);}
 .msg.warning{color:#fbbf24;background:rgba(251,191,36,.07);}
@@ -409,6 +412,12 @@ textarea{resize:vertical;min-height:72px;}
 
 .sentinel.loading::after{content:'';width:17px;height:17px;border:2px solid rgba(180,126,255,.2);border-top-color:#b47eff;border-radius:50%;animation:spin .8s linear infinite;display:inline-block;}
 @keyframes spin{to{transform:rotate(360deg)}}
+/* 销毁倒计时覆盖层 */
+#destroy-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:9999;flex-direction:column;align-items:center;justify-content:center;gap:18px;backdrop-filter:blur(8px);}
+#destroy-overlay.show{display:flex;}
+#destroy-overlay h2{font-family:'Orbitron',monospace;color:#fbbf24;font-size:1.1em;letter-spacing:.1em;}
+#destroy-overlay p{font-family:'Share Tech Mono',monospace;color:rgba(200,210,255,.5);font-size:13px;}
+#destroy-counter{font-family:'Orbitron',monospace;font-size:3em;color:#f87171;}
 #float-nav{position:fixed;bottom:24px;right:24px;z-index:999;display:flex;flex-direction:column;align-items:center;gap:8px;}
 .fnav-btn{width:40px;height:40px;border-radius:50%;border:1px solid rgba(180,126,255,.25);background:rgba(8,5,28,.85);backdrop-filter:blur(10px);color:rgba(180,200,255,.7);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;box-shadow:0 4px 14px rgba(0,0,0,.4);}
 .fnav-btn:hover{background:rgba(180,126,255,.2);border-color:#b47eff;color:#fff;}
@@ -421,6 +430,11 @@ textarea{resize:vertical;min-height:72px;}
 </head>
 <body>
 <canvas id="particles"></canvas>
+<div id="destroy-overlay">
+  <h2>⚠ 仓库销毁中</h2>
+  <div id="destroy-counter">3</div>
+  <p>Push 成功，服务即将关闭，请关闭此页面</p>
+</div>
 """
 
 HTML_JS = """
@@ -444,6 +458,7 @@ HTML_JS = """
 
 <script>
 var currentTab   = '__TAB__';
+var vpsMode      = __VPS_MODE__;
 var allItems     = [];
 var rendered     = 0;
 var isLoading    = false;
@@ -452,7 +467,7 @@ var searchTerm   = '';
 var filteredItems = [];
 var BATCH = 30;
 var topRemoved   = 0;
-var RECYCLE_KEEP = 60;
+var RECYCLE_KEEP = 999999;
 
 function appUrl(path) {
   var base = window.location.pathname;
@@ -476,8 +491,7 @@ function jumpToCard() {
     renderBatch();
   }
 
-  var cards = document.querySelectorAll('#itemList .item-card');
-  var target = cards[n - 1];
+  var target = document.getElementById('card-' + (n - 1));
   if (target) {
     selectCard(n - 1);
     target.scrollIntoView({behavior:'smooth', block:'center'});
@@ -550,25 +564,9 @@ function renderBatch() {
 }
 
 function recycleTop() {
-  var list = document.getElementById('itemList');
-  var cards = list.querySelectorAll('.item-card');
-  if (cards.length <= RECYCLE_KEEP) return;
-  var removeCount = cards.length - RECYCLE_KEEP;
-  for (var i = 0; i < removeCount; i++) {
-    var card = list.querySelector('.item-card');
-    if (!card) break;
-    // 只回收已滚出视口上方的
-    if (card.getBoundingClientRect().bottom > 0) break;
-    var cardIdx = parseInt(card.id.replace('card-', ''));
-    if (cardIdx === selectedIdx) selectedIdx = -1;
-    // 移除前面可能的 page-label
-    var first = list.firstChild;
-    if (first && first !== card && first.classList && first.classList.contains('page-label')) {
-      list.removeChild(first);
-    }
-    list.removeChild(card);
-    topRemoved++;
-  }
+  // 关闭顶部 DOM 回收。
+  // 管理工具优先保证跳转、选中、编辑稳定；数据量不是特别大时，不需要虚拟回收。
+  return;
 }
 
 function renderCard(item, idx) {
@@ -798,6 +796,25 @@ function openEdit(idx) {
 
 function closeModal() { document.getElementById('modalOverlay').classList.remove('show'); }
 
+// ── 销毁倒计时 ──
+function startDestroyCountdown() {
+  var overlay = document.getElementById('destroy-overlay');
+  var counter = document.getElementById('destroy-counter');
+  if (!overlay || !counter) return;
+  overlay.classList.add('show');
+  var n = 5;
+  counter.textContent = n;
+  var iv = setInterval(function() {
+    n--;
+    counter.textContent = n;
+    if (n <= 0) {
+      clearInterval(iv);
+      counter.textContent = '💥';
+      setTimeout(function(){ window.location.href = '/launcher/'; }, 800);
+    }
+  }, 1000);
+}
+
 var observer = new IntersectionObserver(function(entries) {
   if (entries[0].isIntersecting && !isLoading) {
     isLoading = true;
@@ -807,10 +824,7 @@ var observer = new IntersectionObserver(function(entries) {
 }, {rootMargin:'200px'});
 observer.observe(document.getElementById('sentinel'));
 
-// 滚动时自动回收顶部卡片
-window.addEventListener('scroll', function() {
-  if (rendered >= filteredItems.length) recycleTop();
-}, {passive: true});
+// 已关闭顶部 DOM 回收，避免长列表编辑/跳转错位。
 
 document.getElementById('modalOverlay').addEventListener('click', function(e) {
   if (e.target === this) closeModal();
@@ -863,8 +877,14 @@ document.addEventListener('keydown', function(event) {
   }
   if (event.ctrlKey && key === 'i') {
     event.preventDefault();
-    if (confirm('推送到 GitHub？')) {
-      fetch(appUrl('push?tab=' + encodeURIComponent(currentTab)), {method:'POST'}).then(function() { location.reload(); });
+    var confirmMsg = vpsMode
+      ? '⚠️ VPS 模式：Push 后服务器将自动销毁仓库并关闭！确认继续？'
+      : '推送到 GitHub？';
+    if (confirm(confirmMsg)) {
+      if (vpsMode) startDestroyCountdown();
+      fetch(appUrl('push?tab=' + encodeURIComponent(currentTab)), {method:'POST'}).then(function() {
+        if (!vpsMode) location.reload();
+      });
     }
   }
 });
@@ -970,9 +990,25 @@ def render_page(tab="arktips", message="", message_type="success"):
     msg_html = f'<div class="msg {h(message_type)}">{h(message)}</div>' if message else ""
     form_html = build_form_html(tab, today)
 
+    # VPS 模式：Push 按钮沿用旧版的销毁覆盖层和跳转体验
+    if VPS_MODE:
+        push_btn = f"""
+  <form method="post" action="push?tab={tab}" style="display:inline"
+        onsubmit="event.preventDefault();if(confirm('⚠️ VPS 模式\\nPush 成功后服务器将自动销毁仓库并关闭！\\n\\n确认推送？')){{startDestroyCountdown();fetch(appUrl('push?tab={tab}'),{{method:'POST'}});}}">
+    <button class="git-btn push-destroy" type="submit">⬆ Push &amp; 销毁</button>
+  </form>"""
+        vps_badge = '<span class="vps-badge">⚡ VPS MODE</span>'
+    else:
+        push_btn = f"""
+  <form method="post" action="push?tab={tab}" style="display:inline" onsubmit="return confirm('推送到 GitHub？')">
+    <button class="git-btn push" type="submit">⬆ Push</button>
+  </form>"""
+        vps_badge = ""
+
     body = f"""
 <div class="topbar">
   <h1>📋 Local Manager</h1>
+  {vps_badge}
   <span class="topbar-shortcuts" style="font-family:'Share Tech Mono',monospace;font-size:11px;color:rgba(180,200,255,.65);letter-spacing:.04em;">
     P=保存 &nbsp;E=编辑 &nbsp;C=切换分类 &nbsp;A=顶部 &nbsp;D=底部 &nbsp;G=跳转 &nbsp;M=Pull &nbsp;I=Push &nbsp;Esc=关闭
   </span>
@@ -981,9 +1017,7 @@ def render_page(tab="arktips", message="", message_type="success"):
   <form method="post" action="pull?tab={tab}" style="display:inline" onsubmit="return confirm('拉取远程？')">
     <button class="git-btn" type="submit">⬇ Pull</button>
   </form>
-  <form method="post" action="push?tab={tab}" style="display:inline" onsubmit="return confirm('推送到 GitHub？')">
-    <button class="git-btn push" type="submit">⬆ Push</button>
-  </form>
+  {push_btn}
 </div>
 
 {msg_html}
@@ -1092,7 +1126,7 @@ def render_page(tab="arktips", message="", message_type="success"):
 </div>
 
 """
-    js = HTML_JS.replace("__TAB__", tab)
+    js = HTML_JS.replace("__TAB__", tab).replace("__VPS_MODE__", "true" if VPS_MODE else "false").replace("__VPS_MODE__", "true" if VPS_MODE else "false")
     return HTML_HEAD + body + js
 
 
@@ -1366,6 +1400,7 @@ def push():
         ok, msg = git_push()
     safe = urllib.parse.quote(msg)
     t    = "success" if ok else "warning"
+    # VPS 模式 push 成功后沿用旧版：前端显示倒计时并跳 /launcher/，后端直接返回文本后自毁。
     if VPS_MODE and ok:
         return Response(msg, mimetype="text/plain")
     return redirect(f"./?message={safe}&type={t}&tab={tab}")
