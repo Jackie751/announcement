@@ -1007,7 +1007,7 @@
       "https://telegram.jackie3137.xyz/f/e19a7db322a35e9697e4/video.mp4"
     ],
     "category": "预告资讯",
-    "important": true,
+    "important": false,
     "pinOrder": 2,
     "pinExpiry": "2026-05-28"
   },
@@ -1048,7 +1048,7 @@
       "https://telegram.jackie3137.xyz/f/fadd1f7e8f5c095942fa/XLR7CznNWq3Z_vKI.mp4"
     ],
     "category": "预告资讯",
-    "important": true,
+    "important": false,
     "pinOrder": 2,
     "pinExpiry": "2026-05-13"
   },
