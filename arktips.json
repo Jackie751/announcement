@@ -1,5 +1,23 @@
 [
   {
+    "id": 15872,
+    "date": "2026-06-07",
+    "time": "2026-06-07 10:42:55",
+    "channel": "@ANIME_NEWS_LATEST",
+    "title": "💫",
+    "text": "💫\"The Villager of Level 999\" TV Anime Main PV.💫\r\n\r\nEarly weekly streaming in Japan begins with a two-episode premiere on July 1. (Brain's Base)",
+    "content": "💫\"The Villager of Level 999\" TV Anime Main PV.💫\r\n\r\nEarly weekly streaming in Japan begins with a two-episode premiere on July 1. (Brain's Base)",
+    "image": "",
+    "images": [],
+    "videos": [
+      "https://telegram.jackie3137.xyz/f/8b2d366e1e442c738b0d/Thunder%20File%20To%20Link_20260607125116.mp4"
+    ],
+    "category": "预告资讯",
+    "important": true,
+    "pinOrder": 1,
+    "pinExpiry": "2026-07-01"
+  },
+  {
     "id": 12,
     "date": "2026-06-06",
     "time": "2026-06-06 15:01:24",
@@ -272,24 +290,6 @@
     "important": true,
     "pinOrder": 4,
     "pinExpiry": "2026-07-09"
-  },
-  {
-    "id": 15872,
-    "date": "2026-06-07",
-    "time": "2026-06-07 10:42:55",
-    "channel": "@ANIME_NEWS_LATEST",
-    "title": "💫",
-    "text": "💫\"The Villager of Level 999\" TV Anime Main PV.💫\r\n\r\nEarly weekly streaming in Japan begins with a two-episode premiere on July 1. (Brain's Base)",
-    "content": "💫\"The Villager of Level 999\" TV Anime Main PV.💫\r\n\r\nEarly weekly streaming in Japan begins with a two-episode premiere on July 1. (Brain's Base)",
-    "image": "",
-    "images": [],
-    "videos": [
-      "https://telegram.jackie3137.xyz/f/87ae1a584e329d60ce65/LV999%E3%81%AE%E6%9D%91%E4%BA%BA%E3%83%A1%E3%82%A4%E3%83%B3PV2026%E5%B9%B47%E6%9C%881%E6%97%A5%E6%94%BE%E9%80%81%E9%96%8B%E5%A7%8B.mp4"
-    ],
-    "category": "预告资讯",
-    "important": true,
-    "pinOrder": 1,
-    "pinExpiry": "2026-07-01"
   },
   {
     "id": 15873,
