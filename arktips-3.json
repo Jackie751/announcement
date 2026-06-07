@@ -1,23 +1,5 @@
 [
   {
-    "id": 17,
-    "date": "2026-06-07",
-    "time": "2026-06-07 00:49:50",
-    "channel": "@MOVIE3137",
-    "title": "1",
-    "text": "1",
-    "content": "1",
-    "image": "https://telegram.jackie3137.xyz/f/5f372c8c0eadf87b66c3/video.mp4",
-    "images": [],
-    "videos": [
-      "https://telegram.jackie3137.xyz/f/5f372c8c0eadf87b66c3/video.mp4"
-    ],
-    "category": "预告资讯",
-    "important": false,
-    "pinOrder": 999999,
-    "pinExpiry": ""
-  },
-  {
     "id": 48,
     "date": "2026-06-06",
     "time": "2026-06-06 16:43:16",
@@ -49,7 +31,7 @@
       "https://telegram.jackie3137.xyz/f/670668d12fdf8509baf0/G70s8LxWsAA08z-.jpg"
     ],
     "videos": [
-      "https://music.jackie3137.xyz/f/3d39f2e2e5810ae30d40/application.octet-stream"
+      "https://telegram.jackie3137.xyz/f/5f372c8c0eadf87b66c3/video.mp4"
     ],
     "category": "预告资讯",
     "important": false,
