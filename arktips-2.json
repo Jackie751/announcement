@@ -1484,7 +1484,7 @@
     ],
     "videos": [],
     "category": "预告资讯",
-    "important": true,
+    "important": false,
     "pinOrder": 2,
     "pinExpiry": "2026-06-08"
   },
@@ -1563,7 +1563,7 @@
     ],
     "videos": [],
     "category": "资源更新",
-    "important": true,
+    "important": false,
     "pinOrder": 3,
     "pinExpiry": "2026-06-08"
   },
