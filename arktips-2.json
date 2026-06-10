@@ -81,7 +81,7 @@
     "images": [],
     "videos": [],
     "category": "预告资讯",
-    "important": true,
+    "important": false,
     "pinOrder": 2,
     "pinExpiry": "2026-06-09"
   },
@@ -1545,7 +1545,7 @@
     ],
     "videos": [],
     "category": "活动",
-    "important": true,
+    "important": false,
     "pinOrder": 2,
     "pinExpiry": "2026-06-09"
   },
