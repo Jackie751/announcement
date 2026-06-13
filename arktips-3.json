@@ -47,7 +47,7 @@
     ],
     "videos": [],
     "category": "预告资讯",
-    "important": true,
+    "important": false,
     "pinOrder": 4,
     "pinExpiry": "2026-06-11"
   },
@@ -532,7 +532,7 @@
       "https://music.jackie3137.xyz/f/2f2a8e99992b85a0942a/Thunder%20File%20To%20Link_20260607024453.mp4"
     ],
     "category": "预告资讯",
-    "important": true,
+    "important": false,
     "pinOrder": 2,
     "pinExpiry": "2026-06-12"
   },
@@ -893,7 +893,7 @@
     ],
     "videos": [],
     "category": "活动",
-    "important": true,
+    "important": false,
     "pinOrder": 2,
     "pinExpiry": "2026-06-11"
   },
@@ -1172,7 +1172,7 @@
     ],
     "videos": [],
     "category": "活动",
-    "important": true,
+    "important": false,
     "pinOrder": 1,
     "pinExpiry": "2026-06-11"
   },
