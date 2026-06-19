@@ -13,9 +13,9 @@
     ],
     "videos": [],
     "category": "预告资讯",
-    "important": false,
+    "important": true,
     "pinOrder": 999999,
-    "pinExpiry": ""
+    "pinExpiry": "2026-06-12"
   },
   {
     "id": 7567,
