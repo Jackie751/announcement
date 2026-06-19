@@ -22,7 +22,7 @@
     "date": "2026-06-19",
     "time": "2026-06-19 02:56:05",
     "channel": "@MCKURO",
-    "title": "《鸣潮》3.5版本前瞻通讯将于2026年6月26日19:00正式播出\n\n《鸣潮》3.5版本前瞻通讯将",
+    "title": "《鸣潮》3.5版本前瞻通讯将于2026年6月26日19:00正式播出",
     "text": "《鸣潮》3.5版本前瞻通讯将于2026年6月26日19:00正式播出\n\n《鸣潮》3.5版本前瞻通讯将于2026年6月26日19:00正式播出。\n本次通讯将在《鸣潮》官方直播间播出，欢迎漂泊者准时收看！\n\nsource @MCKURO",
     "content": "《鸣潮》3.5版本前瞻通讯将于2026年6月26日19:00正式播出\n\n《鸣潮》3.5版本前瞻通讯将于2026年6月26日19:00正式播出。\n本次通讯将在《鸣潮》官方直播间播出，欢迎漂泊者准时收看！\n\nsource @MCKURO",
     "image": "https://cora.jackie3137.xyz/f/543f978cecfb1d1533c0/Thunder%20File%20To%20Link_20260619025606.jpg",
@@ -31,7 +31,7 @@
     ],
     "videos": [],
     "category": "活动",
-    "important": false,
+    "important": true,
     "pinOrder": 999999,
     "pinExpiry": ""
   },
@@ -257,7 +257,7 @@
     ],
     "videos": [],
     "category": "活动",
-    "important": true,
+    "important": false,
     "pinOrder": 999999,
     "pinExpiry": "2026-06-18"
   },
@@ -701,7 +701,7 @@
     "images": [],
     "videos": [],
     "category": "资源更新",
-    "important": true,
+    "important": false,
     "pinOrder": 999999,
     "pinExpiry": "2026-06-18"
   },
@@ -765,7 +765,7 @@
     "images": [],
     "videos": [],
     "category": "预告资讯",
-    "important": true,
+    "important": false,
     "pinOrder": 999999,
     "pinExpiry": "2026-06-18"
   },
@@ -852,7 +852,7 @@
     ],
     "videos": [],
     "category": "活动",
-    "important": true,
+    "important": false,
     "pinOrder": 999999,
     "pinExpiry": "2026-06-18"
   },
@@ -1271,7 +1271,7 @@
     "images": [],
     "videos": [],
     "category": "预告资讯",
-    "important": true,
+    "important": false,
     "pinOrder": 999999,
     "pinExpiry": "2026-06-18"
   },
