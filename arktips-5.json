@@ -460,7 +460,7 @@
     ],
     "videos": [],
     "category": "预告资讯",
-    "important": true,
+    "important": false,
     "pinOrder": 999999,
     "pinExpiry": "2026-06-19"
   },
@@ -582,7 +582,7 @@
     ],
     "videos": [],
     "category": "资源更新",
-    "important": true,
+    "important": false,
     "pinOrder": 999999,
     "pinExpiry": "2026-06-19"
   },
@@ -703,7 +703,7 @@
     ],
     "videos": [],
     "category": "活动",
-    "important": true,
+    "important": false,
     "pinOrder": 999999,
     "pinExpiry": "2026-06-19"
   },
@@ -815,7 +815,7 @@
     "images": [],
     "videos": [],
     "category": "社区周边",
-    "important": true,
+    "important": false,
     "pinOrder": 999999,
     "pinExpiry": "2026-06-19"
   },
