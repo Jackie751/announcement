@@ -106,11 +106,7 @@
     "image": "",
     "images": [],
     "videos": [
-      "<div style=\"position:relative;padding-bottom:56.25%;height:0\">",
-      "<iframe src=\"//player.bilibili.com/player.html?isOutside=true&bvid=BV11j7h6CESh&p=1\"",
-      "style=\"position:absolute;top:0;left:0;width:100%;height:100%\"",
-      "frameborder=\"0\" allowfullscreen></iframe>",
-      "</div>"
+      "<iframe src=\"//player.bilibili.com/player.html?isOutside=true&aid=116811165140253&bvid=BV1tv7a6nEXG&cid=39402802742&p=1\" scrolling=\"no\" border=\"0\" frameborder=\"no\" framespacing=\"0\" allowfullscreen=\"true\"></iframe>"
     ],
     "category": "预告资讯",
     "important": true,
