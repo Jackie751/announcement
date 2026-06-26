@@ -603,21 +603,26 @@ function renderCard(item, idx) {
 
 function renderMediaThumb(url) {
   if (!url) return '';
+  // 直接是 <iframe ...> 代码
+  if (url.trim().startsWith('<iframe')) {
+    return '<div style="width:80px;height:52px;border-radius:7px;border:1px solid rgba(0,186,255,.3);background:rgba(0,186,255,.08);display:inline-flex;align-items:center;justify-content:center;flex-direction:column;gap:2px;font-size:10px;color:#00baff;font-family:monospace;vertical-align:top;">' +
+      '<span style="font-size:16px;">&#x25B6;</span><span>iframe</span></div>';
+  }
   // B站
   var bvMatch = url.match(/BV[a-zA-Z0-9]+/i);
   if (/bilibili\.com\/video\/BV/i.test(url) && bvMatch) {
-    return '<div style="width:80px;height:52px;border-radius:7px;border:1px solid rgba(0,186,255,.3);background:rgba(0,186,255,.08);display:inline-flex;align-items:center;justify-content:center;flex-direction:column;gap:2px;font-size:10px;color:#00baff;font-family:\'Share Tech Mono\',monospace;vertical-align:top;">' +
-      '<span style="font-size:16px;">▶</span><span>B站</span></div>';
+    return '<div style="width:80px;height:52px;border-radius:7px;border:1px solid rgba(0,186,255,.3);background:rgba(0,186,255,.08);display:inline-flex;align-items:center;justify-content:center;flex-direction:column;gap:2px;font-size:10px;color:#00baff;font-family:monospace;vertical-align:top;">' +
+      '<span style="font-size:16px;">&#x25B6;</span><span>B&#x7AD9;</span></div>';
   }
   // YouTube
   if (/youtu\.be\/|youtube\.com\/watch/i.test(url)) {
-    return '<div style="width:80px;height:52px;border-radius:7px;border:1px solid rgba(255,80,80,.3);background:rgba(255,80,80,.08);display:inline-flex;align-items:center;justify-content:center;flex-direction:column;gap:2px;font-size:10px;color:#ff6060;font-family:\'Share Tech Mono\',monospace;vertical-align:top;">' +
-      '<span style="font-size:16px;">▶</span><span>YT</span></div>';
+    return '<div style="width:80px;height:52px;border-radius:7px;border:1px solid rgba(255,80,80,.3);background:rgba(255,80,80,.08);display:inline-flex;align-items:center;justify-content:center;flex-direction:column;gap:2px;font-size:10px;color:#ff6060;font-family:monospace;vertical-align:top;">' +
+      '<span style="font-size:16px;">&#x25B6;</span><span>YT</span></div>';
   }
   // 通用iframe
   if (url.startsWith('iframe://')) {
-    return '<div style="width:80px;height:52px;border-radius:7px;border:1px solid rgba(180,126,255,.3);background:rgba(180,126,255,.08);display:inline-flex;align-items:center;justify-content:center;flex-direction:column;gap:2px;font-size:10px;color:#b47eff;font-family:\'Share Tech Mono\',monospace;vertical-align:top;">' +
-      '<span style="font-size:16px;">⊡</span><span>embed</span></div>';
+    return '<div style="width:80px;height:52px;border-radius:7px;border:1px solid rgba(180,126,255,.3);background:rgba(180,126,255,.08);display:inline-flex;align-items:center;justify-content:center;flex-direction:column;gap:2px;font-size:10px;color:#b47eff;font-family:monospace;vertical-align:top;">' +
+      '<span style="font-size:16px;">&#x229F;</span><span>embed</span></div>';
   }
   // 视频文件
   if (/\.(mp4|mov|webm|mkv|m4v)(\?.*)?$/i.test(url)) {

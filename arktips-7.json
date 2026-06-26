@@ -68,12 +68,14 @@
     "date": "2026-06-26",
     "time": "2026-06-26 13:43:14",
     "channel": "@MOVIE3137",
-    "title": "I will find you\n北美\nNetflix \n6.18",
-    "text": "I will find you\n北美\nNetflix \n6.18",
-    "content": "I will find you\n北美\nNetflix \n6.18",
+    "title": "I will find you北美Netflix 6.18",
+    "text": "I will find you\r\n北美\r\nNetflix \r\n6.18",
+    "content": "I will find you\r\n北美\r\nNetflix \r\n6.18",
     "image": "",
     "images": [],
-    "videos": [],
+    "videos": [
+      "<iframe src=\"//player.bilibili.com/player.html?isOutside=true&aid=116811165140253&bvid=BV1tv7a6nEXG&cid=39402802742&p=1\" scrolling=\"no\" border=\"0\" frameborder=\"no\" framespacing=\"0\" allowfullscreen=\"true\"></iframe>"
+    ],
     "category": "预告资讯",
     "important": false,
     "pinOrder": 999999,
