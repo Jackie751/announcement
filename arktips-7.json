@@ -86,16 +86,18 @@
     "date": "2026-06-26",
     "time": "2026-06-26 13:42:01",
     "channel": "@MOVIE3137",
-    "title": "龙之家族 s3\n北美\nhbomax\n6.23",
-    "text": "龙之家族 s3\n北美\nhbomax\n6.23",
-    "content": "龙之家族 s3\n北美\nhbomax\n6.23",
+    "title": "龙之家族 s3北美hbomax6.23",
+    "text": "龙之家族 s3\r\n北美\r\nhbomax\r\n6.23",
+    "content": "龙之家族 s3\r\n北美\r\nhbomax\r\n6.23",
     "image": "",
     "images": [],
-    "videos": [],
+    "videos": [
+      "https://www.bilibili.com/video/BV1X57A63ERY"
+    ],
     "category": "预告资讯",
-    "important": false,
+    "important": true,
     "pinOrder": 999999,
-    "pinExpiry": ""
+    "pinExpiry": "2026-06-23"
   },
   {
     "id": 41,
