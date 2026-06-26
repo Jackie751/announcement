@@ -104,13 +104,15 @@
     "date": "2026-06-26",
     "time": "2026-06-26 13:41:06",
     "channel": "@MOVIE3137",
-    "title": "莫离Drama6月",
+    "title": "莫离Drama 6月",
     "text": "莫离\r\nDrama\r\n6月",
     "content": "莫离\r\nDrama\r\n6月",
     "image": "",
     "images": [],
-    "videos": [],
-    "category": "预告资讯",
+    "videos": [
+      "BV1wFE161E1B"
+    ],
+    "category": "社区周边",
     "important": false,
     "pinOrder": 999999,
     "pinExpiry": "2026-06-01"
