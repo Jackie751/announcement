@@ -190,7 +190,7 @@
       "https://cora.jackie3137.xyz/f/206962d4ee12d9c22aec/Thunder%20File%20To%20Link_20260623181434.mp4"
     ],
     "category": "预告资讯",
-    "important": true,
+    "important": false,
     "pinOrder": 999999,
     "pinExpiry": "2026-06-25"
   },
@@ -208,7 +208,7 @@
     ],
     "videos": [],
     "category": "预告资讯",
-    "important": true,
+    "important": false,
     "pinOrder": 999999,
     "pinExpiry": "2026-06-25"
   },
@@ -226,7 +226,7 @@
     ],
     "videos": [],
     "category": "预告资讯",
-    "important": true,
+    "important": false,
     "pinOrder": 999999,
     "pinExpiry": "2026-06-25"
   },
@@ -324,7 +324,7 @@
     ],
     "videos": [],
     "category": "预告资讯",
-    "important": true,
+    "important": false,
     "pinOrder": 999999,
     "pinExpiry": "2026-06-25"
   },
