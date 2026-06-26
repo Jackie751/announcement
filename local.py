@@ -603,11 +603,8 @@ function renderCard(item, idx) {
 
 function renderMediaThumb(url) {
   if (!url) return '';
-  // 直接是 <iframe ...> 代码
-  if (url.trim().startsWith('<iframe')) {
-    return '<div style="width:80px;height:52px;border-radius:7px;border:1px solid rgba(0,186,255,.3);background:rgba(0,186,255,.08);display:inline-flex;align-items:center;justify-content:center;flex-direction:column;gap:2px;font-size:10px;color:#00baff;font-family:monospace;vertical-align:top;">' +
-      '<span style="font-size:16px;">&#x25B6;</span><span>iframe</span></div>';
-  }
+  // 纯BV号
+  if (/^BV[a-zA-Z0-9]+$/i.test(url.trim())) { url = 'https://www.bilibili.com/video/' + url.trim(); }
   // B站
   var bvMatch = url.match(/BV[a-zA-Z0-9]+/i);
   if (/bilibili\.com\/video\/BV/i.test(url) && bvMatch) {
