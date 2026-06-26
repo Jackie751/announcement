@@ -581,12 +581,10 @@ function renderCard(item, idx) {
   var badges  = (pinned ? '<span class="badge badge-pin">📌</span>' : '') +
                 (cat ? '<span class="badge badge-cat">' + cat + '</span>' : '') +
                 (ch  ? '<span class="badge badge-ch">'  + ch  + '</span>' : '');
-  var imgHtml = imgs.slice(0,3).map(function(u) {
-    return '<img class="item-img" src="' + esc(u) + '">';
-  }).join('');
-  var vidHtml = vids.slice(0,2).map(function(u) {
-    return '<video src="' + esc(u) + '" controls preload="metadata" style="max-width:100%;max-height:120px;border-radius:7px;border:1px solid rgba(180,126,255,.15);margin-top:4px;display:block;"></video>';
-  }).join('');
+  // 合并 images + videos 一起渲染，支持 B站/YouTube/iframe embed
+  var allMedia = imgs.concat(vids);
+  var imgHtml = allMedia.slice(0,5).map(function(u) { return renderMediaThumb(u); }).join('');
+  var vidHtml = '';
   var contentHtml = content
     ? '<div class="item-content" id="ct-' + idx + '">' + content + '</div>' +
       '<button class="expand-btn" onclick="event.stopPropagation();toggleContent(' + idx + ')">展开 ▾</button>'
@@ -599,9 +597,34 @@ function renderCard(item, idx) {
     '</div>' +
     '<div class="item-meta">' + date + (item.id ? ' &nbsp;·&nbsp; id:' + esc(String(item.id)) : '') + '</div>' +
     contentHtml +
-    (imgHtml ? '<div class="item-images">' + imgHtml + '</div>' : '') +
-    (vidHtml ? '<div style="margin-top:6px">' + vidHtml + '</div>' : '') +
+    (imgHtml ? '<div class="item-images" style="flex-wrap:wrap;gap:6px;">' + imgHtml + '</div>' : '') +
     '</div>';
+}
+
+function renderMediaThumb(url) {
+  if (!url) return '';
+  // B站
+  var bvMatch = url.match(/BV[a-zA-Z0-9]+/i);
+  if (/bilibili\.com\/video\/BV/i.test(url) && bvMatch) {
+    return '<div style="width:80px;height:52px;border-radius:7px;border:1px solid rgba(0,186,255,.3);background:rgba(0,186,255,.08);display:inline-flex;align-items:center;justify-content:center;flex-direction:column;gap:2px;font-size:10px;color:#00baff;font-family:\'Share Tech Mono\',monospace;vertical-align:top;">' +
+      '<span style="font-size:16px;">▶</span><span>B站</span></div>';
+  }
+  // YouTube
+  if (/youtu\.be\/|youtube\.com\/watch/i.test(url)) {
+    return '<div style="width:80px;height:52px;border-radius:7px;border:1px solid rgba(255,80,80,.3);background:rgba(255,80,80,.08);display:inline-flex;align-items:center;justify-content:center;flex-direction:column;gap:2px;font-size:10px;color:#ff6060;font-family:\'Share Tech Mono\',monospace;vertical-align:top;">' +
+      '<span style="font-size:16px;">▶</span><span>YT</span></div>';
+  }
+  // 通用iframe
+  if (url.startsWith('iframe://')) {
+    return '<div style="width:80px;height:52px;border-radius:7px;border:1px solid rgba(180,126,255,.3);background:rgba(180,126,255,.08);display:inline-flex;align-items:center;justify-content:center;flex-direction:column;gap:2px;font-size:10px;color:#b47eff;font-family:\'Share Tech Mono\',monospace;vertical-align:top;">' +
+      '<span style="font-size:16px;">⊡</span><span>embed</span></div>';
+  }
+  // 视频文件
+  if (/\.(mp4|mov|webm|mkv|m4v)(\?.*)?$/i.test(url)) {
+    return '<video src="' + esc(url) + '" controls preload="metadata" style="max-width:100%;max-height:120px;border-radius:7px;border:1px solid rgba(180,126,255,.15);margin-top:4px;display:block;"></video>';
+  }
+  // 图片
+  return '<img class="item-img" src="' + esc(url) + '">';
 }
 
 function esc(s) {
