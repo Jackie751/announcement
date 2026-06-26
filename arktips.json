@@ -1,5 +1,41 @@
 [
   {
+    "id": 41,
+    "date": "2026-06-26",
+    "time": "2026-06-26 13:41:06",
+    "channel": "@MOVIE3137",
+    "title": "莫离  6月",
+    "text": "莫离\r\n6月",
+    "content": "莫离\r\n6月",
+    "image": "",
+    "images": [],
+    "videos": [
+      "BV1wFE161E1B"
+    ],
+    "category": "社区周边",
+    "important": true,
+    "pinOrder": 999999,
+    "pinExpiry": "2026-06-01"
+  },
+  {
+    "id": 43,
+    "date": "2026-06-26",
+    "time": "2026-06-26 13:43:14",
+    "channel": "@MOVIE3137",
+    "title": "I will find you北美Netflix 6.18",
+    "text": "I will find you\r\n北美\r\nNetflix \r\n6.18",
+    "content": "I will find you\r\n北美\r\nNetflix \r\n6.18",
+    "image": "",
+    "images": [],
+    "videos": [
+      "BV1B6jb6xEEc"
+    ],
+    "category": "预告资讯",
+    "important": true,
+    "pinOrder": 999999,
+    "pinExpiry": "2026-06-18"
+  },
+  {
     "id": 42,
     "date": "2026-06-26",
     "time": "2026-06-26 13:42:01",
