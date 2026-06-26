@@ -866,8 +866,14 @@ document.addEventListener('keydown', function(event) {
 
   if (event.ctrlKey && key === 'p') {
     event.preventDefault();
-    var saveBtn = document.querySelector('.add-form form .btn-primary');
-    if (saveBtn) saveBtn.closest('form').requestSubmit();
+    var modal = document.getElementById('modalOverlay');
+    if (modal && modal.classList.contains('show')) {
+      var editForm = document.getElementById('editForm');
+      if (editForm) editForm.requestSubmit();
+    } else {
+      var saveBtn = document.querySelector('.add-form form .btn-primary');
+      if (saveBtn) saveBtn.closest('form').requestSubmit();
+    }
     return;
   }
 
@@ -881,7 +887,7 @@ document.addEventListener('keydown', function(event) {
     event.preventDefault();
     window.scrollTo({top:document.body.scrollHeight, behavior:'smooth'});
   }
-  if (event.ctrlKey && key === 'g') {
+  if (key === 'v') {
     event.preventDefault();
     var jn = document.getElementById('jumpNum');
     if (jn) { jn.focus(); jn.select(); }
@@ -893,6 +899,28 @@ document.addEventListener('keydown', function(event) {
   if (key === 'c') {
     event.preventDefault();
     quickCycleCategory();
+  }
+  if (key === 's') {
+    event.preventDefault();
+    quickExtractTitle();
+  }
+  if (key === 't') {
+    event.preventDefault();
+    quickTogglePin(true);
+  }
+  if (key === 'q') {
+    event.preventDefault();
+    quickTogglePin(false);
+  }
+  if (key === 'o') {
+    event.preventDefault();
+    var expiryInput = document.getElementById('quickExpiryDate');
+    if (expiryInput) {
+      expiryInput.focus();
+      expiryInput.onkeydown = function(e) {
+        if (e.key === 'Enter') { e.preventDefault(); quickSetExpiry(); expiryInput.onkeydown = null; }
+      };
+    }
   }
   if (event.ctrlKey && key === 'm') {
     event.preventDefault();
@@ -1035,7 +1063,7 @@ def render_page(tab="arktips", message="", message_type="success"):
   <h1>📋 Local Manager</h1>
   {vps_badge}
   <span class="topbar-shortcuts" style="font-family:'Share Tech Mono',monospace;font-size:11px;color:rgba(180,200,255,.65);letter-spacing:.04em;">
-    P=保存 &nbsp;E=编辑 &nbsp;C=切换分类 &nbsp;A=顶部 &nbsp;D=底部 &nbsp;G=跳转 &nbsp;M=Pull &nbsp;I=Push &nbsp;Esc=关闭
+    P=保存 &nbsp;E=编辑 &nbsp;C=切换分类 &nbsp;S=提取标题 &nbsp;T=置顶 &nbsp;Q=取消置顶 &nbsp;O=截止日期 &nbsp;A=顶部 &nbsp;D=底部 &nbsp;V=跳转 &nbsp;M=Pull &nbsp;I=Push &nbsp;Esc=关闭
   </span>
   <button class="tab-btn {arktips_active}" onclick="switchTab('arktips')">资源区</button>
   <button class="tab-btn {ann_active}" onclick="switchTab('announcements')">公告</button>
