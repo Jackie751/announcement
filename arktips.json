@@ -1,5 +1,23 @@
 [
   {
+    "id": 47,
+    "date": "2026-06-26",
+    "time": "2026-06-26 13:54:48",
+    "channel": "@MOVIE3137",
+    "title": "Agent Kim | 金特务：本色 | Netflix | 2026.6.27",
+    "text": "Agent Kim | 金特务：本色 | Netflix | 2026.6.27",
+    "content": "Agent Kim | 金特务：本色 | Netflix | 2026.6.27",
+    "image": "",
+    "images": [],
+    "videos": [
+      "BV1UvjN6rE25"
+    ],
+    "category": "预告资讯",
+    "important": true,
+    "pinOrder": 999999,
+    "pinExpiry": "2026-06-27"
+  },
+  {
     "id": 129150,
     "date": "2026-06-26",
     "time": "2026-06-26 04:06:49",
@@ -310,24 +328,6 @@
     ],
     "videos": [],
     "category": "活动",
-    "important": true,
-    "pinOrder": 999999,
-    "pinExpiry": "2026-06-27"
-  },
-  {
-    "id": 47,
-    "date": "2026-06-26",
-    "time": "2026-06-26 13:54:48",
-    "channel": "@MOVIE3137",
-    "title": "Agent Kim | 金特务：本色 | Netflix | us | 2026.6.27",
-    "text": "Agent Kim | 金特务：本色 | Netflix | us | 2026.6.27",
-    "content": "Agent Kim | 金特务：本色 | Netflix | us | 2026.6.27",
-    "image": "",
-    "images": [],
-    "videos": [
-      "BV1UvjN6rE25"
-    ],
-    "category": "预告资讯",
     "important": true,
     "pinOrder": 999999,
     "pinExpiry": "2026-06-27"
