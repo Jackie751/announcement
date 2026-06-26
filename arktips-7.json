@@ -139,7 +139,7 @@
       "BV1w9V86dE3z"
     ],
     "category": "预告资讯",
-    "important": true,
+    "important": false,
     "pinOrder": 999999,
     "pinExpiry": "2026-06-24"
   },
@@ -157,7 +157,7 @@
       "BV1B6jb6xEEc"
     ],
     "category": "预告资讯",
-    "important": true,
+    "important": false,
     "pinOrder": 999999,
     "pinExpiry": "2026-06-18"
   },
@@ -175,7 +175,7 @@
       "BV1X57A63ERY"
     ],
     "category": "预告资讯",
-    "important": true,
+    "important": false,
     "pinOrder": 999999,
     "pinExpiry": "2026-06-23"
   },
@@ -194,7 +194,7 @@
       "BV1wFE161E1B"
     ],
     "category": "社区周边",
-    "important": true,
+    "important": false,
     "pinOrder": 999999,
     "pinExpiry": "2026-06-01"
   },

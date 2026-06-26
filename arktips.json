@@ -219,24 +219,6 @@
     "pinExpiry": ""
   },
   {
-    "id": 44,
-    "date": "2026-06-26",
-    "time": "2026-06-26 13:49:31",
-    "channel": "@MOVIE3137",
-    "title": "the the Hand of Dante | 但丁之手 | us | Netflix | 6.24",
-    "text": "the the Hand of Dante | 但丁之手 | us | Netflix | 6.24",
-    "content": "the the Hand of Dante | 但丁之手 | us | Netflix | 6.24",
-    "image": "",
-    "images": [],
-    "videos": [
-      "BV1w9V86dE3z"
-    ],
-    "category": "预告资讯",
-    "important": true,
-    "pinOrder": 999999,
-    "pinExpiry": "2026-06-24"
-  },
-  {
     "id": 45,
     "date": "2026-06-26",
     "time": "2026-06-26 13:51:54",
@@ -289,24 +271,6 @@
     "important": true,
     "pinOrder": 999999,
     "pinExpiry": ""
-  },
-  {
-    "id": 42,
-    "date": "2026-06-26",
-    "time": "2026-06-26 13:42:01",
-    "channel": "@MOVIE3137",
-    "title": "House of the Dragon | 龙之家族 第三季 | hbomax | Season 3| 2026.6.23",
-    "text": "House of the Dragon | 龙之家族 第三季 | hbomax | Season 3| 2026.6.23",
-    "content": "House of the Dragon | 龙之家族 第三季 | hbomax | Season 3| 2026.6.23",
-    "image": "",
-    "images": [],
-    "videos": [
-      "BV1X57A63ERY"
-    ],
-    "category": "预告资讯",
-    "important": true,
-    "pinOrder": 999999,
-    "pinExpiry": "2026-06-23"
   },
   {
     "id": 7652,
@@ -367,43 +331,6 @@
     "important": true,
     "pinOrder": 999999,
     "pinExpiry": "2026-06-27"
-  },
-  {
-    "id": 41,
-    "date": "2026-06-26",
-    "time": "2026-06-26 13:41:06",
-    "channel": "@MOVIE3137",
-    "title": "莫离 | 腾讯视频 | 2026.6.9",
-    "text": "莫离 | 腾讯视频 | 2026.6.9",
-    "content": "莫离 | 腾讯视频 | 2026.6.9",
-    "image": "",
-    "images": [],
-    "videos": [
-      "BV1NbVY6zER5",
-      "BV1wFE161E1B"
-    ],
-    "category": "社区周边",
-    "important": true,
-    "pinOrder": 999999,
-    "pinExpiry": "2026-06-01"
-  },
-  {
-    "id": 43,
-    "date": "2026-06-26",
-    "time": "2026-06-26 13:43:14",
-    "channel": "@MOVIE3137",
-    "title": "I will find you | 我会找到你 | Netflix | 2026.6.21",
-    "text": "顶级剧本，神级演技，网飞新剧《我会找到你》拍出了悬疑新标杆",
-    "content": "顶级剧本，神级演技，网飞新剧《我会找到你》拍出了悬疑新标杆",
-    "image": "",
-    "images": [],
-    "videos": [
-      "BV1B6jb6xEEc"
-    ],
-    "category": "预告资讯",
-    "important": true,
-    "pinOrder": 999999,
-    "pinExpiry": "2026-06-18"
   },
   {
     "id": 16018,
