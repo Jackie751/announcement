@@ -1461,6 +1461,9 @@ def push():
 
 if __name__ == "__main__":
     import argparse
+    import pystray
+    from PIL import Image
+
     parser = argparse.ArgumentParser()
     parser.add_argument("--port", type=int, default=5000)
     args, _ = parser.parse_known_args()
@@ -1471,10 +1474,28 @@ if __name__ == "__main__":
     if VPS_MODE:
         print("[VPS MODE] Push 后将自动销毁仓库目录")
         host = "0.0.0.0"
+        app.run(host=host, port=args.port, debug=False)
     else:
         url = f"http://127.0.0.1:{args.port}"
-        def open_browser():
+        threading.Timer(1.2, lambda: webbrowser.open(url)).start()
+
+        def quit_app(icon, item):
+            icon.stop()
+            os._exit(0)
+
+        def open_browser_action(icon, item):
             webbrowser.open(url)
-        threading.Timer(1.2, open_browser).start()
-        host = "127.0.0.1"
-    app.run(host=host, port=args.port, debug=False)
+
+        img = Image.new('RGB', (16, 16), color=(30, 144, 255))
+        menu = pystray.Menu(
+            pystray.MenuItem("打开", open_browser_action),
+            pystray.MenuItem("退出", quit_app),
+        )
+        icon = pystray.Icon("local", img, "本地管理工具", menu)
+
+        flask_thread = threading.Thread(
+            target=lambda: app.run(host="127.0.0.1", port=args.port, debug=False),
+            daemon=True
+        )
+        flask_thread.start()
+        icon.run()
