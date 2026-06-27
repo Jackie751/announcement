@@ -4,7 +4,7 @@
     "date": "2026-06-27",
     "time": "2026-06-27 15:19:28",
     "channel": "@ANIME_NEWS_LATEST",
-    "title": "💫\"Yomi no Tsugai - Daemons of the Shadow Realm\" TV",
+    "title": "💫\"Yomi no Tsugai - Daemons of the Shadow Realm\" TV Anime New PV.💫",
     "text": "💫\"Yomi no Tsugai - Daemons of the Shadow Realm\" TV Anime New PV.💫\n\nCour 2 begins on July 4.",
     "content": "💫\"Yomi no Tsugai - Daemons of the Shadow Realm\" TV Anime New PV.💫\n\nCour 2 begins on July 4.",
     "image": "",
@@ -27,9 +27,9 @@
     "images": [],
     "videos": [],
     "category": "预告资讯",
-    "important": false,
+    "important": true,
     "pinOrder": 999999,
-    "pinExpiry": ""
+    "pinExpiry": "2026-07-23"
   },
   {
     "id": 16037,
@@ -39,7 +39,7 @@
     "title": "💫\"Kill Blue\" TV Anime Season 2 Announced.💫",
     "text": "💫\"Kill Blue\" TV Anime Season 2 Announced.💫",
     "content": "💫\"Kill Blue\" TV Anime Season 2 Announced.💫",
-    "important": true,
+    "important": false,
     "pinOrder": 999999,
     "pinExpiry": "2026-07-23"
   },

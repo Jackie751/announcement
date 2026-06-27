@@ -173,14 +173,31 @@ def ensure_gitignore():
     else:
         gitignore.write_text(line + "\n", encoding="utf-8")
 
+def wait_for_remote_stable(branch, retries=6, interval=3):
+    """等远端连续两次 fetch 结果一致才认为稳定，避免拉到对方 push 的中间状态"""
+    import time
+    prev = None
+    for _ in range(retries):
+        run_cmd(["git", "fetch", "origin", branch])
+        ok, out = run_cmd(["git", "rev-parse", f"origin/{branch}"])
+        curr = out.strip()
+        if curr and curr == prev:
+            return True
+        prev = curr
+        time.sleep(interval)
+    return False
+
 def git_push():
     ensure_gitignore()
     branch = get_current_branch()
     run_cmd(["git", "add", "."])
     msg = f"Update {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
     run_cmd(["git", "commit", "-m", msg])
+    run_cmd(["git", "rebase", "--abort"])
+    wait_for_remote_stable(branch)
     ok2, out2 = run_cmd(["git", "pull", "--rebase", "origin", branch])
     if not ok2:
+        run_cmd(["git", "rebase", "--abort"])
         return False, "git pull 失败：" + out2
     ok3, out3 = run_cmd(["git", "push", "origin", f"HEAD:refs/heads/{branch}"])
     if not ok3:
