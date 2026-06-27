@@ -1443,6 +1443,15 @@ def pull():
     t      = "success" if ok else "warning"
     return redirect(f"./?message={safe}&type={t}&tab={tab}")
 
+@app.route("/debug-all-pages")
+def debug_all_pages():
+    from flask import jsonify
+    result = {}
+    for f in get_page_files():
+        data = load_page(f)
+        result[f.name] = {"count": len(data), "ids": [str(i.get("id")) for i in data]}
+    return jsonify(result)
+
 
 @app.route("/push", methods=["POST"])
 def push():
