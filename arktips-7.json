@@ -1,5 +1,21 @@
 [
   {
+    "id": 51,
+    "date": "2026-06-27",
+    "time": "2026-06-27 00:40:05",
+    "channel": "@MOVIE3137",
+    "title": "Ice Cream Man | 冰激凌人 | us | 2026.08.07",
+    "text": "Ice Cream Man | 冰激凌人 | us | 2026.08.07",
+    "content": "Ice Cream Man | 冰激凌人 | us | 2026.08.07",
+    "image": "",
+    "images": [],
+    "videos": [],
+    "category": "预告资讯",
+    "important": false,
+    "pinOrder": 999999,
+    "pinExpiry": ""
+  },
+  {
     "id": 50,
     "date": "2026-06-27",
     "time": "2026-06-27 00:38:40",
