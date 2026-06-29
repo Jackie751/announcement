@@ -311,7 +311,7 @@
       "BV1UvjN6rE25"
     ],
     "category": "预告资讯",
-    "important": true,
+    "important": false,
     "pinOrder": 999999,
     "pinExpiry": "2026-06-27"
   },
@@ -347,7 +347,7 @@
       "BV1At411J7UD"
     ],
     "category": "资源更新",
-    "important": true,
+    "important": false,
     "pinOrder": 999999,
     "pinExpiry": "2026-06-27"
   },
@@ -552,7 +552,7 @@
     ],
     "videos": [],
     "category": "活动",
-    "important": true,
+    "important": false,
     "pinOrder": 999999,
     "pinExpiry": "2026-06-27"
   },
@@ -699,7 +699,7 @@
     ],
     "videos": [],
     "category": "社区周边",
-    "important": true,
+    "important": false,
     "pinOrder": 999999,
     "pinExpiry": "2026-06-27"
   },
@@ -856,7 +856,7 @@
     ],
     "videos": [],
     "category": "活动",
-    "important": true,
+    "important": false,
     "pinOrder": 999999,
     "pinExpiry": "2026-06-27"
   },
@@ -874,7 +874,7 @@
     ],
     "videos": [],
     "category": "其他",
-    "important": true,
+    "important": false,
     "pinOrder": 999999,
     "pinExpiry": "2026-06-27"
   },
@@ -1018,7 +1018,7 @@
     ],
     "videos": [],
     "category": "活动",
-    "important": true,
+    "important": false,
     "pinOrder": 999999,
     "pinExpiry": "2026-06-27"
   },
@@ -1070,7 +1070,7 @@
     "images": [],
     "videos": [],
     "category": "活动",
-    "important": true,
+    "important": false,
     "pinOrder": 999999,
     "pinExpiry": "2026-06-27"
   },
