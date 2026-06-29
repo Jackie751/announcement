@@ -1487,8 +1487,6 @@ def push():
 
 if __name__ == "__main__":
     import argparse
-    import pystray
-    from PIL import Image
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--port", type=int, default=5000)
@@ -1502,6 +1500,9 @@ if __name__ == "__main__":
         host = "0.0.0.0"
         app.run(host=host, port=args.port, debug=False)
     else:
+        import pystray
+        from PIL import Image
+
         url = f"http://127.0.0.1:{args.port}"
         threading.Timer(1.2, lambda: webbrowser.open(url)).start()
 
