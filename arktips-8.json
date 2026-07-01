@@ -1882,7 +1882,7 @@
     ],
     "videos": [],
     "category": "活动",
-    "important": true,
+    "important": false,
     "pinOrder": 999999,
     "pinExpiry": "2026-06-30"
   }

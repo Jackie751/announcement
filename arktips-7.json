@@ -14,7 +14,7 @@
     ],
     "videos": [],
     "category": "社区周边",
-    "important": true,
+    "important": false,
     "pinOrder": 999999,
     "pinExpiry": "2026-06-28"
   },
@@ -113,7 +113,7 @@
     ],
     "videos": [],
     "category": "活动",
-    "important": true,
+    "important": false,
     "pinOrder": 999999,
     "pinExpiry": "2026-06-28"
   },
@@ -796,7 +796,7 @@
       "https://cora.jackie3137.xyz/f/31ae1321fb9ea3c958fc/39425671352-1-30112_merged.mp4"
     ],
     "category": "社区周边",
-    "important": true,
+    "important": false,
     "pinOrder": 999999,
     "pinExpiry": "2026-06-29"
   },
@@ -1000,7 +1000,7 @@
     ],
     "videos": [],
     "category": "活动",
-    "important": true,
+    "important": false,
     "pinOrder": 999999,
     "pinExpiry": "2026-06-28"
   },
@@ -1054,7 +1054,7 @@
       "https://cora.jackie3137.xyz/f/1d0964410bb6e34263ce/39401228657-1-30116_merged.mp4"
     ],
     "category": "活动",
-    "important": true,
+    "important": false,
     "pinOrder": 999999,
     "pinExpiry": "2026-06-28"
   },
