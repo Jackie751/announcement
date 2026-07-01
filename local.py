@@ -33,6 +33,9 @@ ARKTIPS_FILE = BASE_DIR / "arktips.json"
 PAGE_PREFIX  = "arktips-"
 PAGE_SIZE    = 100
 
+# 新增条目（尚未 push，还没分配真实页码）的暂存覆盖层
+NEW_ITEMS_FILE = BASE_DIR / f"{PAGE_PREFIX}new.json.save"
+
 
 # ──────────────────────────────────────────────────────────────
 # 工具函数
@@ -92,6 +95,153 @@ def find_item_page(item_id) -> tuple:
             if str(item.get("id")) == str(item_id):
                 return page_file, i
     return None, -1
+
+
+# ──────────────────────────────────────────────────────────────
+# Overlay（.save 覆盖层）—— 解决多机同时 push 冲突
+#
+# 编辑/删除只写入 <page>.json.save（本地临时文件，不进 git），
+# 原始页面文件在 push 之前完全不动。push 时先 pull 到最新，
+# 再把 overlay 按 id 合并回刚拉取的数据，成功后清空 overlay。
+# 新增条目（还没有真实页码）暂存在 arktips-new.json.save 里，
+# push 时才根据最新页面大小决定塞进第几页。
+# ──────────────────────────────────────────────────────────────
+def overlay_path(page_file: Path) -> Path:
+    return page_file.with_name(page_file.name + ".save")
+
+def load_overlay(page_file: Path) -> dict:
+    op = overlay_path(page_file)
+    if not op.exists():
+        return {}
+    try:
+        return json.loads(op.read_text(encoding="utf-8"))
+    except Exception:
+        return {}
+
+def save_overlay(page_file: Path, overlay: dict):
+    op = overlay_path(page_file)
+    if overlay:
+        op.write_text(json.dumps(overlay, ensure_ascii=False, indent=2), encoding="utf-8")
+    elif op.exists():
+        op.unlink()
+
+def overlay_upsert(page_file: Path, item: dict):
+    overlay = load_overlay(page_file)
+    overlay[str(item.get("id"))] = item
+    save_overlay(page_file, overlay)
+
+def overlay_mark_deleted(page_file: Path, item_id):
+    overlay = load_overlay(page_file)
+    overlay[str(item_id)] = {"id": item_id, "_deleted": True}
+    save_overlay(page_file, overlay)
+
+def load_page_merged(page_file: Path) -> list:
+    """原始页面文件 + overlay 合并后的视图，用于 UI 展示。不修改磁盘上的原文件。"""
+    base = load_page(page_file)
+    overlay = load_overlay(page_file)
+    if not overlay:
+        return base
+    result = []
+    seen_ids = set()
+    for item in base:
+        iid = str(item.get("id"))
+        seen_ids.add(iid)
+        ov = overlay.get(iid)
+        if ov is not None:
+            if ov.get("_deleted"):
+                continue
+            result.append(ov)
+        else:
+            result.append(item)
+    return result
+
+def load_new_items() -> dict:
+    if not NEW_ITEMS_FILE.exists():
+        return {}
+    try:
+        return json.loads(NEW_ITEMS_FILE.read_text(encoding="utf-8"))
+    except Exception:
+        return {}
+
+def save_new_items(data: dict):
+    if data:
+        NEW_ITEMS_FILE.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+    elif NEW_ITEMS_FILE.exists():
+        NEW_ITEMS_FILE.unlink()
+
+def find_item_merged(item_id):
+    """在（新增暂存 + 所有页面的合并视图）里定位一条记录。
+       返回 (page_file_or_None, kind, item)
+       kind: 'new'（还没 push，暂存在 NEW_ITEMS_FILE） / 'page'（已存在于某个真实页）/ None（找不到）
+    """
+    item_id = str(item_id)
+    new_items = load_new_items()
+    if item_id in new_items:
+        return None, "new", new_items[item_id]
+    for pf in get_page_files():
+        for item in load_page_merged(pf):
+            if str(item.get("id")) == item_id:
+                return pf, "page", item
+    return None, None, None
+
+def apply_overlays_and_stage() -> list:
+    """在 git pull 完成、页面文件已是最新远程状态之后调用。
+       把所有 .save 覆盖层合并回真实页面文件，新增条目按最新页面大小分配页码，
+       成功合并的覆盖层随即清空。返回被改动过的文件路径列表。"""
+    changed = []
+
+    # 1) 应用各页的编辑 / 删除覆盖层
+    for pf in get_page_files():
+        overlay = load_overlay(pf)
+        if not overlay:
+            continue
+        data = load_page(pf)  # 刚 pull 下来的最新数据
+        result = []
+        seen = set()
+        for item in data:
+            iid = str(item.get("id"))
+            seen.add(iid)
+            ov = overlay.get(iid)
+            if ov is not None:
+                if ov.get("_deleted"):
+                    continue
+                result.append(ov)
+            else:
+                result.append(item)
+        # overlay 里有、但最新数据里没有（理论上不该出现，容错保留在最前面）
+        for iid, ov in overlay.items():
+            if iid not in seen and not ov.get("_deleted"):
+                result.insert(0, ov)
+        save_json(pf, result)
+        changed.append(pf)
+        overlay_path(pf).unlink(missing_ok=True)
+
+    # 2) 新增条目：用最新页面大小决定塞进第几页
+    new_items = load_new_items()
+    if new_items:
+        page_files = get_page_files()
+        if page_files:
+            last_page = page_files[-1]
+            data = load_page(last_page)
+        else:
+            last_page = BASE_DIR / f"{PAGE_PREFIX}1.json"
+            data = []
+        for iid, item in new_items.items():
+            if len(data) >= PAGE_SIZE:
+                if last_page not in changed:
+                    save_json(last_page, data)
+                    changed.append(last_page)
+                m = re.match(r'arktips-(\d+)\.json', last_page.name)
+                next_num = (int(m.group(1)) if m else len(page_files)) + 1
+                last_page = BASE_DIR / f"{PAGE_PREFIX}{next_num}.json"
+                data = []
+            data.insert(0, item)
+        save_json(last_page, data)
+        if last_page not in changed:
+            changed.append(last_page)
+        NEW_ITEMS_FILE.unlink(missing_ok=True)
+
+    return changed
 
 
 # ──────────────────────────────────────────────────────────────
@@ -160,18 +310,29 @@ def get_current_branch():
     branch = out.strip() if ok and out else ""
     return branch if branch and branch != "HEAD" else "main"
 
+def commit_stray_changes():
+    """pull --rebase 前，先把 .gitignore 等非覆盖层文件的散碎改动提交掉，
+       避免 git 因为工作区不干净直接拒绝 pull。"""
+    ok, out = run_cmd(["git", "status", "--porcelain"])
+    if ok and out.strip():
+        run_cmd(["git", "add", "."])
+        run_cmd(["git", "commit", "-m", f"housekeeping {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"])
+
 def ensure_gitignore():
     gitignore = BASE_DIR / ".gitignore"
-    line = "json_backups/"
+    lines = ["json_backups/", "*.json.save"]
     if gitignore.exists():
         text = gitignore.read_text(encoding="utf-8", errors="ignore")
-        if line not in [x.strip() for x in text.splitlines()]:
+        existing = [x.strip() for x in text.splitlines()]
+        missing = [l for l in lines if l not in existing]
+        if missing:
             with gitignore.open("a", encoding="utf-8") as f:
                 if text and not text.endswith("\n"):
                     f.write("\n")
-                f.write(line + "\n")
+                for l in missing:
+                    f.write(l + "\n")
     else:
-        gitignore.write_text(line + "\n", encoding="utf-8")
+        gitignore.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 def wait_for_remote_stable(branch, retries=6, interval=3):
     """等远端连续两次 fetch 结果一致才认为稳定，避免拉到对方 push 的中间状态"""
@@ -189,16 +350,21 @@ def wait_for_remote_stable(branch, retries=6, interval=3):
 
 def git_push():
     ensure_gitignore()
+    commit_stray_changes()
     branch = get_current_branch()
-    run_cmd(["git", "add", "."])
-    msg = f"Update {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
-    run_cmd(["git", "commit", "-m", msg])
+    # 覆盖层模式下，push 前页面文件本身没有本地改动（改动都在 .save 里），
+    # 所以这里 pull 不会跟本地编辑冲突。
     run_cmd(["git", "rebase", "--abort"])
     wait_for_remote_stable(branch)
     ok2, out2 = run_cmd(["git", "pull", "--rebase", "origin", branch])
     if not ok2:
         run_cmd(["git", "rebase", "--abort"])
         return False, "git pull 失败：" + out2
+    # pull 完成，页面文件已是最新远程状态，现在把本地 .save 覆盖层按 id 合并回去
+    apply_overlays_and_stage()
+    run_cmd(["git", "add", "."])
+    msg = f"Update {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+    run_cmd(["git", "commit", "-m", msg])
     ok3, out3 = run_cmd(["git", "push", "origin", f"HEAD:refs/heads/{branch}"])
     if not ok3:
         return False, "git push 失败：" + out3
@@ -207,13 +373,16 @@ def git_push():
 def git_push_and_destroy():
     """VPS 模式：push 成功后延迟 1.5 秒销毁整个仓库目录并退出进程"""
     ensure_gitignore()
+    commit_stray_changes()
     branch = get_current_branch()
+    ok_pull, out_pull = run_cmd(["git", "pull", "--rebase", "origin", branch])
+    if not ok_pull:
+        run_cmd(["git", "rebase", "--abort"])
+        return False, "git pull 失败：" + out_pull
+    apply_overlays_and_stage()
     run_cmd(["git", "add", "."])
     msg = f"Update {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
     run_cmd(["git", "commit", "-m", msg])
-    ok_pull, out_pull = run_cmd(["git", "pull", "--rebase", "origin", branch])
-    if not ok_pull:
-        return False, "git pull 失败：" + out_pull
     ok_push, out_push = run_cmd(["git", "push", "origin", f"HEAD:refs/heads/{branch}"])
     if not ok_push:
         return False, "git push 失败：" + out_push
@@ -1217,10 +1386,16 @@ def api_items():
     tab   = request.args.get("tab", "arktips")
     items = []
     if tab == "arktips":
+        for item in load_new_items().values():
+            item = dict(item)
+            item["_page"]      = "（未推送新增）"
+            item["_page_file"] = ""
+            items.append(item)
         page_files = get_page_files()
         if page_files:
             for pf in reversed(page_files):
-                for item in load_page(pf):
+                for item in load_page_merged(pf):
+                    item = dict(item)
                     item["_page"]      = pf.name
                     item["_page_file"] = str(pf)
                     items.append(item)
@@ -1264,21 +1439,9 @@ def add():
             "pinOrder":  parse_pin_order(request.form.get("pinOrder")),
             "pinExpiry": request.form.get("pinExpiry", "").strip(),
         }
-        page_files = get_page_files()
-        if page_files:
-            last_page = page_files[-1]
-            data = load_page(last_page)
-            if len(data) >= PAGE_SIZE:
-                next_num  = len(page_files) + 1
-                last_page = BASE_DIR / f"{PAGE_PREFIX}{next_num}.json"
-                data = []
-            data.insert(0, item)
-            save_json(last_page, data)
-        else:
-            data = load_json(ARKTIPS_FILE)
-            if not isinstance(data, list): data = []
-            data.insert(0, item)
-            save_json(ARKTIPS_FILE, data)
+        new_items = load_new_items()
+        new_items[str(item["id"])] = item
+        save_new_items(new_items)
         if important:
             arktips_upsert(item)
     else:
@@ -1311,38 +1474,38 @@ def update():
     from flask import jsonify
     tab       = request.form.get("tab", "arktips")
     item_id   = request.form.get("item_id", "")
-    page_file = request.form.get("page_file", "")
     important = parse_bool(request.form.get("important"))
     if tab == "arktips":
-        if page_file and Path(page_file).exists():
-            pf   = Path(page_file)
-            data = load_page(pf)
-            idx  = next((i for i, e in enumerate(data) if str(e.get("id")) == str(item_id)), -1)
-            if idx >= 0:
-                imgs_raw  = request.form.get("images", "").strip()
-                imgs      = [x.strip() for x in imgs_raw.splitlines() if x.strip()]
-                vids_raw  = request.form.get("videos", "").strip()
-                vids      = [x.strip() for x in vids_raw.splitlines() if x.strip()]
-                raw_text  = request.form.get("text", "").strip()
-                raw_title = request.form.get("title", "").strip()
-                old = data[idx]
-                data[idx] = {
-                    **old,
-                    "channel":   request.form.get("channel", "").strip(),
-                    "date":      request.form.get("date", "").strip(),
-                    "title":     raw_title if raw_title else raw_text[:50],
-                    "text":      raw_text, "content": raw_text,
-                    "image":     imgs[0] if imgs else "",
-                    "images":    imgs,
-                    "videos":    vids,
-                    "category":  request.form.get("category", "活动").strip(),
-                    "important": important,
-                    "pinOrder":  parse_pin_order(request.form.get("pinOrder")),
-                    "pinExpiry": request.form.get("pinExpiry", "").strip(),
-                }
-                save_json(pf, data)
-                if important: arktips_upsert(data[idx])
-                else:         arktips_remove(item_id)
+        pf, kind, old_item = find_item_merged(item_id)
+        if kind is not None:
+            imgs_raw  = request.form.get("images", "").strip()
+            imgs      = [x.strip() for x in imgs_raw.splitlines() if x.strip()]
+            vids_raw  = request.form.get("videos", "").strip()
+            vids      = [x.strip() for x in vids_raw.splitlines() if x.strip()]
+            raw_text  = request.form.get("text", "").strip()
+            raw_title = request.form.get("title", "").strip()
+            new_item = {
+                **old_item,
+                "channel":   request.form.get("channel", "").strip(),
+                "date":      request.form.get("date", "").strip(),
+                "title":     raw_title if raw_title else raw_text[:50],
+                "text":      raw_text, "content": raw_text,
+                "image":     imgs[0] if imgs else "",
+                "images":    imgs,
+                "videos":    vids,
+                "category":  request.form.get("category", "活动").strip(),
+                "important": important,
+                "pinOrder":  parse_pin_order(request.form.get("pinOrder")),
+                "pinExpiry": request.form.get("pinExpiry", "").strip(),
+            }
+            if kind == "new":
+                new_items = load_new_items()
+                new_items[str(item_id)] = new_item
+                save_new_items(new_items)
+            else:
+                overlay_upsert(pf, new_item)
+            if important: arktips_upsert(new_item)
+            else:         arktips_remove(item_id)
     else:
         data = load_json(ANN_FILE)
         if isinstance(data, list):
@@ -1373,13 +1536,18 @@ def api_toggle_pin():
     tab     = d.get("tab", "arktips")
     pin     = d.get("pin", False)
     if tab == "arktips":
-        pf, idx = find_item_page(item_id)
-        if pf is None:
+        pf, kind, item = find_item_merged(item_id)
+        if kind is None:
             return jsonify({"ok": False, "msg": "找不到条目"})
-        data = load_page(pf)
-        data[idx]["important"] = pin
-        save_json(pf, data)
-        if pin: arktips_upsert(data[idx])
+        item = dict(item)
+        item["important"] = pin
+        if kind == "new":
+            new_items = load_new_items()
+            new_items[str(item_id)] = item
+            save_new_items(new_items)
+        else:
+            overlay_upsert(pf, item)
+        if pin: arktips_upsert(item)
         else:   arktips_remove(item_id)
     else:
         data = load_json(ANN_FILE)
@@ -1402,15 +1570,20 @@ def api_set_field():
     if not field:
         return jsonify({"ok": False, "msg": "field 不能为空"})
     if tab == "arktips":
-        pf, idx = find_item_page(item_id)
-        if pf is None:
+        pf, kind, item = find_item_merged(item_id)
+        if kind is None:
             return jsonify({"ok": False, "msg": "找不到条目"})
-        data = load_page(pf)
-        data[idx][field] = value
-        save_json(pf, data)
+        item = dict(item)
+        item[field] = value
+        if kind == "new":
+            new_items = load_new_items()
+            new_items[str(item_id)] = item
+            save_new_items(new_items)
+        else:
+            overlay_upsert(pf, item)
         if field in ("important","pinExpiry","title","category"):
-            if data[idx].get("important") in (True,"true",1,"1","True"):
-                arktips_upsert(data[idx])
+            if item.get("important") in (True,"true",1,"1","True"):
+                arktips_upsert(item)
             else:
                 arktips_remove(item_id)
     else:
@@ -1430,16 +1603,19 @@ def api_delete():
     item_id = str(d.get("item_id", ""))
     tab     = d.get("tab", "arktips")
     if tab == "arktips":
-        pf, idx = find_item_page(item_id)
-        if pf is None:
+        pf, kind, item = find_item_merged(item_id)
+        if kind == "new":
+            new_items = load_new_items()
+            new_items.pop(str(item_id), None)
+            save_new_items(new_items)
+        elif kind == "page":
+            overlay_mark_deleted(pf, item_id)
+        else:
+            # 兜底：兼容没有分页、直接用 arktips.json 存储的旧数据
             data = load_json(ARKTIPS_FILE)
             if isinstance(data, list):
                 data = [e for e in data if str(e.get("id","")) != item_id]
                 save_json(ARKTIPS_FILE, data)
-        else:
-            data = load_page(pf)
-            data = [e for e in data if str(e.get("id","")) != item_id]
-            save_json(pf, data)
         arktips_remove(item_id)
     else:
         data = load_json(ANN_FILE)
