@@ -19,27 +19,11 @@
     "pinExpiry": ""
   },
   {
-    "id": 515,
-    "date": "2026-07-01",
-    "time": "2026-07-01 20:14:38",
-    "channel": "@TESTJACKIE3137",
-    "title": "牛逼",
-    "text": "牛逼",
-    "content": "牛逼",
-    "image": "",
-    "images": [],
-    "videos": [],
-    "category": "活动",
-    "important": false,
-    "pinOrder": 999999,
-    "pinExpiry": ""
-  },
-  {
     "id": 1285,
     "date": "2026-07-01",
     "time": "2026-07-01 20:00:32",
     "channel": "@ARKBULLETIN_CN",
-    "title": "新游戏内公告：常驻标准寻访限时出率上升\n#活动通知",
+    "title": "新游戏内公告：常驻标准寻访限时出率上升",
     "text": "新游戏内公告：常驻标准寻访限时出率上升\n#活动通知",
     "content": "新游戏内公告：常驻标准寻访限时出率上升\n#活动通知",
     "image": "https://cora.jackie3137.xyz/f/8064e0b13c963dcf3bcc/Thunder%20File%20To%20Link_20260701200033.jpg",
@@ -50,6 +34,6 @@
     "category": "活动",
     "important": false,
     "pinOrder": 999999,
-    "pinExpiry": ""
+    "pinExpiry": "2026-07-02"
   }
 ]
