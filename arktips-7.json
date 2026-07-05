@@ -892,7 +892,7 @@
     ],
     "videos": [],
     "category": "预告资讯",
-    "important": true,
+    "important": false,
     "pinOrder": 999999,
     "pinExpiry": "2026-07-04"
   },
@@ -910,7 +910,7 @@
       "https://cora.jackie3137.xyz/f/3d099f93e0f6c2795233/Thunder%20File%20To%20Link_20260626064527.mp4"
     ],
     "category": "预告资讯",
-    "important": true,
+    "important": false,
     "pinOrder": 999999,
     "pinExpiry": "2026-07-04"
   },
@@ -1520,7 +1520,7 @@
     "images": [],
     "videos": [],
     "category": "预告资讯",
-    "important": true,
+    "important": false,
     "pinOrder": 999999,
     "pinExpiry": "2026-07-02"
   },

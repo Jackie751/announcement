@@ -49,7 +49,7 @@
     ],
     "videos": [],
     "category": "活动",
-    "important": true,
+    "important": false,
     "pinOrder": 999999,
     "pinExpiry": "2026-07-03"
   },
@@ -232,7 +232,7 @@
     ],
     "videos": [],
     "category": "活动",
-    "important": true,
+    "important": false,
     "pinOrder": 999999,
     "pinExpiry": "2026-07-02"
   },
@@ -375,7 +375,7 @@
     ],
     "videos": [],
     "category": "社区周边",
-    "important": true,
+    "important": false,
     "pinOrder": 999999,
     "pinExpiry": "2026-07-03"
   },
@@ -393,7 +393,7 @@
     ],
     "videos": [],
     "category": "社区周边",
-    "important": true,
+    "important": false,
     "pinOrder": 999999,
     "pinExpiry": "2026-07-03"
   },
@@ -429,7 +429,7 @@
     ],
     "videos": [],
     "category": "预告资讯",
-    "important": true,
+    "important": false,
     "pinOrder": 999999,
     "pinExpiry": "2026-07-02"
   },
@@ -491,7 +491,7 @@
       "https://cora.jackie3137.xyz/f/12834e365e8b41fca568/f778b943595bc81aa2f211c67812ed7c_6638388592832738099.mp4"
     ],
     "category": "活动",
-    "important": true,
+    "important": false,
     "pinOrder": 999999,
     "pinExpiry": "2026-07-02"
   },
@@ -532,7 +532,7 @@
     ],
     "videos": [],
     "category": "活动",
-    "important": true,
+    "important": false,
     "pinOrder": 999999,
     "pinExpiry": "2026-07-03"
   },
@@ -573,7 +573,7 @@
     ],
     "videos": [],
     "category": "活动",
-    "important": true,
+    "important": false,
     "pinOrder": 999999,
     "pinExpiry": "2026-07-01"
   },
@@ -645,7 +645,7 @@
     ],
     "videos": [],
     "category": "活动",
-    "important": true,
+    "important": false,
     "pinOrder": 999999,
     "pinExpiry": "2026-07-02"
   },
@@ -829,7 +829,7 @@
     ],
     "videos": [],
     "category": "活动",
-    "important": true,
+    "important": false,
     "pinOrder": 999999,
     "pinExpiry": "2026-07-02"
   },
@@ -848,7 +848,7 @@
     ],
     "videos": [],
     "category": "活动",
-    "important": true,
+    "important": false,
     "pinOrder": 999999,
     "pinExpiry": "2026-07-03"
   },
@@ -884,7 +884,7 @@
     ],
     "videos": [],
     "category": "资源更新",
-    "important": true,
+    "important": false,
     "pinOrder": 999999,
     "pinExpiry": "2026-07-03"
   },
@@ -921,7 +921,7 @@
     ],
     "videos": [],
     "category": "活动",
-    "important": true,
+    "important": false,
     "pinOrder": 999999,
     "pinExpiry": "2026-07-03"
   },
@@ -939,7 +939,7 @@
     ],
     "videos": [],
     "category": "资源更新",
-    "important": true,
+    "important": false,
     "pinOrder": 999999,
     "pinExpiry": "2026-07-03"
   },
@@ -958,7 +958,7 @@
     ],
     "videos": [],
     "category": "活动",
-    "important": true,
+    "important": false,
     "pinOrder": 999999,
     "pinExpiry": "2026-07-03"
   },
@@ -977,7 +977,7 @@
     ],
     "videos": [],
     "category": "活动",
-    "important": true,
+    "important": false,
     "pinOrder": 999999,
     "pinExpiry": "2026-07-03"
   },
@@ -996,7 +996,7 @@
     ],
     "videos": [],
     "category": "活动",
-    "important": true,
+    "important": false,
     "pinOrder": 999999,
     "pinExpiry": "2026-07-03"
   },
@@ -1012,7 +1012,7 @@
     "images": [],
     "videos": [],
     "category": "活动",
-    "important": true,
+    "important": false,
     "pinOrder": 999999,
     "pinExpiry": "2026-07-03"
   },
@@ -1030,7 +1030,7 @@
     ],
     "videos": [],
     "category": "活动",
-    "important": true,
+    "important": false,
     "pinOrder": 999999,
     "pinExpiry": "2026-07-03"
   },
@@ -1050,7 +1050,7 @@
     ],
     "videos": [],
     "category": "预告资讯",
-    "important": true,
+    "important": false,
     "pinOrder": 999999,
     "pinExpiry": "2026-07-01"
   },
@@ -1068,7 +1068,7 @@
     ],
     "videos": [],
     "category": "预告资讯",
-    "important": true,
+    "important": false,
     "pinOrder": 999999,
     "pinExpiry": "2026-07-01"
   },
@@ -1180,7 +1180,7 @@
     ],
     "videos": [],
     "category": "活动",
-    "important": true,
+    "important": false,
     "pinOrder": 999999,
     "pinExpiry": "2026-07-01"
   },
@@ -1466,7 +1466,7 @@
     "images": [],
     "videos": [],
     "category": "预告资讯",
-    "important": true,
+    "important": false,
     "pinOrder": 999999,
     "pinExpiry": "2026-07-02"
   },
@@ -1482,7 +1482,7 @@
     "images": [],
     "videos": [],
     "category": "预告资讯",
-    "important": true,
+    "important": false,
     "pinOrder": 999999,
     "pinExpiry": "2026-07-01"
   },
@@ -1591,7 +1591,7 @@
       "https://cora.jackie3137.xyz/f/af11abd736c7bb8c792e/c5a207e4bf276cda13c4bd4e1a560f7d_5882852655715592716.mp4"
     ],
     "category": "活动",
-    "important": true,
+    "important": false,
     "pinOrder": 999999,
     "pinExpiry": "2026-07-01"
   },
@@ -1610,7 +1610,7 @@
     ],
     "videos": [],
     "category": "活动",
-    "important": true,
+    "important": false,
     "pinOrder": 999999,
     "pinExpiry": "2026-07-02"
   },
