@@ -170,7 +170,7 @@
     ],
     "videos": [],
     "category": "社区周边",
-    "important": true,
+    "important": false,
     "pinOrder": 999999,
     "pinExpiry": "2026-07-05"
   },
@@ -307,7 +307,7 @@
     ],
     "videos": [],
     "category": "预告资讯",
-    "important": true,
+    "important": false,
     "pinOrder": 999999,
     "pinExpiry": "2026-07-08"
   },
@@ -1239,7 +1239,7 @@
     ],
     "videos": [],
     "category": "活动",
-    "important": true,
+    "important": false,
     "pinOrder": 999999,
     "pinExpiry": "2026-07-05"
   },
@@ -1297,7 +1297,7 @@
     ],
     "videos": [],
     "category": "活动",
-    "important": true,
+    "important": false,
     "pinOrder": 999999,
     "pinExpiry": "2026-07-05"
   },

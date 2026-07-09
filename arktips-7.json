@@ -1358,7 +1358,7 @@
       "https://cora.jackie3137.xyz/f/5fbc8654189307372a7e/Thunder%20File%20To%20Link_20260625045915.mp4"
     ],
     "category": "预告资讯",
-    "important": true,
+    "important": false,
     "pinOrder": 999999,
     "pinExpiry": "2026-07-05"
   },
@@ -1376,7 +1376,7 @@
     ],
     "videos": [],
     "category": "预告资讯",
-    "important": true,
+    "important": false,
     "pinOrder": 999999,
     "pinExpiry": "2026-07-05"
   },
