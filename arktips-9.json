@@ -1323,7 +1323,7 @@
       "https://cora.jackie3137.xyz/f/ac9f5cd01c7857bf9850/hgifTmTxHOC04Q_remux.mp4"
     ],
     "category": "预告资讯",
-    "important": true,
+    "important": false,
     "pinOrder": 999999,
     "pinExpiry": "2026-07-17"
   },
@@ -1577,7 +1577,7 @@
     ],
     "videos": [],
     "category": "预告资讯",
-    "important": true,
+    "important": false,
     "pinOrder": 999999,
     "pinExpiry": "2026-07-10"
   },
@@ -1665,7 +1665,7 @@
     ],
     "videos": [],
     "category": "预告资讯",
-    "important": true,
+    "important": false,
     "pinOrder": 999999,
     "pinExpiry": "2026-07-17"
   },

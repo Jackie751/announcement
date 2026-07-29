@@ -595,7 +595,7 @@
     ],
     "videos": [],
     "category": "活动",
-    "important": true,
+    "important": false,
     "pinOrder": 999999,
     "pinExpiry": "2026-07-22"
   },
@@ -1452,7 +1452,7 @@
       "https://cora.jackie3137.xyz/f/e45a6b525061d4f35e6c/Thunder%20File%20To%20Link_20260628090503.mp4"
     ],
     "category": "预告资讯",
-    "important": true,
+    "important": false,
     "pinOrder": 999999,
     "pinExpiry": "2026-07-12"
   },
@@ -1612,7 +1612,7 @@
     "images": [],
     "videos": [],
     "category": "预告资讯",
-    "important": true,
+    "important": false,
     "pinOrder": 999999,
     "pinExpiry": "2026-07-23"
   },
@@ -1640,7 +1640,7 @@
     "images": [],
     "videos": [],
     "category": "预告资讯",
-    "important": true,
+    "important": false,
     "pinOrder": 999999,
     "pinExpiry": "2026-07-09"
   },
@@ -1656,7 +1656,7 @@
     "images": [],
     "videos": [],
     "category": "预告资讯",
-    "important": true,
+    "important": false,
     "pinOrder": 999999,
     "pinExpiry": "2026-07-18"
   },
@@ -1672,7 +1672,7 @@
     "images": [],
     "videos": [],
     "category": "预告资讯",
-    "important": true,
+    "important": false,
     "pinOrder": 999999,
     "pinExpiry": "2026-07-17"
   },
@@ -1736,7 +1736,7 @@
     "images": [],
     "videos": [],
     "category": "预告资讯",
-    "important": true,
+    "important": false,
     "pinOrder": 999999,
     "pinExpiry": "2026-07-11"
   },

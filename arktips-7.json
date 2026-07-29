@@ -311,7 +311,7 @@
       "BV1gPdBB8ENL"
     ],
     "category": "预告资讯",
-    "important": true,
+    "important": false,
     "pinOrder": 999999,
     "pinExpiry": "2026-07-28"
   },
@@ -329,7 +329,7 @@
       "BV1rpdPBJEKV"
     ],
     "category": "预告资讯",
-    "important": true,
+    "important": false,
     "pinOrder": 999999,
     "pinExpiry": "2026-07-10"
   },
@@ -624,7 +624,7 @@
     ],
     "videos": [],
     "category": "活动",
-    "important": true,
+    "important": false,
     "pinOrder": 999999,
     "pinExpiry": "2026-07-10"
   },
@@ -681,7 +681,7 @@
     ],
     "videos": [],
     "category": "活动",
-    "important": true,
+    "important": false,
     "pinOrder": 999999,
     "pinExpiry": "2026-07-10"
   },
@@ -1502,7 +1502,7 @@
       "https://cora.jackie3137.xyz/f/3b92bbc4c304a2a40fdf/Thunder%20File%20To%20Link_20260625045842.mp4"
     ],
     "category": "预告资讯",
-    "important": true,
+    "important": false,
     "pinOrder": 999999,
     "pinExpiry": "2026-07-19"
   },
@@ -1696,7 +1696,7 @@
       "https://cora.jackie3137.xyz/f/aed23761761640f72ccd/Thunder%20File%20To%20Link_20260624160813.mp4"
     ],
     "category": "预告资讯",
-    "important": true,
+    "important": false,
     "pinOrder": 999999,
     "pinExpiry": "2026-07-11"
   },

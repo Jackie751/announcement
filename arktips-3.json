@@ -520,7 +520,7 @@
     ],
     "videos": [],
     "category": "预告资讯",
-    "important": true,
+    "important": false,
     "pinOrder": 3,
     "pinExpiry": "2026-07-10"
   },
