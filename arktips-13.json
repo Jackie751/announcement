@@ -1,5 +1,23 @@
 [
   {
+    "id": 1335,
+    "date": "2026-08-01",
+    "time": "2026-07-31 23:00:34",
+    "channel": "@ARKBULLETIN_CN",
+    "title": "新游戏内公告：新增时装限时上架\n#活动通知",
+    "text": "新游戏内公告：新增时装限时上架\n#活动通知",
+    "content": "新游戏内公告：新增时装限时上架\n#活动通知",
+    "image": "https://cora.jackie3137.xyz/f/9591ed07b28d97988d04/Thunder%20File%20To%20Link_20260731230035.jpg",
+    "images": [
+      "https://cora.jackie3137.xyz/f/9591ed07b28d97988d04/Thunder%20File%20To%20Link_20260731230035.jpg"
+    ],
+    "videos": [],
+    "category": "活动",
+    "important": false,
+    "pinOrder": 999999,
+    "pinExpiry": ""
+  },
+  {
     "id": 6833,
     "date": "2026-07-31",
     "time": "2026-07-31 14:00:48",
